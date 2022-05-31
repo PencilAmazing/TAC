@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using TAC.Render;
+using TAC.Editor;
 using TAC.World;
 using static Raylib_cs.Color;
 using static Raylib_cs.Raylib;
@@ -16,16 +17,25 @@ namespace TAC
 			// Init opengl to make things easier
 			InitWindow(screenWidth, screenHeight, Directory.GetCurrentDirectory());
 
+			bool isEdit = true;
+
 			ResourceCache db = new ResourceCache();
 			db.LoadAssets();
 
 			Renderer renderer = new Renderer();
-			Scene scene = new GameScene(new Position(32, 32, 32), renderer, db);
+			Scene scene;
+			if (isEdit)
+				scene = new EditorScene(new Position(32, 32, 32), renderer, db);
+			else
+				scene = new GameScene(new Position(32, 32, 32), renderer, db);
 
 			// Define the camera to look into our 3d world
-			CameraControl camera = new CameraControl(scene as GameScene);
+			CameraControl camera = new CameraControl(scene);
 
-			(scene as GameScene).AddUnit(new Unit(0, new Position(0, 0, 0), "Bruh-bot 9001", UnitDirection.East));
+			if (!isEdit)
+				(scene as GameScene).AddUnit(new Unit(0, new Position(0, 0, 0), "Bruh-bot 9001", UnitDirection.East));
+			else
+				(scene as EditorScene).ToggleWall(new Position(0, 0, 0), Wall.West);
 
 			SetTargetFPS(60);
 
@@ -37,7 +47,10 @@ namespace TAC
 				ClearBackground(RAYWHITE);
 				BeginMode3D(camera.camera);
 
-				camera.UpdateControl();
+				if (isEdit)
+					camera.UpdateEditControl();
+				else
+					camera.UpdateGameControl();
 				scene.Think(GetFrameTime());
 
 				scene.Draw(camera.camera);

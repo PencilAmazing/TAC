@@ -34,10 +34,8 @@ namespace TAC.World
 				for (int j = 0; j < floor.width; j++) {
 					Tile tile = floor.GetTile(i, j);
 					if (tile.walls == 0) continue;
-					if (tile.HasWall(Wall.North)) renderer.DrawWall(camera, new Vector3(i, 0, j), 0, cache);
-					if (tile.HasWall(Wall.East)) renderer.DrawWall(camera, new Vector3(i, 0, j), 1, cache);
-					if (tile.HasWall(Wall.South)) renderer.DrawWall(camera, new Vector3(i, 0, j), 2, cache);
-					if (tile.HasWall(Wall.West)) renderer.DrawWall(camera, new Vector3(i, 0, j), 3, cache);
+					if (tile.HasWall(Wall.North)) renderer.DrawWall(camera, new Vector3(i, 0, j), false, cache);
+					if (tile.HasWall(Wall.West)) renderer.DrawWall(camera, new Vector3(i, 0, j), true, cache);
 				}
 			}
 		}

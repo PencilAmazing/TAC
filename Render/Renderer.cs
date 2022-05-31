@@ -4,6 +4,7 @@ using System;
 using System.Numerics;
 using static Raylib_cs.Raylib;
 using TAC.World;
+using static Raylib_cs.Raymath;
 
 namespace TAC.Render
 {
@@ -80,11 +81,17 @@ namespace TAC.Render
 		/// <summary>
 		/// angle multiplier modulo 4
 		/// </summary>
-		public void DrawWall(Camera3D camera, Vector3 tileCenter, int multiplier, ResourceCache cache)
+		public void DrawWall(Camera3D camera, Vector3 center, bool rotate, ResourceCache cache)
 		{
-			Matrix4x4 translate = Matrix4x4.CreateTranslation(tileCenter);
-			Matrix4x4 rotation = Matrix4x4.CreateRotationY(MathF.PI * multiplier / 2);
-			DrawMesh(cache.cube, cache.wallMaterial, translate * rotation);
+			// center tile
+			Matrix4x4 translate = MatrixTranslate(center.X, center.Y, center.Z);
+			if (rotate) translate *= MatrixRotateY(MathF.PI / 2); // Rotate if west wall
+			// Offset to edge of tile
+			translate *= MatrixTranslate(0.0f, 0.5f, -0.5f);
+			// Scale box to wall shape
+			translate *= MatrixScale(1, 1, 0.1f);
+
+			DrawMesh(cache.cube, cache.wallMaterial, translate);
 		}
 
 		public void DrawSkybox(Camera3D camera, ResourceCache cache)

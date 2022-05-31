@@ -8,7 +8,7 @@ namespace TAC.World
 		public int y;
 		public int z;
 
-		public static Vector3 HalfUnitVector = Vector3.One / 2;
+		public static readonly Position Negative = new Position(-1, -1, -1);
 
 		public Position(int x, int y, int z)
 		{
