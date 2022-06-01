@@ -14,6 +14,14 @@ namespace TAC.Render
 		private string AssetShaderPrefix = "assets/shader/";
 		private string AssetScenePrefix = "assets/scene/";
 
+		// promise me you won't touch anything
+		public int toploc;
+		public int bottomloc;
+		public int leftloc;
+		public int rightloc;
+		public int frontloc;
+		public int backloc;
+
 		public enum TextureType
 		{
 			TEX_TILE,
@@ -29,7 +37,7 @@ namespace TAC.Render
 
 		public Shader BillboardShader;
 		public Shader SkyboxShader;
-		public Shader CubemapShader;
+		public Shader WallShader;
 
 		// General purpose cube mesh
 		public Mesh cube;
@@ -49,6 +57,7 @@ namespace TAC.Render
 		{
 			Texture2D tex = Raylib.LoadTexture(ImagePath);
 			SetTextureFilter(tex, TextureFilter.TEXTURE_FILTER_POINT);
+			SetTextureWrap(tex, TextureWrap.TEXTURE_WRAP_CLAMP);
 			switch (type) {
 				case TextureType.TEX_TILE:
 					tiles.Add(tex);
@@ -78,7 +87,6 @@ namespace TAC.Render
 				UnloadTexture(tex);
 
 			UnloadShader(BillboardShader);
-			UnloadShader(CubemapShader);
 			UnloadShader(SkyboxShader);
 
 			UnloadMesh(ref cube);
@@ -88,6 +96,11 @@ namespace TAC.Render
 		{
 			LoadTexture(AssetTilePrefix + "OBKMTB90.png", TextureType.TEX_TILE);
 			LoadTexture(AssetTilePrefix + "OBASEM37.png", TextureType.TEX_TILE);
+			LoadTexture(AssetTilePrefix + "OBOOKA03.png", TextureType.TEX_TILE);
+			LoadTexture(AssetTilePrefix + "OBRCKL02.png", TextureType.TEX_TILE);
+			LoadTexture(AssetTilePrefix + "OBRCKQ12.png", TextureType.TEX_TILE);
+			LoadTexture(AssetTilePrefix + "OBRCKQ44.png", TextureType.TEX_TILE);
+			LoadTexture(AssetTilePrefix + "OCHRMA14.png", TextureType.TEX_TILE);
 		}
 
 		private void LoadUnits()
@@ -98,24 +111,34 @@ namespace TAC.Render
 		private void LoadShaders()
 		{
 			BillboardShader = LoadShader(null, AssetShaderPrefix + "billboard.fs");
-			CubemapShader = LoadShader(AssetShaderPrefix + "cubemap.vs", AssetShaderPrefix + "cubemap.fs");
 			SkyboxShader = LoadShader(AssetShaderPrefix + "skybox.vs", AssetShaderPrefix + "skybox.fs");
 			SetShaderValue(SkyboxShader, GetShaderLocation(SkyboxShader, "environmentMap"), (int)MATERIAL_MAP_CUBEMAP, SHADER_UNIFORM_INT);
 			SetShaderValue(SkyboxShader, GetShaderLocation(SkyboxShader, "vflipped"), 1, SHADER_UNIFORM_INT);
+
+			WallShader = LoadShader(AssetShaderPrefix + "wall.vert", AssetShaderPrefix + "wall.frag");
+			rightloc = GetShaderLocation(WallShader, "right");
+			leftloc = GetShaderLocation(WallShader, "left");
+			toploc = GetShaderLocation(WallShader, "top");
+			bottomloc = GetShaderLocation(WallShader, "bottom");
+			backloc = GetShaderLocation(WallShader, "back");
+			frontloc = GetShaderLocation(WallShader, "front");
 		}
 
 		private void UploadMeshes()
 		{
 			// GenMesh uploads data to GPU
 			cube = GenMeshCube(1, 1, 1);
-			wallMaterial = LoadMaterialDefault();
 			SkyboxMaterial = LoadMaterialDefault();
 			SkyboxMaterial.shader = SkyboxShader;
 
 			Image SkyboxImage = LoadImage(AssetScenePrefix + "skybox/skybox.png");
 			SkyboxCubemap = LoadTextureCubemap(SkyboxImage, CubemapLayout.CUBEMAP_LAYOUT_AUTO_DETECT);
 			UnloadImage(SkyboxImage);
-			SetMaterialTexture(ref SkyboxMaterial, MaterialMapIndex.MATERIAL_MAP_CUBEMAP, SkyboxCubemap);
+			SetMaterialTexture(ref SkyboxMaterial, MATERIAL_MAP_CUBEMAP, SkyboxCubemap);
+
+			wallMaterial = LoadMaterialDefault();
+			wallMaterial.shader = WallShader;
+			//SetMaterialTexture(ref wallMaterial, MATERIAL_MAP_DIFFUSE, tiles[1]);
 		}
 
 		public void LoadAssets()

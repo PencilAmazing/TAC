@@ -6,12 +6,25 @@ using System.Threading.Tasks;
 
 namespace TAC.World
 {
-	public enum Wall : byte
+	// Class containing ids of wall textures
+	public class Brush
 	{
-		North = 1 << 1,
-		West = 1 << 2
+		public int top;
+		public int front;
+		public int bottom;
+		public int back;
+		public int right;
+		public int left;
 	};
 
+	public enum Wall : byte
+	{
+		North = 1 << 0,
+		West = 1 << 1
+	};
+
+
+	// Maybe walls should be in a separate array?
 	public struct Tile
 	{
 		public int type;
@@ -21,20 +34,19 @@ namespace TAC.World
 		public Tile(int type = 0, byte walls = 0)
 		{
 			this.type = type;
-			this.walls = walls;
+			this.walls = 0;
 			this.unit = null;
 		}
 
 		public bool HasWall(Wall wall)
 		{
-			return (walls & (byte)wall) != 0;
+			return (walls & (int)wall) != 0;
 		}
 
 		public override bool Equals(object obj)
 		{
 			return obj is Tile tile &&
 				   type == tile.type &&
-				   walls == tile.walls &&
 				   EqualityComparer<Unit>.Default.Equals(unit, tile.unit);
 		}
 
