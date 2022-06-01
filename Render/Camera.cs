@@ -144,6 +144,9 @@ namespace TAC.Render
 			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) {
 				(scene as EditorScene).ToggleWall(position, wall);
 			}
+			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)) {
+				(scene as EditorScene).ToggleWall(position, (Wall)((byte)wall<<2));
+			}
 		}
 
 	}

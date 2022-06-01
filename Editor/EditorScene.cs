@@ -16,6 +16,5 @@ namespace TAC.Editor
 		{
 			floor[pos.x, pos.z].walls ^= (byte)wall;
 		}
-
 	}
 }

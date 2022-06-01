@@ -30,13 +30,17 @@ namespace TAC.World
 		{
 			renderer.DrawSkybox(camera, cache);
 			renderer.DrawFloor(camera, floor, cache);
+
+			// Draw wall
 			for (int i = 0; i < floor.length; i++) {
 				for (int j = 0; j < floor.width; j++) {
 					Tile tile = floor.GetTile(i, j);
 					if (tile.walls == 0) continue;
 					WallTexture tex = new WallTexture();
-					if (tile.HasWall(Wall.North)) renderer.DrawWall(camera, new Vector3(i, 0, j), false, tex, cache);
-					if (tile.HasWall(Wall.West)) renderer.DrawWall(camera, new Vector3(i, 0, j), true, tex, cache);
+					if (tile.HasWall(Wall.North))
+						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), tex, cache);
+					if (tile.HasWall(Wall.West))
+						renderer.DrawWall(camera, new Vector3(i, 0, j), true, tile.HasWall(Wall.FlipWest), tex, cache);
 				}
 			}
 		}

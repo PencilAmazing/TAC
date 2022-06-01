@@ -20,7 +20,9 @@ namespace TAC.World
 	public enum Wall : byte
 	{
 		North = 1 << 0,
-		West = 1 << 1
+		West = 1 << 1,
+		FlipNorth = 1 << 2,
+		FlipWest = 1 << 3
 	};
 
 
@@ -61,5 +63,6 @@ namespace TAC.World
 		{
 			return !(left == right);
 		}
+
 	}
 }

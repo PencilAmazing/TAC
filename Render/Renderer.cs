@@ -108,25 +108,24 @@ namespace TAC.Render
 		/// <summary>
 		/// angle multiplier modulo 4
 		/// </summary>
-		public void DrawWall(Camera3D camera, Vector3 center, bool rotate, WallTexture tex, ResourceCache cache)
+		public void DrawWall(Camera3D camera, Vector3 center, bool rotate, bool flip, WallTexture tex, ResourceCache cache)
 		{
 			// center tile
 			Matrix4x4 translate = MatrixTranslate(center.X, center.Y, center.Z);
 			if (rotate) translate *= MatrixRotateY(MathF.PI / 2); // Rotate if west wall
-																  // Offset to edge of tile
-			translate *= MatrixTranslate(0.0f, 0.5f, -0.5f);
-			// Scale box to wall shape
-			translate *= MatrixScale(1, 1, 0.1f);
+			translate *= MatrixTranslate(0.0f, 0.5f, -0.5f); // Offset to edge of tile
+			if(flip) translate *= MatrixRotateY(MathF.PI); // rotate 180 to flip texture
+			translate *= MatrixScale(1, 1, 0.1f);// Scale box to wall shape
 
-			//BeginShaderMode(cache.WallShader);
-
-			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)0, cache.tiles[tex.top]); // everything?
-			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)1, cache.tiles[tex.left]); // top
+			// Upload textures to GPU
+			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)0, cache.tiles[tex.top]);
+			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)1, cache.tiles[tex.left]);
 			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)2, cache.tiles[tex.front]);
 			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)3, cache.tiles[tex.bottom]);
 			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)4, cache.tiles[tex.right]);
 			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)5, cache.tiles[tex.back]);
 
+			// Bind textures to shader
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.toploc, cache.tiles[tex.top]);
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.leftloc, cache.tiles[tex.left]);
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.frontloc, cache.tiles[tex.front]);
@@ -134,16 +133,7 @@ namespace TAC.Render
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.rightloc, cache.tiles[tex.right]);
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.backloc, cache.tiles[tex.back]);
 
-			//Rlgl.rlEnableShader(cache.WallShader.id);
-			//Rlgl.rlSetUniformSampler(cache.toploc, cache.tiles[tex.top].id);
-			//Rlgl.rlSetUniformSampler(cache.leftloc, cache.tiles[tex.left].id);
-			//Rlgl.rlSetUniformSampler(cache.frontloc, cache.tiles[tex.front].id);
-			//Rlgl.rlSetUniformSampler(cache.bottomloc, cache.tiles[tex.bottom].id);
-			//Rlgl.rlSetUniformSampler(cache.rightloc, cache.tiles[tex.right].id);
-			//Rlgl.rlSetUniformSampler(cache.backloc, cache.tiles[tex.back].id);
-
-			DrawMesh(cache.cube, cache.wallMaterial, translate);
-			//EndShaderMode();
+			DrawMesh(cache.cube, cache.wallMaterial, translate); // Magic!
 		}
 
 		public void DrawSkybox(Camera3D camera, ResourceCache cache)
