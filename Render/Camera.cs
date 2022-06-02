@@ -142,7 +142,7 @@ namespace TAC.Render
 			DrawSphereWires(position.ToVector3() + diff / 2, 0.1f, 4, 4, Color.BLUE);
 
 			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) {
-				(scene as EditorScene).ToggleWall(position, wall);
+				(scene as EditorScene).ToggleBrush(position, wall, Brush.One);
 			}
 			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)) {
 				(scene as EditorScene).ToggleWall(position, (Wall)((byte)wall<<2));

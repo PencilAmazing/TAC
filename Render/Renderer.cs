@@ -25,35 +25,7 @@ namespace TAC.Render
 		}
 	}
 
-	struct WallTexture
-	{
-		public int top;
-		public int front;
-		public int bottom;
-		public int back;
-		public int right;
-		public int left;
 
-		public WallTexture()
-		{
-			top = 1;
-			front = 2;
-			bottom = 3;
-			back = 4;
-			right = 5;
-			left = 6;
-		}
-
-		public WallTexture(int top = 6, int front = 1, int bottom = 2, int back = 3, int right = 4, int left = 5)
-		{
-			this.top = top;
-			this.front = front;
-			this.bottom = bottom;
-			this.back = back;
-			this.right = right;
-			this.left = left;
-		}
-	}
 
 	// Consider making static?
 	class Renderer
@@ -108,13 +80,13 @@ namespace TAC.Render
 		/// <summary>
 		/// angle multiplier modulo 4
 		/// </summary>
-		public void DrawWall(Camera3D camera, Vector3 center, bool rotate, bool flip, WallTexture tex, ResourceCache cache)
+		public void DrawWall(Camera3D camera, Vector3 center, bool rotate, bool flip, Brush tex, ResourceCache cache)
 		{
 			// center tile
 			Matrix4x4 translate = MatrixTranslate(center.X, center.Y, center.Z);
 			if (rotate) translate *= MatrixRotateY(MathF.PI / 2); // Rotate if west wall
 			translate *= MatrixTranslate(0.0f, 0.5f, -0.5f); // Offset to edge of tile
-			if(flip) translate *= MatrixRotateY(MathF.PI); // rotate 180 to flip texture
+			if (flip) translate *= MatrixRotateY(MathF.PI); // rotate 180 to flip texture
 			translate *= MatrixScale(1, 1, 0.1f);// Scale box to wall shape
 
 			// Upload textures to GPU

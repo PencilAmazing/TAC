@@ -12,6 +12,21 @@ namespace TAC.Editor
 
 		}
 
+		public void ToggleBrush(Position pos, Wall wall, Brush brush)
+		{
+			if (wall == Wall.North) {
+				if (floor[pos.x, pos.z].North == Brush.nullBrush)
+					floor[pos.x, pos.z].North = brush;
+				else
+					floor[pos.x, pos.z].North = Brush.nullBrush;
+			} else if(wall == Wall.West) {
+				if (floor[pos.x, pos.z].West == Brush.nullBrush)
+					floor[pos.x, pos.z].West = brush;
+				else
+					floor[pos.x, pos.z].West = Brush.nullBrush;
+			}
+		}
+
 		public void ToggleWall(Position pos, Wall wall)
 		{
 			floor[pos.x, pos.z].walls ^= (byte)wall;
