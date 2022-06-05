@@ -70,14 +70,15 @@ namespace TAC.World
 
 		public bool HasWall(Wall wall) => (walls & (int)wall) != 0;
 
-		public static bool operator==(Tile l, Tile r) {
+		public static bool operator ==(Tile l, Tile r)
+		{
 			return l.type == r.type &&
 				   l.North == r.North &&
 				   l.West == r.West &&
 				   l.walls == r.walls &&
 				   l.unit == r.unit;
 		}
-		public static bool operator!= (Tile l, Tile r) => !(l == r);
+		public static bool operator !=(Tile l, Tile r) => !(l == r);
 
 		public static readonly Tile nullTile = new Tile(-1);
 	}

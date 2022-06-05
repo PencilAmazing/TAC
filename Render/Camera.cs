@@ -130,9 +130,9 @@ namespace TAC.Render
 			Wall wall = Wall.North;
 			if (MathF.Abs(diff.X) > MathF.Abs(diff.Z)) {
 				wall = Wall.West;
-				if (diff.X < 0)
-					position -= new Position(1, 0, 0);
-				diff = Vector3.UnitX;
+				if (diff.X > 0)
+					position += new Position(1, 0, 0);
+				diff = -Vector3.UnitX;
 			} else {
 				if (diff.Z > 0)
 					position += new Position(0, 0, 1);
@@ -143,6 +143,7 @@ namespace TAC.Render
 
 			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) {
 				(scene as EditorScene).ToggleBrush(position, wall, Brush.One);
+				(scene as EditorScene).ToggleWall(position, wall);
 			}
 			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)) {
 				(scene as EditorScene).ToggleWall(position, (Wall)((byte)wall<<2));

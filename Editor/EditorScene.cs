@@ -19,11 +19,13 @@ namespace TAC.Editor
 					floor[pos.x, pos.z].North = brush;
 				else
 					floor[pos.x, pos.z].North = Brush.nullBrush;
-			} else if(wall == Wall.West) {
+				ToggleWall(pos, wall);
+			} else if (wall == Wall.West) {
 				if (floor[pos.x, pos.z].West == Brush.nullBrush)
 					floor[pos.x, pos.z].West = brush;
 				else
 					floor[pos.x, pos.z].West = Brush.nullBrush;
+				ToggleWall(pos, wall);
 			}
 		}
 

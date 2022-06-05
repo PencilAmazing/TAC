@@ -33,9 +33,11 @@ namespace TAC
 			CameraControl camera = new CameraControl(scene);
 
 			if (!isEdit)
-				(scene as GameScene).AddUnit(new Unit(0, new Position(0, 0, 0), "Bruh-bot 9001", UnitDirection.East));
-			else
-				(scene as EditorScene).ToggleWall(new Position(0, 0, 0), Wall.West);
+				(scene as GameScene).AddUnit(new Unit(0, new Position(0, 0, 0), "Bruh-bot 9001", UnitDirection.North));
+			else {
+				(scene as EditorScene).ToggleBrush(new Position(0, 0, 0), Wall.North, Brush.One);
+				(scene as EditorScene).ToggleBrush(new Position(0, 0, 0), Wall.West, Brush.One);
+			}
 
 			SetTargetFPS(60);
 

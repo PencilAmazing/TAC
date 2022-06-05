@@ -69,5 +69,39 @@ namespace TAC.World
 		{
 			return floor.GetTile(pos.x, pos.z);
 		}
+
+		public bool IsTileOccupied(Position pos)
+		{
+			Tile tile = floor.GetTile(pos.x, pos.z);
+			return tile == Tile.nullTile || tile.unit != null; // Or tile has object
+		}
+
+		/// <summary>
+		/// True if adjacent direction is blocked
+		/// </summary>
+		/// <param name="dir">Direction to walk towards</param>
+		public bool TestDirection(Position pos, UnitDirection dir)
+		{
+			int x = pos.x;
+			int z = pos.z;
+			// Can't be arsed to inline
+			bool north = floor.GetTile(x, z).North != Brush.nullBrush;
+			bool west = floor.GetTile(x, z).West != Brush.nullBrush;
+			bool south = floor.GetTile(x, z + 1).North != Brush.nullBrush;
+			bool east = floor.GetTile(x + 1, z).West != Brush.nullBrush;
+			return dir switch
+			{
+				UnitDirection.North => north,
+				UnitDirection.West => west,
+				UnitDirection.South => south,
+				UnitDirection.East => east,
+				UnitDirection.NorthEast => north || east,
+				UnitDirection.NorthWest => north || west,
+				UnitDirection.SouthEast => south || east,
+				UnitDirection.SouthWest => south || west,
+				_ => false
+			};
+		}
+
 	}
 }

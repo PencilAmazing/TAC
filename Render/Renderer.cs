@@ -84,7 +84,7 @@ namespace TAC.Render
 		{
 			// center tile
 			Matrix4x4 translate = MatrixTranslate(center.X, center.Y, center.Z);
-			if (rotate) translate *= MatrixRotateY(MathF.PI / 2); // Rotate if west wall
+			if (rotate) translate *= MatrixRotateY(-MathF.PI / 2); // Rotate if west wall
 			translate *= MatrixTranslate(0.0f, 0.5f, -0.5f); // Offset to edge of tile
 			if (flip) translate *= MatrixRotateY(MathF.PI); // rotate 180 to flip texture
 			translate *= MatrixScale(1, 1, 0.1f);// Scale box to wall shape

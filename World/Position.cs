@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace TAC.World
 {
@@ -30,10 +31,27 @@ namespace TAC.World
 			return new Vector3(x, y, z);
 		}
 
+		public override bool Equals(object obj)
+		{
+			return obj is Position position &&
+				   x == position.x &&
+				   y == position.y &&
+				   z == position.z;
+		}
+
+		// Easy enough...
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(x, y, z);
+		}
+
 		public static Position operator +(Position pos) => pos;
 		public static Position operator -(Position pos) => new(-pos.x, -pos.y, -pos.z);
 		public static Position operator +(Position l, Position r) => new(l.x + r.x, l.y + r.y, l.z + r.z);
 		public static Position operator -(Position l, Position r) => l + (-r);
+
+		public static bool operator ==(Position l, Position r) => l.x == r.x && l.y == r.y && l.z == r.z;
+		public static bool operator !=(Position l, Position r) => !(l == r);
 	}
 
 }

@@ -18,6 +18,15 @@ namespace TAC.Logic
 			this.path = new List<Position>();
 		}
 
+		// Neat trick from the openxcom fellas
+		Position GenerateVectorFromDirection(UnitDirection dir)
+		{
+			int[] x = { 0, 1, 1, 1, 0, -1, -1, -1 };
+			int[] z = { -1, -1, 0, 1, 1, 1, 0, -1 };
+			int[] y = { 0, 0, 0, 0, 0, 0, 0, 0 };
+			return new Position(x[(int)dir], y[(int)dir], z[(int)dir]);
+		}
+
 		/// <summary>
 		/// Finds path from unit to position on grid <br/>
 		/// Stores unit and goal inside
@@ -26,33 +35,53 @@ namespace TAC.Logic
 		public bool FindPathForUnit(Unit unit, Position goal)
 		{
 			// Skip if tile is occupied
-			Tile end = scene.GetTile(goal);
-			if (end == Tile.nullTile || end.unit != null)
+			if (scene.IsTileOccupied(goal))
 				return false;
+			Position start = unit.position;
 
-			Tile start = scene.GetTile(unit.position);
+			Queue<Position> frontier = new();
+			frontier.Enqueue(start);
 
-			int dx = goal.x - unit.position.x > 0 ? 1 : -1;
-			int dz = goal.z - unit.position.z > 0 ? 1 : -1;
+			Dictionary<Position, Position> camefrom = new();
+			camefrom[start] = Position.Negative;
 
-			// X axis
-			for (int i = unit.position.x; i != goal.x + dx; i += dx) {
-				Position pos = new Position(i, 0, unit.position.z);
-				Tile tile = scene.GetTile(pos);
-				if (tile != Tile.nullTile)
-					path.Add(pos);
-				else
-					return false;
+			// Still tiles to explore?
+			while (frontier.Count > 0) {
+				// Pop off top
+				Position current = frontier.Dequeue();
+				if (current == goal) break;
+				// Fun fact: breadth first is trash if diagonals are involved
+				UnitDirection[] dirs =
+				{
+					UnitDirection.North,
+					UnitDirection.East,
+					UnitDirection.South,
+					UnitDirection.West,
+					UnitDirection.NorthEast,
+					UnitDirection.NorthWest,
+					UnitDirection.SouthWest,
+					UnitDirection.SouthEast
+				};
+				// Check neighbors - beware of boxing!
+				foreach (UnitDirection dir in dirs) {
+					// For each connected neighbor
+					if (!scene.TestDirection(current, dir)) {
+						Position next = current + GenerateVectorFromDirection(dir);
+						if (!camefrom.ContainsKey(next)) {
+							frontier.Enqueue(next);
+							camefrom[next] = current;
+						}
+					}
+				}
 			}
 
-			for (int z = unit.position.z; z != goal.z + dz; z += dz) {
-				Position pos = new Position(goal.x, 0, z);
-				Tile tile = scene.GetTile(pos);
-				if (tile != Tile.nullTile)
-					path.Add(pos);
-				else
-					return false;
+			// reconstruct path
+			Position step = goal;
+			while (step != start) {
+				path.Add(step);
+				step = camefrom[step];
 			}
+			path.Reverse();
 
 			// Store unit and goal for safekeeping
 			this.unit = unit;
