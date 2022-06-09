@@ -7,7 +7,7 @@ using TAC.World;
 
 namespace TAC.Logic
 {
-	abstract class Action
+	public abstract class Action
 	{
 		protected Scene scene;
 		public bool isDone;

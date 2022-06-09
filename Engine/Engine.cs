@@ -1,8 +1,11 @@
-﻿using TAC.Editor;
+﻿using ImGuiNET;
+using Raylib_cs;
+using System.Numerics;
+using TAC.Editor;
 using TAC.Render;
 using TAC.UISystem;
 using TAC.World;
-using Raylib_cs;
+using static ImGuiNET.ImGui;
 using static Raylib_cs.Raylib;
 
 namespace TAC.Inner
@@ -37,10 +40,61 @@ namespace TAC.Inner
 			camera = new CameraControl(scene);
 		}
 
-		public void Update(float deltaTime)
+		public void DrawEditUI(float dt)
+		{
+			SetNextWindowPos(Vector2.Zero);
+
+			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+			Begin("huh", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
+
+			if (Button("Play", new Vector2(150, 40))) {
+				UIEventQueue.EventQueue.Enqueue(new UIEvent(ToggleGameMode));
+			}
+
+			PopStyleVar();
+			End();
+		}
+
+		public void DrawGameUI(float dt)
+		{
+			SetNextWindowPos(Vector2.Zero);
+
+			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+			Begin("huh", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
+
+			if (Button("Play", new Vector2(150, 40))) {
+				UIEventQueue.EventQueue.Enqueue(new UIEvent(ToggleGameMode));
+			}
+
+			PopStyleVar();
+			End();
+		}
+
+		public void ToggleGameMode() => SetGameMode(!scene.isEdit);
+
+		public void SetGameMode(bool isEdit)
+		{
+			scene.isEdit = isEdit;
+			if (scene.isEdit == true) {
+				// Cancel current action
+				scene.currentAction = null;
+			}
+		}
+
+		public void ConvertEditToGame()
+		{
+			SetGameMode(false);
+
+		}
+
+		public void Shmove(float deltaTime)
 		{
 			imguiController.Update(deltaTime);
-			ui.Update(deltaTime);
+			//ui.Update(deltaTime);
+			if (scene.isEdit)
+				DrawEditUI(deltaTime);
+			else
+				DrawGameUI(deltaTime);
 
 			camera.UpdateCamera();
 			BeginDrawing();
@@ -53,12 +107,12 @@ namespace TAC.Inner
 				camera.UpdateGameControl();
 
 			UI.DispatchEvents();
-
 			scene.Think(deltaTime);
 
 			scene.Draw(camera.camera);
 			scene.DrawDebug3D(camera.camera);
 			EndMode3D();
+
 			scene.DrawDebug();
 			scene.DrawUI();
 			imguiController.Draw();

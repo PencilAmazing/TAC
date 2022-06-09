@@ -16,11 +16,11 @@ namespace TAC.World
 		public ResourceCache cache;
 		public Renderer renderer { get; }
 		public Position size { get; }
-		public bool isEdit { get; private set; }
+		public bool isEdit;
 
 		private Stack<DebugText> debugStack;
 
-		private Action currentAction;
+		public Action currentAction;
 
 		public Scene(Position size, Renderer renderer, ResourceCache cache, bool isEdit)
 		{
@@ -131,25 +131,34 @@ namespace TAC.World
 		/// <param name="dir">Direction to walk towards</param>
 		public bool TestDirection(Position pos, UnitDirection dir)
 		{
+			// I really hope the compiler fixes this
 			int x = pos.x;
 			int z = pos.z;
 			// Can't be arsed to inline
+			// Walls around this tile
 			bool north = floor.GetTile(x, z).North > 0;
 			bool west = floor.GetTile(x, z).West > 0;
 			bool south = floor.GetTile(x, z + 1).North > 0;
 			bool east = floor.GetTile(x + 1, z).West > 0;
-			return dir switch
-			{
-				UnitDirection.North => north,
-				UnitDirection.West => west,
-				UnitDirection.South => south,
-				UnitDirection.East => east,
-				UnitDirection.NorthEast => north || east,
-				UnitDirection.NorthWest => north || west,
-				UnitDirection.SouthEast => south || east,
-				UnitDirection.SouthWest => south || west,
-				_ => false
-			};
+
+			if (dir == UnitDirection.North)
+				return north;
+			if (dir == UnitDirection.West)
+				return west;
+			if (dir == UnitDirection.South)
+				return south;
+			if (dir == UnitDirection.East)
+				return east;
+
+			if (dir == UnitDirection.NorthEast) {
+				return north || east || floor.GetTile(x + 1, z - 1).West > 0 || floor.GetTile(x + 1, z).North > 0;
+			} else if (dir == UnitDirection.NorthWest) {
+				return north || west || floor.GetTile(x, z - 1).West > 0 || floor.GetTile(x - 1, z).North > 0;
+			} else if (dir == UnitDirection.SouthEast) {
+				return south || east || floor.GetTile(x + 1, z + 1).North > 0 || floor.GetTile(x + 1, z + 1).West > 0;
+			} else if (dir == UnitDirection.SouthWest) {
+				return south || west || floor.GetTile(x - 1, z + 1).North > 0 || floor.GetTile(x, z + 1).West > 0;
+			} else return false;
 		}
 
 		public void AddUnit(Unit unit)
@@ -174,15 +183,6 @@ namespace TAC.World
 		public Unit GetUnit(Position pos)
 		{
 			return floor.GetTile(pos.x, pos.z).unit;
-		}
-
-		public void SetEditMode(bool isEdit)
-		{
-			if (this.isEdit == isEdit) return;
-
-
-
-			this.isEdit = isEdit;
 		}
 	}
 }

@@ -26,7 +26,7 @@ namespace TAC
 			while (!WindowShouldClose()) // Detect window close button or ESC key
 			{
 				float dt = GetFrameTime();
-				engine.Update(dt);
+				engine.Shmove(dt);
 			}
 
 			CloseWindow();

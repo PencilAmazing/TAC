@@ -75,6 +75,10 @@ namespace TAC.Logic
 				}
 			}
 
+			if(!camefrom.ContainsKey(goal)) {
+				return false;
+			}
+
 			// reconstruct path
 			Position step = goal;
 			while (step != start) {
