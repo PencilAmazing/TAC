@@ -201,19 +201,17 @@ namespace TAC.Editor
 					writer.WriteLine(str);
 					str.Clear();
 				}
-				if (scene is GameScene) {
-					writer.WriteLine("[Units]");
-					foreach (Unit unit in (scene as GameScene).units) {
-						str.Append(unit.type);
-						str.Append(',');
-						str.Append(unit.name);
-						str.Append(',');
-						str.Append(unit.position.ToString());
-						str.Append(',');
-						str.Append(unit.direction.ToString());
-						writer.Write(str);
-						str.Clear();
-					}
+				writer.WriteLine("[Units]");
+				foreach (Unit unit in scene.units) {
+					str.Append(unit.type);
+					str.Append(',');
+					str.Append(unit.name);
+					str.Append(',');
+					str.Append(unit.position.ToString());
+					str.Append(',');
+					str.Append(unit.direction.ToString());
+					writer.Write(str);
+					str.Clear();
 				}
 
 				writer.WriteLine("[Floor]");

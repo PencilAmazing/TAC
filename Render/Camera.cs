@@ -1,16 +1,15 @@
 ﻿using Raylib_cs;
+using System;
 using System.Numerics;
+using TAC.UISystem;
+using TAC.World;
 using static Raylib_cs.CameraProjection;
 using static Raylib_cs.KeyboardKey;
 using static Raylib_cs.Raylib;
-using System;
-using TAC.Editor;
-using TAC.World;
-using TAC.UISystem;
 
 namespace TAC.Render
 {
-	class CameraControl
+	public class CameraControl
 	{
 		public Camera3D camera;
 		public float speed;
@@ -111,7 +110,7 @@ namespace TAC.Render
 				if (selected.unit != null)
 					selectedUnit = selected.unit; // Shouldn't matter
 				else
-					(scene as GameScene).MoveUnit(selectedUnit, position);
+					scene.MoveUnit(selectedUnit, position);
 			}
 
 			if (selectedUnit != null)
@@ -143,11 +142,11 @@ namespace TAC.Render
 			DrawSphereWires(position.ToVector3() + diff / 2, 0.1f, 4, 4, Color.BLUE);
 
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
-				(scene as EditorScene).ToggleBrush(position, wall, 1);
-				(scene as EditorScene).ToggleWall(position, wall);
+				scene.ToggleBrush(position, wall, 1);
+				scene.ToggleWall(position, wall);
 			}
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
-				(scene as EditorScene).ToggleWall(position, (Wall)((byte)wall<<2));
+				scene.ToggleWall(position, (Wall)((byte)wall<<2));
 			}
 		}
 
