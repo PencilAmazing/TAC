@@ -1,20 +1,24 @@
 ﻿using Raylib_cs;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using TAC.World;
 using static Raylib_cs.MaterialMapIndex;
 using static Raylib_cs.Raylib;
 using static Raylib_cs.ShaderUniformDataType;
 
-namespace TAC.Render
+namespace TAC.Editor
 {
 	// Maps textures loaded in memory to tile IDs
-	class ResourceCache
+	public class ResourceCache
 	{
 		private string AssetTilePrefix = "assets/tile/";
 		private string AssetUnitPrefix = "assets/unit/";
 		private string AssetShaderPrefix = "assets/shader/";
 		private string AssetScenePrefix = "assets/scene/";
+		private string AssetSaveDirectory = "assets/save";
 
-		// promise me you won't touch anything
+		// Texture locations in the wall shader.
 		public int toploc;
 		public int bottomloc;
 		public int leftloc;
@@ -35,6 +39,10 @@ namespace TAC.Render
 		public List<Texture2D> units { get; }
 		public List<Texture2D> items { get; }
 
+		public List<Brush> brushes { get; }
+
+		public List<Model> things { get; }
+
 		public Shader BillboardShader;
 		public Shader SkyboxShader;
 		public Shader WallShader;
@@ -51,7 +59,38 @@ namespace TAC.Render
 			tiles = new List<Texture2D>();
 			units = new List<Texture2D>();
 			items = new List<Texture2D>();
+			brushes = new List<Brush>();
+			brushes.Add(null); // reserve 0 slot
 		}
+
+		~ResourceCache()
+		{
+			foreach (Texture2D tex in tiles)
+				UnloadTexture(tex);
+			foreach (Texture2D tex in units)
+				UnloadTexture(tex);
+			foreach (Texture2D tex in items)
+				UnloadTexture(tex);
+
+			UnloadShader(BillboardShader);
+			UnloadShader(SkyboxShader);
+
+			UnloadMesh(ref cube);
+			UnloadMaterial(wallMaterial);
+			UnloadMaterial(SkyboxMaterial);
+			UnloadTexture(SkyboxCubemap);
+
+			foreach (Model model in things)
+				UnloadModel(model);
+
+		}
+
+		public int CreateBrush(Brush brush)
+		{
+			brushes.Add(brush);
+			return brushes.Count - 1;
+		}
+
 
 		public int LoadTexture(string ImagePath, TextureType type)
 		{
@@ -75,21 +114,6 @@ namespace TAC.Render
 					break;
 			}
 			return -1;
-		}
-
-		~ResourceCache()
-		{
-			foreach (Texture2D tex in tiles)
-				UnloadTexture(tex);
-			foreach (Texture2D tex in units)
-				UnloadTexture(tex);
-			foreach (Texture2D tex in items)
-				UnloadTexture(tex);
-
-			UnloadShader(BillboardShader);
-			UnloadShader(SkyboxShader);
-
-			UnloadMesh(ref cube);
 		}
 
 		private void LoadTiles()
@@ -124,7 +148,9 @@ namespace TAC.Render
 			frontloc = GetShaderLocation(WallShader, "front");
 		}
 
-		private void UploadMeshes()
+
+		// Interally generated meshes only please
+		private void GenerateUploadMeshes()
 		{
 			// GenMesh uploads data to GPU
 			cube = GenMeshCube(1, 1, 1);
@@ -141,13 +167,82 @@ namespace TAC.Render
 			//SetMaterialTexture(ref wallMaterial, MATERIAL_MAP_DIFFUSE, tiles[1]);
 		}
 
+		private void LoadBrushes()
+		{
+			CreateBrush(new Brush(1, 1, 1, 1, 1, 1));
+			CreateBrush(new Brush(1, 2, 3, 4, 5, 6));
+		}
+
+		private void LoadMeshes()
+		{
+			//string[] files = System.IO.Directory.GetFiles(AssetScenePrefix + "things", "*.thg");
+		}
+
 		public void LoadAssets()
 		{
 			// DONT CHANGE ORDER!
 			LoadTiles();
 			LoadUnits();
 			LoadShaders();
-			UploadMeshes();
+			GenerateUploadMeshes();
+			LoadBrushes();
+			LoadMeshes();
+		}
+
+		public bool WriteSceneToDisk(Scene scene, string filename = "huh.tac")
+		{
+			StringBuilder str = new StringBuilder();
+			using (StreamWriter writer = new StreamWriter(Path.Combine(AssetSaveDirectory, filename))) {
+				// Write Brushes
+				writer.Write("[Brush]");
+				// brushid = texture ids
+				foreach (Brush brush in brushes) {
+					str.AppendJoin(',', brush.faces);
+					writer.WriteLine(str);
+					str.Clear();
+				}
+				if (scene is GameScene) {
+					writer.WriteLine("[Units]");
+					foreach (Unit unit in (scene as GameScene).units) {
+						str.Append(unit.type);
+						str.Append(',');
+						str.Append(unit.name);
+						str.Append(',');
+						str.Append(unit.position.ToString());
+						str.Append(',');
+						str.Append(unit.direction.ToString());
+						writer.Write(str);
+						str.Clear();
+					}
+				}
+
+				writer.WriteLine("[Floor]");
+				writer.Write(scene.floor.length);
+				writer.Write(',');
+				writer.WriteLine(scene.floor.width);
+				writer.Write(',');
+				foreach (Tile tile in scene.floor.map) {
+					str.AppendJoin(',', tile.type, tile.North, tile.West, tile.thing, tile.walls);
+					writer.Write(str);
+					str.Clear();
+				}
+				writer.Write('\n');
+			}
+
+			return true;
+		}
+
+		public bool LoadSceneFromDisk(ref Scene scene, string filename)
+		{
+			using (StreamReader reader = new(Path.Combine(AssetSaveDirectory, filename))) {
+				while (!reader.EndOfStream) {
+					string line = reader.ReadLine();
+					if (line[0] == '[') {
+
+					}
+				}
+			}
+			return true;
 		}
 	}
 }

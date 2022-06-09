@@ -31,6 +31,11 @@ namespace TAC.World
 			return new Vector3(x, y, z);
 		}
 
+		public override string ToString()
+		{
+			return x.ToString() + ',' + y.ToString() + ',' + z.ToString();
+		}
+
 		public override bool Equals(object obj)
 		{
 			return obj is Position position &&

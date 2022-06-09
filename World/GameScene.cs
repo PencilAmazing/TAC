@@ -2,13 +2,12 @@
 using TAC.Render;
 using TAC.Logic;
 using Raylib_cs;
+using TAC.Editor;
 
 namespace TAC.World
 {
 	class GameScene : Scene
 	{
-		public List<Unit> units { get; }
-
 		private Action currentAction;
 
 		public GameScene(Position size, Renderer renderer, ResourceCache cache)

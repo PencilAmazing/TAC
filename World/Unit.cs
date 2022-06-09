@@ -46,10 +46,6 @@ namespace TAC.World
 
 		public void Think(float deltaTime)
 		{
-			if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)) {
-				direction = (UnitDirection)((int)(direction + 1) % 8);
-			}
 		}
-
 	}
 }

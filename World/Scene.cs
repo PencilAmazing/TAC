@@ -2,20 +2,25 @@
 using System.Numerics;
 using System.Collections.Generic;
 using TAC.Render;
+using TAC.Editor;
 
 namespace TAC.World
 {
-	class Scene
+	public class Scene
 	{
+		public List<Unit> units;
+
 		public Floor floor;
 
-		protected ResourceCache cache;
+		public ResourceCache cache;
 		public Renderer renderer { get; }
+		public Position size { get; }
 
 		private Stack<DebugText> debugStack;
 
 		public Scene(Position size, Renderer renderer, ResourceCache cache)
 		{
+			this.size = size;
 			this.cache = cache;
 			this.renderer = renderer;
 			floor = new Floor(size.x, size.y);
@@ -35,19 +40,15 @@ namespace TAC.World
 			for (int i = 0; i < floor.length; i++) {
 				for (int j = 0; j < floor.width; j++) {
 					Tile tile = floor.GetTile(i, j);
-					if (tile.North == Brush.nullBrush && tile.West == Brush.nullBrush) continue;
-					if (tile.North != Brush.nullBrush)
-						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), tile.North, cache);
-					if (tile.West != Brush.nullBrush)
-						renderer.DrawWall(camera, new Vector3(i, 0, j), true, tile.HasWall(Wall.FlipWest), tile.West, cache);
+					if (tile.North > 0)
+						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), cache.brushes[tile.North], cache);
+					if (tile.West > 0)
+						renderer.DrawWall(camera, new Vector3(i, 0, j), true, tile.HasWall(Wall.FlipWest), cache.brushes[tile.West], cache);
 				}
 			}
 		}
 
-		public void PushDebugText(DebugText text)
-		{
-			debugStack.Push(text);
-		}
+		public void PushDebugText(DebugText text) => debugStack.Push(text);
 
 		public void DrawDebug()
 		{
@@ -59,6 +60,7 @@ namespace TAC.World
 		}
 
 		public virtual void DrawDebug3D(Camera3D camera) { return; }
+		public virtual void DrawUI() { return; }
 
 		public Model GetFloorQuad()
 		{
@@ -85,10 +87,10 @@ namespace TAC.World
 			int x = pos.x;
 			int z = pos.z;
 			// Can't be arsed to inline
-			bool north = floor.GetTile(x, z).North != Brush.nullBrush;
-			bool west = floor.GetTile(x, z).West != Brush.nullBrush;
-			bool south = floor.GetTile(x, z + 1).North != Brush.nullBrush;
-			bool east = floor.GetTile(x + 1, z).West != Brush.nullBrush;
+			bool north = floor.GetTile(x, z).North > -1;
+			bool west = floor.GetTile(x, z).West > -1;
+			bool south = floor.GetTile(x, z + 1).North > -1;
+			bool east = floor.GetTile(x + 1, z).West > -1;
 			return dir switch
 			{
 				UnitDirection.North => north,
@@ -102,6 +104,5 @@ namespace TAC.World
 				_ => false
 			};
 		}
-
 	}
 }

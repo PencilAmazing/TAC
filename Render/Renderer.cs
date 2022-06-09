@@ -5,10 +5,11 @@ using System.Numerics;
 using static Raylib_cs.Raylib;
 using TAC.World;
 using static Raylib_cs.Raymath;
+using TAC.Editor;
 
 namespace TAC.Render
 {
-	struct DebugText
+	public struct DebugText
 	{
 		public string text;
 		public int posx;
@@ -28,7 +29,7 @@ namespace TAC.Render
 
 
 	// Consider making static?
-	class Renderer
+	public class Renderer
 	{
 		public Renderer() { }
 

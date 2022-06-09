@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ImGui.NET" Version="1.87.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Raylib-cs\Raylib-cs\Raylib-cs.csproj" />
   </ItemGroup>
 

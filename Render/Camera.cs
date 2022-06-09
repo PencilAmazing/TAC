@@ -6,6 +6,7 @@ using static Raylib_cs.Raylib;
 using System;
 using TAC.Editor;
 using TAC.World;
+using TAC.UISystem;
 
 namespace TAC.Render
 {
@@ -106,7 +107,7 @@ namespace TAC.Render
 			if (selected != Tile.nullTile)
 				DrawCubeWiresV(position.ToVector3(), Vector3.One, Color.ORANGE);
 
-			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) {
+			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				if (selected.unit != null)
 					selectedUnit = selected.unit; // Shouldn't matter
 				else
@@ -141,11 +142,11 @@ namespace TAC.Render
 
 			DrawSphereWires(position.ToVector3() + diff / 2, 0.1f, 4, 4, Color.BLUE);
 
-			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) {
-				(scene as EditorScene).ToggleBrush(position, wall, Brush.One);
+			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
+				(scene as EditorScene).ToggleBrush(position, wall, 1);
 				(scene as EditorScene).ToggleWall(position, wall);
 			}
-			if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)) {
+			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
 				(scene as EditorScene).ToggleWall(position, (Wall)((byte)wall<<2));
 			}
 		}

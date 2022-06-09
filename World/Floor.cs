@@ -3,14 +3,14 @@ using System.Numerics;
 using static Raylib_cs.Color;
 using static Raylib_cs.MaterialMapIndex;
 using static Raylib_cs.Raylib;
-using TAC.Render;
+using TAC.Editor;
 
 namespace TAC.World
 {
 	/// <summary>
 	/// Representation of floor tiles and static objects
 	/// </summary>
-	class Floor
+	public class Floor
 	{
 		public int length { get; }
 		public int width { get; }
