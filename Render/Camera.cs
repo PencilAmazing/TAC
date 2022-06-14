@@ -9,6 +9,7 @@ using static Raylib_cs.Raylib;
 
 namespace TAC.Render
 {
+	// Should really separate camera and control
 	public class CameraControl
 	{
 		public Camera3D camera;
@@ -17,7 +18,7 @@ namespace TAC.Render
 		private Vector2 angle = new(0.0f, MathF.PI / 6);
 		private float zoom = 10.0f;
 
-		private Unit selectedUnit;
+		public Unit selectedUnit { get; private set; }
 		private Scene scene;
 
 		public CameraControl(Scene scene, float speed = 0.5f)
@@ -31,7 +32,6 @@ namespace TAC.Render
 			camera.projection = CAMERA_PERSPECTIVE;
 
 			SetCameraMode(camera, CameraMode.CAMERA_CUSTOM);
-			//SetCameraMoveControls(KeyboardKey.KEY_W, KeyboardKey.KEY_S, KeyboardKey.KEY_D, KeyboardKey.KEY_A, KeyboardKey.KEY_Q, KeyboardKey.KEY_E);
 
 			this.speed = speed;
 			selectedUnit = null;
@@ -113,8 +113,8 @@ namespace TAC.Render
 					scene.MoveUnit(selectedUnit, position);
 			}
 
-			if (selectedUnit != null)
-				scene.PushDebugText(new DebugText(selectedUnit.name, 10, 10, 21, Color.BLACK));
+			//if (selectedUnit != null)
+				//scene.PushDebugText(new DebugText(selectedUnit.name, 10, 10, 21, Color.BLACK));
 		}
 
 		public void UpdateEditControl()

@@ -60,14 +60,21 @@ namespace TAC.Inner
 			SetNextWindowPos(Vector2.Zero);
 
 			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-			Begin("huh", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
+			Begin("controls", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
 
-			if (Button("Play", new Vector2(150, 40))) {
+			if (Button("Edit", new Vector2(150, 40))) {
 				UIEventQueue.EventQueue.Enqueue(new UIEvent(ToggleGameMode));
 			}
-
-			PopStyleVar();
 			End();
+
+			if (camera.selectedUnit != null) {
+				SetNextWindowPos(Vector2.UnitY * screenHeight, ImGuiCond.None, Vector2.UnitY);
+				Begin("info", ImGuiWindowFlags.NoDecoration);
+				SetWindowFontScale(1.5f);
+				Text(camera.selectedUnit.name);
+				End();
+			}
+			PopStyleVar();
 		}
 
 		public void ToggleGameMode() => SetGameMode(!scene.isEdit);
