@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TAC.Render;
 using TAC.Editor;
 using TAC.Logic;
+using static System.Math;
 
 namespace TAC.World
 {
@@ -20,7 +21,7 @@ namespace TAC.World
 
 		private Stack<DebugText> debugStack;
 
-		public Action currentAction;
+		private Action currentAction;
 
 		public Scene(Position size, Renderer renderer, ResourceCache cache, bool isEdit)
 		{
@@ -40,11 +41,11 @@ namespace TAC.World
 		public virtual void Think(float deltaTime)
 		{
 			foreach (Unit unit in units)
-				unit.Think(deltaTime);
+				unit.Think(deltaTime); // Is this necessary? Make it opt in if anything
 
 			if (currentAction != null) {
 				currentAction.Think(deltaTime);
-				if (currentAction.isDone) currentAction = null;
+				if (currentAction.isDone) ClearCurrentAction();
 			}
 		}
 
@@ -81,11 +82,17 @@ namespace TAC.World
 
 		public virtual void DrawDebug3D(Camera3D camera)
 		{
-			ActionMoveUnit action = currentAction as ActionMoveUnit;
-			if (action != null)
-				renderer.DrawDebugPath(action.path.path.ToArray());
+			ActionMoveUnit move = GetCurrentAction() as ActionMoveUnit;
+			if (move != null) {
+				renderer.DrawDebugPath(move.path.path.ToArray());
+				return;
+			}
+			ActionSelectTarget select = GetCurrentAction() as ActionSelectTarget;
+			if(select != null) {
+				renderer.DrawDebugPath(select.line.ToArray());
+				return;
+			}
 		}
-		public virtual void DrawUI() { return; }
 
 		public Model GetFloorQuad()
 		{
@@ -95,6 +102,15 @@ namespace TAC.World
 		public Tile GetTile(Position pos)
 		{
 			return floor.GetTile(pos.x, pos.z);
+		}
+
+		/// <summary>
+		/// Is position within size of scene?
+		/// </summary>
+		public bool IsTileWithinBounds(Position pos)
+		{
+			return pos.x > 0 && pos.y > 0 && pos.z > 0 &&
+				   pos.x < size.x && pos.y < size.y && pos.z < size.z;
 		}
 
 		public bool IsTileOccupied(Position pos)
@@ -123,6 +139,56 @@ namespace TAC.World
 					floor[pos.x, pos.z].West = brushID;
 				ToggleWall(pos, wall);
 			}
+		}
+
+		// https://www.redblobgames.com/grids/line-drawing.html#supercover
+		// https://github.com/cgyurgyik/fast-voxel-traversal-algorithm/blob/master/overview/FastVoxelTraversalOverview.md
+		public List<Position> GetSupercoverLine(Position origin, Position p1)
+		{
+			Vector3 ray = Vector3.Normalize((p1 - origin).ToVector3());
+
+			int stepX = Abs(ray.X) < float.Epsilon ? 0 : (ray.X < 0 ? -1 : 1);
+			int stepY = Abs(ray.Y) < float.Epsilon ? 0 : (ray.Y < 0 ? -1 : 1);
+			int stepZ = Abs(ray.Z) < float.Epsilon ? 0 : (ray.Z < 0 ? -1 : 1);
+
+			int X = origin.x;
+			int Y = origin.y;
+			int Z = origin.z;
+			float tMaxX = (X - origin.x) / ray.X;
+			float tMaxY = (Y - origin.y) / ray.Y;
+			float tMaxZ = (Z - origin.z) / ray.Z;
+
+			float tDeltaX = 1 / ray.X;
+			float tDeltaY = 1 / ray.Y;
+			float tDeltaZ = 1 / ray.Z;
+			List<Position> points = new List<Position>() { origin };
+
+			do {
+				if (tMaxX < tMaxY) {
+					if (tMaxX < tMaxZ) {
+						X = X + stepX;
+						if (X >= this.size.x) return points; /* outside grid */
+						tMaxX = tMaxX + tDeltaX;
+					} else {
+						Z = Z + stepZ;
+						if (Z >= size.z) return points;
+						tMaxZ = tMaxZ + tDeltaZ;
+					}
+				} else {
+					if (tMaxY < tMaxZ) {
+						Y = Y + stepY;
+						if (Y >= size.y) return points;
+						tMaxY = tMaxY + tDeltaY;
+					} else {
+						Z = Z + stepZ;
+						if (Z == size.y) return points;
+						tMaxZ = tMaxZ + tDeltaZ;
+					}
+					points.Add(new Position(X, Y, Z));
+				}
+			} while (X != p1.x && Y != p1.y && Z != p1.z);
+
+			return points;
 		}
 
 		/// <summary>
@@ -161,6 +227,10 @@ namespace TAC.World
 			} else return false;
 		}
 
+		public Action GetCurrentAction() => currentAction;
+		public void SetCurrentAction(Action action) => currentAction = action;
+		public void ClearCurrentAction() => currentAction = null;
+
 		public void AddUnit(Unit unit)
 		{
 			if (unit == null)
@@ -171,13 +241,20 @@ namespace TAC.World
 			floor.SetTile(unit.position, tile);
 		}
 
-		public void MoveUnit(Unit unit, Position goal)
+		public void PushActionMoveUnit(Unit unit, Position goal)
 		{
 			if (unit == null) return;
 			Pathfinding path = new Pathfinding(this);
 			if (path.FindPathForUnit(unit, goal)) {
-				currentAction = new ActionMoveUnit(this, path);
+				SetCurrentAction(new ActionMoveUnit(this, path));
 			}
+		}
+
+		public void PushActionSelectTarget(Unit unit, Item item, Position target)
+		{
+			if (unit != null && IsTileWithinBounds(target))
+				SetCurrentAction(new ActionSelectTarget(this, unit, item, target));
+
 		}
 
 		public Unit GetUnit(Position pos)

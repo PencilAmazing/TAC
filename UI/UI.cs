@@ -21,27 +21,28 @@ namespace TAC.UISystem
 			return new Color((byte)(clearColor.X * 255), (byte)(clearColor.Y * 255), (byte)(clearColor.Z * 255), (byte)255);
 		}
 
-		public void Load()
-		{
+		public void Load() { }
 
-		}
-
-		public void Unload()
-		{
-
-		}
+		public void Unload() { }
 
 		public static void DispatchEvents()
 		{
-			while(UIEventQueue.EventQueue.Count > 0) {
-				UIEvent ev = UIEventQueue.EventQueue.Dequeue();
-				ev.del();
+			while (UIEventQueue.EventQueue.Count > 0) {
+				UIEventDelegate del = UIEventQueue.EventQueue.Dequeue();
+				del();
 			}
 		}
 
 		public static bool IsMouseUnderUI()
 		{
 			return ImGui.GetIO().WantCaptureMouse;
+		}
+
+		public static void ButtonWithCallback(string name, Vector2 size, UIEventDelegate callback)
+		{
+			if (Button(name, size)) {
+				UIEventQueue.PushEvent(callback);
+			}
 		}
 
 		public static bool GetMouseButtonPress(MouseButton button)
@@ -51,24 +52,7 @@ namespace TAC.UISystem
 
 		public void Update(float dt)
 		{
-			//PushFont(font1);
-
-			SetNextWindowPos(Vector2.Zero);
-
-			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-			Begin("huh", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
-
-			if (Button("Play", new Vector2(150, 40))) {
-				UIEventQueue.EventQueue.Enqueue(SaveFunctionDelegate);
-			}
-			SameLine();
-			if (Button("Load level", new Vector2(150, 40))) {
-				UIEventQueue.EventQueue.Enqueue(LoadFunctionDelegate);
-			}
-
-			PopStyleVar();
-			//PopFont();
-			End();
+			return;
 		}
 	}
 }

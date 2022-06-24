@@ -19,7 +19,7 @@ namespace TAC.Inner
 		public ResourceCache cache;
 		public Renderer renderer;
 		public UI ui;
-		public CameraControl camera;
+		public PlayerController player;
 
 		private ImguiController imguiController;
 
@@ -37,7 +37,7 @@ namespace TAC.Inner
 
 			scene = new Scene(new Position(32, 32, 32), renderer, cache, false);
 
-			camera = new CameraControl(scene);
+			player = new PlayerController(scene);
 		}
 
 		public void DrawEditUI(float dt)
@@ -48,13 +48,14 @@ namespace TAC.Inner
 			Begin("huh", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
 
 			if (Button("Play", new Vector2(150, 40))) {
-				UIEventQueue.EventQueue.Enqueue(new UIEvent(ToggleGameMode));
+				UIEventQueue.EventQueue.Enqueue(ToggleGameMode);
 			}
 
 			PopStyleVar();
 			End();
 		}
 
+		// Move this to UI class for god's sake
 		public void DrawGameUI(float dt)
 		{
 			SetNextWindowPos(Vector2.Zero);
@@ -63,17 +64,28 @@ namespace TAC.Inner
 			Begin("controls", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
 
 			if (Button("Edit", new Vector2(150, 40))) {
-				UIEventQueue.EventQueue.Enqueue(new UIEvent(ToggleGameMode));
+				UIEventQueue.PushEvent(ToggleGameMode);
 			}
 			End();
 
-			if (camera.selectedUnit != null) {
+			if (player.selectedUnit != null) {
 				SetNextWindowPos(Vector2.UnitY * screenHeight, ImGuiCond.None, Vector2.UnitY);
 				Begin("info", ImGuiWindowFlags.NoDecoration);
 				SetWindowFontScale(1.5f);
-				Text(camera.selectedUnit.name);
+				Text(player.selectedUnit.name);
+				End();
+
+				SetNextWindowPos(new Vector2(screenWidth, screenHeight), ImGuiCond.None, Vector2.One);
+				Begin("Onhand", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
+				//SetWindowFontScale(1.5f);
+				if (player.selectedUnit.inventory.Count > 0) {
+					Item item = player.selectedUnit.inventory[0];
+					UI.ButtonWithCallback(item.name, new Vector2(200, 40), player.StartSelectingTarget);
+				}
+
 				End();
 			}
+
 			PopStyleVar();
 		}
 
@@ -84,7 +96,7 @@ namespace TAC.Inner
 			scene.isEdit = isEdit;
 			if (scene.isEdit == true) {
 				// Cancel current action
-				scene.currentAction = null;
+				scene.ClearCurrentAction();
 			}
 		}
 
@@ -103,25 +115,25 @@ namespace TAC.Inner
 			else
 				DrawGameUI(deltaTime);
 
-			camera.UpdateCamera();
+			player.camera.UpdateCamera(scene.size.ToVector3());
 			BeginDrawing();
 			ClearBackground(Color.RAYWHITE);
-			BeginMode3D(camera.camera);
+			BeginMode3D(player.camera.camera);
 
 			if (scene.isEdit)
-				camera.UpdateEditControl();
+				player.UpdateEditControl();
 			else
-				camera.UpdateGameControl();
+				player.UpdateGameControl();
 
 			UI.DispatchEvents();
 			scene.Think(deltaTime);
 
-			scene.Draw(camera.camera);
-			scene.DrawDebug3D(camera.camera);
+			scene.Draw(player.camera.camera);
+			scene.DrawDebug3D(player.camera.camera);
 			EndMode3D();
 
 			scene.DrawDebug();
-			scene.DrawUI();
+			//scene.DrawUI();
 			imguiController.Draw();
 			EndDrawing();
 		}

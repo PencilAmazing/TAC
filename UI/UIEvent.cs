@@ -19,6 +19,7 @@ namespace TAC.UISystem
 
 	public static class UIEventQueue
 	{
-		public static Queue<UIEvent> EventQueue = new();
+		public static Queue<UIEventDelegate> EventQueue = new();
+		public static void PushEvent(UIEventDelegate item) => EventQueue.Enqueue(item);
 	}
 }

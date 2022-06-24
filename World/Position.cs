@@ -31,6 +31,11 @@ namespace TAC.World
 			return new Vector3(x, y, z);
 		}
 
+		public static Position Abs(Position value)
+		{
+			return new Position(Math.Abs(value.x), Math.Abs(value.y), Math.Abs(value.z));
+		}
+
 		public override string ToString()
 		{
 			return x.ToString() + ',' + y.ToString() + ',' + z.ToString();

@@ -18,6 +18,7 @@ namespace TAC
 				engine.scene.ToggleBrush(new Position(0, 0, 0), Wall.West, 1);
 			} else {
 				engine.scene.AddUnit(new Unit(0, new Position(0, 0, 0), "Bruh-bot 9001", UnitDirection.North));
+				engine.scene.units[0].AddToInventory(new Item("Stick", 2));
 			}
 
 			//editor.SaveFunctionDelegate = new UIEvent(db.WriteSceneToDisk);
@@ -29,6 +30,7 @@ namespace TAC
 				engine.Shmove(dt);
 			}
 
+			engine.Shutdown();
 			CloseWindow();
 			return 0;
 		}

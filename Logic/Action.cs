@@ -17,9 +17,8 @@ namespace TAC.Logic
 			this.scene = scene;
 			this.isDone = false;
 		}
-		virtual public void Think(float deltaTime)
-		{
-			return;
-		}
+
+		virtual public void Think(float deltaTime) { }
+		virtual protected void Done() { isDone = true; }
 	}
 }
