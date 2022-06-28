@@ -20,6 +20,7 @@ namespace TAC.World
 		public bool isEdit;
 
 		private Stack<DebugText> debugStack;
+		public List<Position> debugPath;
 
 		private Action currentAction;
 
@@ -82,13 +83,17 @@ namespace TAC.World
 
 		public virtual void DrawDebug3D(Camera3D camera)
 		{
+			if (debugPath != null) {
+				renderer.DrawDebugPath(debugPath.ToArray());
+			}
+
 			ActionMoveUnit move = GetCurrentAction() as ActionMoveUnit;
 			if (move != null) {
 				renderer.DrawDebugPath(move.path.path.ToArray());
 				return;
 			}
 			ActionSelectTarget select = GetCurrentAction() as ActionSelectTarget;
-			if(select != null) {
+			if (select != null) {
 				renderer.DrawDebugPath(select.line.ToArray());
 				return;
 			}
@@ -109,7 +114,7 @@ namespace TAC.World
 		/// </summary>
 		public bool IsTileWithinBounds(Position pos)
 		{
-			return pos.x > 0 && pos.y > 0 && pos.z > 0 &&
+			return pos.x >= 0 && pos.y >= 0 && pos.z >= 0 &&
 				   pos.x < size.x && pos.y < size.y && pos.z < size.z;
 		}
 
@@ -143,50 +148,49 @@ namespace TAC.World
 
 		// https://www.redblobgames.com/grids/line-drawing.html#supercover
 		// https://github.com/cgyurgyik/fast-voxel-traversal-algorithm/blob/master/overview/FastVoxelTraversalOverview.md
+		// https://github.com/francisengelmann/fast_voxel_traversal/blob/master/main.cpp
 		public List<Position> GetSupercoverLine(Position origin, Position p1)
 		{
-			Vector3 ray = Vector3.Normalize((p1 - origin).ToVector3());
+			Vector3 ray = ((p1 - origin).ToVector3());
 
 			int stepX = Abs(ray.X) < float.Epsilon ? 0 : (ray.X < 0 ? -1 : 1);
 			int stepY = Abs(ray.Y) < float.Epsilon ? 0 : (ray.Y < 0 ? -1 : 1);
 			int stepZ = Abs(ray.Z) < float.Epsilon ? 0 : (ray.Z < 0 ? -1 : 1);
 
-			int X = origin.x;
-			int Y = origin.y;
-			int Z = origin.z;
-			float tMaxX = (X - origin.x) / ray.X;
-			float tMaxY = (Y - origin.y) / ray.Y;
-			float tMaxZ = (Z - origin.z) / ray.Z;
+			if (stepX == 0 && stepY == 0 && stepZ == 0) return null;
+			//int X = origin.x;
+			//int Y = origin.y;
+			//int Z = origin.z;
+			Position i = origin;
+			float tMaxX = stepX != 0 ? (i.x + stepX - origin.x) / ray.X : float.MaxValue;
+			float tMaxY = stepY != 0 ? (i.y + stepY - origin.y) / ray.Y : float.MaxValue;
+			float tMaxZ = stepZ != 0 ? (i.z + stepZ - origin.z) / ray.Z : float.MaxValue;
 
-			float tDeltaX = 1 / ray.X;
-			float tDeltaY = 1 / ray.Y;
-			float tDeltaZ = 1 / ray.Z;
+			float tDeltaX = stepX != 0 ? 1 / ray.X * stepX : float.MaxValue;
+			float tDeltaY = stepY != 0 ? 1 / ray.Y * stepY : float.MaxValue;
+			float tDeltaZ = stepZ != 0 ? 1 / ray.Z * stepZ : float.MaxValue;
 			List<Position> points = new List<Position>() { origin };
 
-			do {
+			while (IsTileWithinBounds(i)) {
 				if (tMaxX < tMaxY) {
 					if (tMaxX < tMaxZ) {
-						X = X + stepX;
-						if (X >= this.size.x) return points; /* outside grid */
-						tMaxX = tMaxX + tDeltaX;
+						i.x += stepX;
+						tMaxX += tDeltaX;
 					} else {
-						Z = Z + stepZ;
-						if (Z >= size.z) return points;
-						tMaxZ = tMaxZ + tDeltaZ;
+						i.z += stepZ;
+						tMaxZ += tDeltaZ;
 					}
 				} else {
 					if (tMaxY < tMaxZ) {
-						Y = Y + stepY;
-						if (Y >= size.y) return points;
-						tMaxY = tMaxY + tDeltaY;
+						i.y += stepY;
+						tMaxY += tDeltaY;
 					} else {
-						Z = Z + stepZ;
-						if (Z == size.y) return points;
-						tMaxZ = tMaxZ + tDeltaZ;
+						i.z += stepZ;
+						tMaxZ += tDeltaZ;
 					}
-					points.Add(new Position(X, Y, Z));
 				}
-			} while (X != p1.x && Y != p1.y && Z != p1.z);
+				points.Add(i);
+			}
 
 			return points;
 		}

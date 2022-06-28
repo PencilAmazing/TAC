@@ -20,16 +20,16 @@ namespace TAC.Inner
 			WaitAction
 		}
 
-		public CameraControl camera;
-		public Unit selectedUnit { get; private set; }
 		private Scene scene;
 		private GameSelection mode;
+		public CameraControl camera;
+		public Unit selectedUnit { get; private set; }
 
 		public PlayerController(Scene scene, float speed = 0.5f)
 		{
 			this.scene = scene;
 			camera = new CameraControl(scene, speed);
-			this.mode = GameSelection.SelectUnit;
+			mode = GameSelection.SelectUnit;
 		}
 
 		// Has access to render loop
@@ -48,8 +48,10 @@ namespace TAC.Inner
 			} else if(mode == GameSelection.SelectTarget) {
 				// Potential target
 				Position potential = GetMouseTilePosition();
-				if(scene.IsTileWithinBounds(potential)) {
-					scene.PushActionSelectTarget(selectedUnit, selectedUnit.inventory[0], potential);
+				if(scene.IsTileWithinBounds(potential) && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
+					scene.debugPath = scene.GetSupercoverLine(selectedUnit.position, potential);
+					//scene.PushActionSelectTarget(selectedUnit, selectedUnit.inventory[0], potential);
+					this.mode = GameSelection.SelectUnit;
 				}
 			}
 		}
@@ -93,7 +95,7 @@ namespace TAC.Inner
 		/// </summary>
 		public void StartSelectingTarget()
 		{
-
+			this.mode = GameSelection.SelectTarget;
 		}
 
 		private Position GetMouseTilePosition()

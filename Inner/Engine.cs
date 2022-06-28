@@ -36,7 +36,6 @@ namespace TAC.Inner
 			renderer = new Renderer();
 
 			scene = new Scene(new Position(32, 32, 32), renderer, cache, false);
-
 			player = new PlayerController(scene);
 		}
 
