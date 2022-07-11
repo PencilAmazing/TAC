@@ -49,9 +49,9 @@ namespace TAC.Inner
 				// Potential target
 				Position potential = GetMouseTilePosition();
 				if(scene.IsTileWithinBounds(potential) && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
-					scene.debugPath = scene.GetSupercoverLine(selectedUnit.position, potential);
-					//scene.PushActionSelectTarget(selectedUnit, selectedUnit.inventory[0], potential);
+					//scene.debugPath = scene.GetSupercoverLine(selectedUnit.position, potential);
 					this.mode = GameSelection.SelectUnit;
+					scene.PushActionSelectTarget(selectedUnit, selectedUnit.inventory[0], potential);
 				}
 			}
 		}

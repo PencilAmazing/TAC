@@ -45,7 +45,7 @@ namespace TAC.World
 			UnloadRenderTexture(texture);
 		}
 
-		// Maybe move this to scene?
+		// I hate this
 		public ref Tile this[int x, int z]
 		{
 			get { return ref map[x, z]; }

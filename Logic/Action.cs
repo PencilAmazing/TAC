@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TAC.World;
+﻿using TAC.World;
 
 namespace TAC.Logic
 {
@@ -19,6 +14,6 @@ namespace TAC.Logic
 		}
 
 		virtual public void Think(float deltaTime) { }
-		virtual protected void Done() { isDone = true; }
+		virtual public void Done() { isDone = true; }
 	}
 }

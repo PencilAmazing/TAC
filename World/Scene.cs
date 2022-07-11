@@ -1,9 +1,9 @@
 ﻿using Raylib_cs;
-using System.Numerics;
 using System.Collections.Generic;
-using TAC.Render;
+using System.Numerics;
 using TAC.Editor;
 using TAC.Logic;
+using TAC.Render;
 using static System.Math;
 
 namespace TAC.World
@@ -11,6 +11,7 @@ namespace TAC.World
 	public class Scene
 	{
 		public List<Unit> units;
+		public List<ParticleEffect> particleEffects;
 
 		public Floor floor;
 
@@ -20,7 +21,7 @@ namespace TAC.World
 		public bool isEdit;
 
 		private Stack<DebugText> debugStack;
-		public List<Position> debugPath;
+		//public List<Position> debugPath;
 
 		private Action currentAction;
 
@@ -30,6 +31,7 @@ namespace TAC.World
 			this.cache = cache;
 			this.renderer = renderer;
 			this.units = new();
+			particleEffects = new();
 			this.isEdit = isEdit;
 			currentAction = null;
 
@@ -41,12 +43,18 @@ namespace TAC.World
 
 		public virtual void Think(float deltaTime)
 		{
-			foreach (Unit unit in units)
-				unit.Think(deltaTime); // Is this necessary? Make it opt in if anything
+			// Is this necessary? Make it opt in if anything
+			//foreach (Unit unit in units)
+			//unit.Think(deltaTime);
 
 			if (currentAction != null) {
 				currentAction.Think(deltaTime);
 				if (currentAction.isDone) ClearCurrentAction();
+			}
+
+			// Copy list
+			foreach (ParticleEffect effect in particleEffects.ToArray()) {
+				if (effect.phase < 0) particleEffects.Remove(effect);
 			}
 		}
 
@@ -67,6 +75,10 @@ namespace TAC.World
 			}
 
 			renderer.DrawUnits(camera, units, cache);
+			foreach (ParticleEffect effect in particleEffects) {
+				effect.phase += 1;
+				renderer.DrawEffect(camera, effect, cache);
+			}
 			renderer.DrawUnitDebug(camera, units, cache);
 		}
 
@@ -83,9 +95,7 @@ namespace TAC.World
 
 		public virtual void DrawDebug3D(Camera3D camera)
 		{
-			if (debugPath != null) {
-				renderer.DrawDebugPath(debugPath.ToArray());
-			}
+			//if (debugPath != null) renderer.DrawDebugPath(debugPath.ToArray());
 
 			ActionMoveUnit move = GetCurrentAction() as ActionMoveUnit;
 			if (move != null) {
@@ -94,20 +104,15 @@ namespace TAC.World
 			}
 			ActionSelectTarget select = GetCurrentAction() as ActionSelectTarget;
 			if (select != null) {
-				renderer.DrawDebugPath(select.line.ToArray());
+				renderer.DrawDebugPath(select.line);
+				renderer.DrawDebugLine(select.line[0].ToVector3(), select.line[select.line.Length - 1].ToVector3(), Color.BEIGE);
 				return;
 			}
 		}
 
-		public Model GetFloorQuad()
-		{
-			return floor.GetQuad();
-		}
+		public Model GetFloorQuad() => floor.GetQuad();
 
-		public Tile GetTile(Position pos)
-		{
-			return floor.GetTile(pos.x, pos.z);
-		}
+		public Tile GetTile(Position pos) => floor.GetTile(pos.x, pos.z);
 
 		/// <summary>
 		/// Is position within size of scene?
@@ -149,7 +154,7 @@ namespace TAC.World
 		// https://www.redblobgames.com/grids/line-drawing.html#supercover
 		// https://github.com/cgyurgyik/fast-voxel-traversal-algorithm/blob/master/overview/FastVoxelTraversalOverview.md
 		// https://github.com/francisengelmann/fast_voxel_traversal/blob/master/main.cpp
-		public List<Position> GetSupercoverLine(Position origin, Position p1)
+		public Position[] GetSupercoverLine(Position origin, Position p1)
 		{
 			Vector3 ray = ((p1 - origin).ToVector3());
 
@@ -158,9 +163,7 @@ namespace TAC.World
 			int stepZ = Abs(ray.Z) < float.Epsilon ? 0 : (ray.Z < 0 ? -1 : 1);
 
 			if (stepX == 0 && stepY == 0 && stepZ == 0) return null;
-			//int X = origin.x;
-			//int Y = origin.y;
-			//int Z = origin.z;
+
 			Position i = origin;
 			float tMaxX = stepX != 0 ? (i.x + stepX - origin.x) / ray.X : float.MaxValue;
 			float tMaxY = stepY != 0 ? (i.y + stepY - origin.y) / ray.Y : float.MaxValue;
@@ -192,7 +195,7 @@ namespace TAC.World
 				points.Add(i);
 			}
 
-			return points;
+			return points.ToArray();
 		}
 
 		/// <summary>
@@ -247,7 +250,7 @@ namespace TAC.World
 
 		public void PushActionMoveUnit(Unit unit, Position goal)
 		{
-			if (unit == null) return;
+			if (unit == null || currentAction != null) return;
 			Pathfinding path = new Pathfinding(this);
 			if (path.FindPathForUnit(unit, goal)) {
 				SetCurrentAction(new ActionMoveUnit(this, path));
@@ -256,14 +259,27 @@ namespace TAC.World
 
 		public void PushActionSelectTarget(Unit unit, Item item, Position target)
 		{
-			if (unit != null && IsTileWithinBounds(target))
+			// Don't push action if unit is null or there's 
+			// already an action in place
+			if (unit == null || currentAction != null) return;
+			if (IsTileWithinBounds(target)) {
 				SetCurrentAction(new ActionSelectTarget(this, unit, item, target));
-
+			}
 		}
 
 		public Unit GetUnit(Position pos)
 		{
 			return floor.GetTile(pos.x, pos.z).unit;
+		}
+
+		public void AddParticleEffect(ParticleEffect effect)
+		{
+			if (effect != null) particleEffects.Add(effect);
+		}
+
+		public void RemoveParticleEffect(ParticleEffect effect)
+		{
+			if (effect != null) particleEffects.Remove(effect);
 		}
 	}
 }

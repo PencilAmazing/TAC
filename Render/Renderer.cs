@@ -1,11 +1,11 @@
 ﻿using Raylib_cs;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
-using static Raylib_cs.Raylib;
-using TAC.World;
-using static Raylib_cs.Raymath;
 using TAC.Editor;
+using TAC.World;
+using static Raylib_cs.Raylib;
+using static Raylib_cs.Raymath;
 
 namespace TAC.Render
 {
@@ -25,8 +25,6 @@ namespace TAC.Render
 			this.color = color;
 		}
 	}
-
-
 
 	// Consider making static?
 	public class Renderer
@@ -56,6 +54,15 @@ namespace TAC.Render
 			}
 			EndShaderMode();
 		}
+
+		internal void DrawEffect(Camera3D camera, ParticleEffect effect, ResourceCache cache)
+		{
+			Texture2D misctex = cache.misc[effect.sprite.id];
+			int stage = effect.GetStage();
+			Rectangle rect = effect.sprite.GetRectangle(stage);
+			DrawBillboardPro(camera, misctex, rect, effect.position+Vector3.UnitY/2, Vector3.UnitY, Vector2.One*2, Vector2.Zero, 0, Color.WHITE);
+		}
+
 
 		public void DrawUnitDebug(Camera3D camera, List<Unit> units, ResourceCache cache)
 		{
@@ -128,5 +135,7 @@ namespace TAC.Render
 				DrawCubeV(positions[i].ToVector3(), Vector3.One / 2, ColorFromHSV(color, 0.5f, 0.5f));
 			}
 		}
+
+		public void DrawDebugLine(Vector3 from, Vector3 to, Color color) => Raylib.DrawLine3D(from, to, color);
 	}
 }

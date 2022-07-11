@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using TAC.Render;
 
 namespace TAC.World
 {
@@ -15,11 +11,15 @@ namespace TAC.World
 		public string name;
 		public int weight;
 		public ProjectileType projectileType;
+		public Sprite impactEffect;
+		public Sprite actionEffect;
 
-		public Item(string name, int weight, ProjectileType projectileType = ProjectileType.Straight)
+		public Item(string name, int weight, Sprite impactEffect, Sprite actionEffect, ProjectileType projectileType = ProjectileType.Straight)
 		{
 			this.name = name;
 			this.weight = weight;
+			this.impactEffect = impactEffect;
+			this.actionEffect = actionEffect;
 			this.projectileType = projectileType;
 		}
 	}

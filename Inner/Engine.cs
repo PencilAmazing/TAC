@@ -16,7 +16,7 @@ namespace TAC.Inner
 		public static int screenHeight = 750;
 
 		public Scene scene;
-		public ResourceCache cache;
+		public ResourceCache resourceCache;
 		public Renderer renderer;
 		public UI ui;
 		public PlayerController player;
@@ -31,11 +31,11 @@ namespace TAC.Inner
 			imguiController.Load(screenWidth, screenHeight);
 			ui.Load();
 
-			cache = new ResourceCache();
-			cache.LoadAssets();
+			resourceCache = new ResourceCache();
+			resourceCache.LoadAssets();
 			renderer = new Renderer();
 
-			scene = new Scene(new Position(32, 32, 32), renderer, cache, false);
+			scene = new Scene(new Position(32, 32, 32), renderer, resourceCache, false);
 			player = new PlayerController(scene);
 		}
 

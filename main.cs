@@ -1,4 +1,5 @@
 ﻿using TAC.Inner;
+using TAC.Render;
 using TAC.World;
 using static Raylib_cs.Raylib;
 
@@ -18,7 +19,12 @@ namespace TAC
 				engine.scene.ToggleBrush(new Position(0, 0, 0), Wall.West, 1);
 			} else {
 				engine.scene.AddUnit(new Unit(0, new Position(0, 0, 0), "Bruh-bot 9001", UnitDirection.North));
-				engine.scene.units[0].AddToInventory(new Item("Stick", 2));
+				// This all should be loaded by cache from 
+				Sprite impactEffect = new Sprite(0, 6, 32, 32);
+				//Sprite actionEffect = engine.resourceCache.sprites[1];
+				Item stick = new Item("Stick", 2, impactEffect, null);
+
+				engine.scene.units[0].AddToInventory(stick);
 			}
 
 			//editor.SaveFunctionDelegate = new UIEvent(db.WriteSceneToDisk);

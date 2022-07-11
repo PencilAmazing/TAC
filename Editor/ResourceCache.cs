@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using TAC.Render;
 using TAC.World;
 using static Raylib_cs.MaterialMapIndex;
 using static Raylib_cs.Raylib;
@@ -31,16 +32,19 @@ namespace TAC.Editor
 			TEX_TILE,
 			TEX_UNIT,
 			TEX_ITEM,
+			TEX_EFFECT,
 			TEX_MISC
 		}
 
 		// Might be inefficient, whatever
+		// Here's an idea: merge them all into one mega list
 		public List<Texture2D> tiles { get; }
 		public List<Texture2D> units { get; }
 		public List<Texture2D> items { get; }
+		public List<Texture2D> misc { get; }
 
+		public List<Sprite> sprites { get; }
 		public List<Brush> brushes { get; }
-
 		public List<Model> things { get; }
 
 		public Shader BillboardShader;
@@ -59,6 +63,7 @@ namespace TAC.Editor
 			tiles = new List<Texture2D>();
 			units = new List<Texture2D>();
 			items = new List<Texture2D>();
+			misc = new List<Texture2D>();
 			brushes = new List<Brush>();
 			brushes.Add(null); // reserve 0 slot
 		}
@@ -109,7 +114,8 @@ namespace TAC.Editor
 					items.Add(tex);
 					return items.Count - 1;
 				case TextureType.TEX_MISC:
-					break;
+					misc.Add(tex);
+					return misc.Count - 1;
 				default:
 					break;
 			}
@@ -132,6 +138,12 @@ namespace TAC.Editor
 			LoadTexture(AssetUnitPrefix + "mech.png", TextureType.TEX_UNIT);
 		}
 
+		private void LoadEffects()
+		{
+			LoadTexture(AssetScenePrefix + "sprite/explosion_11.png", TextureType.TEX_MISC);
+
+		}
+
 		private void LoadShaders()
 		{
 			BillboardShader = LoadShader(null, AssetShaderPrefix + "billboard.fs");
@@ -147,7 +159,6 @@ namespace TAC.Editor
 			backloc = GetShaderLocation(WallShader, "back");
 			frontloc = GetShaderLocation(WallShader, "front");
 		}
-
 
 		// Interally generated meshes only please
 		private void GenerateUploadMeshes()
@@ -183,6 +194,7 @@ namespace TAC.Editor
 			// DONT CHANGE ORDER!
 			LoadTiles();
 			LoadUnits();
+			LoadEffects();
 			LoadShaders();
 			GenerateUploadMeshes();
 			LoadBrushes();
