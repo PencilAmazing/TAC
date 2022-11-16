@@ -57,10 +57,12 @@ namespace TAC.Render
 
 		internal void DrawEffect(Camera3D camera, ParticleEffect effect, ResourceCache cache)
 		{
+			BeginShaderMode(cache.BillboardShader);
 			Texture2D misctex = cache.misc[effect.sprite.id];
 			int stage = effect.GetStage();
 			Rectangle rect = effect.sprite.GetRectangle(stage);
 			DrawBillboardPro(camera, misctex, rect, effect.position+Vector3.UnitY/2, Vector3.UnitY, Vector2.One*2, Vector2.Zero, 0, Color.WHITE);
+			EndShaderMode();
 		}
 
 
@@ -87,15 +89,16 @@ namespace TAC.Render
 
 		/// <summary>
 		/// angle multiplier modulo 4
+		/// rotate if drawing east/west wall
 		/// </summary>
 		public void DrawWall(Camera3D camera, Vector3 center, bool rotate, bool flip, Brush tex, ResourceCache cache)
 		{
-			// center tile
-			Matrix4x4 translate = MatrixTranslate(center.X, center.Y, center.Z);
-			if (rotate) translate *= MatrixRotateY(-MathF.PI / 2); // Rotate if west wall
-			translate *= MatrixTranslate(0.0f, 0.5f, -0.5f); // Offset to edge of tile
-			if (flip) translate *= MatrixRotateY(MathF.PI); // rotate 180 to flip texture
-			translate *= MatrixScale(1, 1, 0.1f);// Scale box to wall shape
+			Matrix4x4 transform = MatrixScale(1, 1, 0.1f); // Scale box to wall shape
+			transform = MatrixTranslate(0.0f, 0.5f, -0.5f) * transform; // Offset to edge of tile
+			if (rotate) transform = MatrixRotateY(MathF.PI / 2) * transform; // Rotate if west wall
+			if (flip) transform = MatrixRotateY(MathF.PI) * transform; // rotate 180 to flip texture
+
+			transform = MatrixTranslate(center.X, center.Y, center.Z) * transform;
 
 			// Upload textures to GPU
 			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)0, cache.tiles[tex.top]);
@@ -113,7 +116,7 @@ namespace TAC.Render
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.rightloc, cache.tiles[tex.right]);
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.backloc, cache.tiles[tex.back]);
 
-			DrawMesh(cache.cube, cache.wallMaterial, translate); // Magic!
+			DrawMesh(cache.cube, cache.wallMaterial, transform); // Magic!
 		}
 
 		public void DrawSkybox(Camera3D camera, ResourceCache cache)

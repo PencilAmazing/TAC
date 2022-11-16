@@ -45,10 +45,10 @@ namespace TAC.Inner
 					selectedUnit = selected.unit; // Shouldn't be called often
 				else
 					scene.PushActionMoveUnit(selectedUnit, position);
-			} else if(mode == GameSelection.SelectTarget) {
+			} else if (mode == GameSelection.SelectTarget) {
 				// Potential target
 				Position potential = GetMouseTilePosition();
-				if(scene.IsTileWithinBounds(potential) && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
+				if (scene.IsTileWithinBounds(potential) && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 					//scene.debugPath = scene.GetSupercoverLine(selectedUnit.position, potential);
 					this.mode = GameSelection.SelectUnit;
 					scene.PushActionSelectTarget(selectedUnit, selectedUnit.inventory[0], potential);
@@ -101,12 +101,14 @@ namespace TAC.Inner
 		private Position GetMouseTilePosition()
 		{
 			Ray ray = GetMouseRay(GetMousePosition(), camera.camera);
-			// replace this with quad collision instead
-			RayCollision collide = GetRayCollisionModel(ray, scene.GetFloorQuad());
-			if (collide.hit) {
-				collide.point += Vector3.One / 2;
-				// Floor
-				return new Position((int)(collide.point.X), 0, (int)(collide.point.Z));
+			unsafe {
+				// replace this with GetRayCollisionQuad instead
+				RayCollision collide = GetRayCollisionMesh(ray, scene.GetFloorQuad().meshes[0], scene.GetFloorQuad().transform);
+				if (collide.hit) {
+					collide.point += Vector3.One / 2;
+					// Floor
+					return new Position((int)(collide.point.X), 0, (int)(collide.point.Z));
+				}
 			}
 			return Position.Negative;
 		}
@@ -114,11 +116,13 @@ namespace TAC.Inner
 		private Vector3 CollideMouseWithPlane()
 		{
 			Ray ray = GetMouseRay(GetMousePosition(), camera.camera);
-			// replace this with quad collision instead
-			RayCollision collide = GetRayCollisionModel(ray, scene.GetFloorQuad());
-			if (collide.hit) {
-				//collide.point += Vector3.One / 2;
-				return new Vector3(collide.point.X, 0, collide.point.Z);
+			unsafe {
+				// replace this with GetRayCollisionQuad instead
+				RayCollision collide = GetRayCollisionMesh(ray, scene.GetFloorQuad().meshes[0], scene.GetFloorQuad().transform);
+				if (collide.hit) {
+					//collide.point += Vector3.One / 2;
+					return new Vector3(collide.point.X, 0, collide.point.Z);
+				}
 			}
 			return -Vector3.One;
 		}
