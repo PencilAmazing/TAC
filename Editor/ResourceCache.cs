@@ -1,12 +1,15 @@
 ﻿using Raylib_cs;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Text;
 using TAC.Render;
 using TAC.World;
 using static Raylib_cs.MaterialMapIndex;
 using static Raylib_cs.Raylib;
 using static Raylib_cs.ShaderUniformDataType;
+using static Raylib_cs.Raymath;
 
 namespace TAC.Editor
 {
@@ -54,6 +57,12 @@ namespace TAC.Editor
 		// General purpose cube mesh
 		public Mesh cube;
 		public Material wallMaterial;
+
+		/// <summary>
+		/// UNTRANSLATED transforms <br></br>
+		/// do transform = MatrixTranslate(center.X, center.Y, center.Z) * WallTransform;
+		/// </summary>
+		public Matrix4x4 WallTransformNorth, WallTransformWest;
 
 		public Material SkyboxMaterial;
 		public Texture2D SkyboxCubemap;
@@ -161,6 +170,7 @@ namespace TAC.Editor
 		}
 
 		// Interally generated meshes only please
+		// And other frequently used matrices i guess too
 		private void GenerateUploadMeshes()
 		{
 			// GenMesh uploads data to GPU
@@ -176,6 +186,11 @@ namespace TAC.Editor
 			wallMaterial = LoadMaterialDefault();
 			wallMaterial.shader = WallShader;
 			//SetMaterialTexture(ref wallMaterial, MATERIAL_MAP_DIFFUSE, tiles[1]);
+
+			Matrix4x4 transform = MatrixScale(1, 1, 0.1f); // Scale box to wall shape
+			WallTransformNorth = MatrixTranslate(0.0f, 0.5f, -0.5f) * transform; // Offset to edge of tile
+			WallTransformWest = MatrixRotateY(MathF.PI / 2) * transform; // Rotate if west wall
+
 		}
 
 		private void LoadBrushes()
