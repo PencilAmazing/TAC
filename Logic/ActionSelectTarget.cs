@@ -9,12 +9,12 @@ namespace TAC.Logic
 	public class ActionSelectTarget : Action
 	{
 		private Item item;
-		private Unit start;
+		public Unit start;
 		private Position target;
 		public Position[] line;
 
 		private ParticleEffect impactEffect;
-		private Vector3 impactPoint;
+		public RayCollision collision;
 
 		public ActionSelectTarget(Scene scene, Unit start, Item item, Position target) : base(scene)
 		{
@@ -23,31 +23,34 @@ namespace TAC.Logic
 			this.start.phase = 0;
 			this.target = target;
 			line = scene.GetSupercoverLine(start.position, target);
-			impactPoint = CalculateImpactPoint();
-			impactEffect = new ParticleEffect(item.impactEffect, 12, line[line.Length - 1].ToVector3(), Vector2.One);
+			collision = CalculateImpactPoint();
+			impactEffect = new ParticleEffect(item.impactEffect, 12,
+				collision.hit ? collision.point : line[line.Length - 1].ToVector3(), Vector2.One);
 
 		}
 
 		// Return exact coordinates where ray line hits a model in a tile
-		private Vector3 CalculateImpactPoint()
+		private RayCollision CalculateImpactPoint()
 		{
+			RayCollision result = new RayCollision();
 			foreach (Position pos in line) {
-				if (scene.IsTileOccupied(pos)) {
-					Ray ray = new Ray(start.position.ToVector3(), target.ToVector3() - start.position.ToVector3());
+				if (scene.IsTileOccupied(pos) || scene.GetTile(pos).HasWall(Wall.North) || scene.GetTile(pos).HasWall(Wall.West)) {
+					Vector3 chestHeight = start.position.ToVector3() + start.equipOffset;
+					Ray ray = new Ray(chestHeight, target.ToVector3() - chestHeight);
 					// impactpoint = collision trace
 					Tile tile = scene.GetTile(pos);
-					RayCollision collision = new RayCollision();
 					if (tile.HasWall(Wall.North)) {
-						RayCollision collide = Raylib.GetRayCollisionMesh(ray, scene.cache.cube, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformNorth);
-					} else {
-						RayCollision collide = Raylib.GetRayCollisionMesh(ray, scene.cache.cube, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformWest);
-					}
-					if (collision.hit) return collision.point;
+						result = Raylib.GetRayCollisionMesh(ray, scene.cache.cube, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformNorth);
+					} else if (tile.HasWall(Wall.West)) {
+						result = Raylib.GetRayCollisionMesh(ray, scene.cache.cube, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformWest);
+					} // else if(tile.HasThing()) {}
+					if (result.hit) break;
 				}
 			}
-			return Vector3.Zero;
+			return result;
 		}
 
+		// As opposed to think gravity
 		private void ThinkStraight(float dt)
 		{
 			if (start.phase == 0) {
@@ -55,7 +58,8 @@ namespace TAC.Logic
 			} else if (start.phase / 8 < 4) {
 				//actionEffect.position = Vector3.Lerp(start.position.ToVector3(), target.ToVector3(), start.phase * 4 / 8);
 			} else if (start.phase / 8 == 4) {
-				scene.AddParticleEffect(impactEffect);
+				if (collision.hit)
+					scene.AddParticleEffect(impactEffect);
 			} else if (start.phase / 8 < 8) {
 				impactEffect.phase += 1;
 			} else if (start.phase / 8 <= 12) {

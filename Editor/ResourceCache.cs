@@ -189,7 +189,7 @@ namespace TAC.Editor
 
 			Matrix4x4 transform = MatrixScale(1, 1, 0.1f); // Scale box to wall shape
 			WallTransformNorth = MatrixTranslate(0.0f, 0.5f, -0.5f) * transform; // Offset to edge of tile
-			WallTransformWest = MatrixRotateY(MathF.PI / 2) * transform; // Rotate if west wall
+			WallTransformWest = MatrixRotateY(MathF.PI / 2) * WallTransformNorth; // Rotate if west wall
 
 		}
 

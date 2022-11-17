@@ -38,6 +38,9 @@ namespace TAC.World
 		public Position position;
 		public UnitDirection direction;
 
+		// Chest height I guess
+		public Vector3 equipOffset = new Vector3(0, 0.6f, 0);
+
 		// General purpose counter
 		public int phase;
 

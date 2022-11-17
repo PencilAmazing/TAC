@@ -81,8 +81,8 @@ namespace TAC.Inner
 			DrawSphereWires(position.ToVector3() + diff / 2, 0.1f, 4, 4, Color.BLUE);
 
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
-				scene.ToggleBrush(position, wall, 1);
-				scene.ToggleWall(position, wall);
+				scene.ToggleBrush(position, wall, 1); // Also toggles wall, BTW
+				//scene.ToggleWall(position, wall);
 			}
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
 				scene.ToggleWall(position, (Wall)((byte)wall << 2));

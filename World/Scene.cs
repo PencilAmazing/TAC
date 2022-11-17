@@ -105,7 +105,10 @@ namespace TAC.World
 			ActionSelectTarget select = GetCurrentAction() as ActionSelectTarget;
 			if (select != null) {
 				renderer.DrawDebugPath(select.line);
-				renderer.DrawDebugLine(select.line[0].ToVector3(), select.line[select.line.Length - 1].ToVector3(), Color.BEIGE);
+				if (select.collision.hit)
+					renderer.DrawDebugLine(select.start.position.ToVector3() + select.start.equipOffset, select.collision.point, Color.BEIGE);
+				else
+					renderer.DrawDebugLine(select.start.position.ToVector3() + select.start.equipOffset, select.line[select.line.Length - 1].ToVector3(), Color.BEIGE);
 				return;
 			}
 		}
@@ -126,14 +129,18 @@ namespace TAC.World
 		public bool IsTileOccupied(Position pos)
 		{
 			Tile tile = floor.GetTile(pos.x, pos.z);
-			return tile == Tile.nullTile || tile.unit != null; // Or tile has object
+			return tile != Tile.nullTile && (tile.unit != null); // Or tile has object
 		}
 
 		public void ToggleWall(Position pos, Wall wall)
 		{
-			floor[pos.x, pos.z].walls ^= (byte)wall;
+			int result = (floor[pos.x, pos.z].walls) ^ (byte)wall;
+			floor[pos.x, pos.z].walls = (byte)(result);
 		}
 
+		/// <summary>
+		/// Calls ToggleWall aswell
+		/// </summary>
 		public void ToggleBrush(Position pos, Wall wall, int brushID)
 		{
 			if (wall == Wall.North) {

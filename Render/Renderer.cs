@@ -93,10 +93,14 @@ namespace TAC.Render
 		/// </summary>
 		public void DrawWall(Camera3D camera, Vector3 center, bool rotate, bool flip, Brush tex, ResourceCache cache)
 		{
-			Matrix4x4 transform = MatrixScale(1, 1, 0.1f); // Scale box to wall shape
-			transform = MatrixTranslate(0.0f, 0.5f, -0.5f) * transform; // Offset to edge of tile
-			if (rotate) transform = MatrixRotateY(MathF.PI / 2) * transform; // Rotate if west wall
-			if (flip) transform = MatrixRotateY(MathF.PI) * transform; // rotate 180 to flip texture
+			//Matrix4x4 transform = MatrixScale(1, 1, 0.1f); // Scale box to wall shape
+			//transform = MatrixTranslate(0.0f, 0.5f, -0.5f) * transform; // Offset to edge of tile
+			//if (rotate) transform = MatrixRotateY(MathF.PI / 2) * transform; // Rotate if west wall
+			//if (flip) transform = MatrixRotateY(MathF.PI) * transform; // rotate 180 to flip texture
+
+			Matrix4x4 transform = rotate ? cache.WallTransformWest : cache.WallTransformNorth;
+			// TODO: Fix wall texture flipping
+			//if (flip) transform = MatrixRotateY(MathF.PI) * transform; // rotate 180 to flip texture
 
 			transform = MatrixTranslate(center.X, center.Y, center.Z) * transform;
 
