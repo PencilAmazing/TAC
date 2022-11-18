@@ -99,7 +99,6 @@ namespace TAC.Render
 			//if (flip) transform = MatrixRotateY(MathF.PI) * transform; // rotate 180 to flip texture
 
 			Matrix4x4 transform = rotate ? cache.WallTransformWest : cache.WallTransformNorth;
-			// TODO: Fix wall texture flipping
 			if (flip) transform = transform * MatrixRotateY(MathF.PI); // rotate 180 to flip texture
 
 			transform = MatrixTranslate(center.X, center.Y, center.Z) * transform;
