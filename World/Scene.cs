@@ -161,6 +161,7 @@ namespace TAC.World
 		// https://www.redblobgames.com/grids/line-drawing.html#supercover
 		// https://github.com/cgyurgyik/fast-voxel-traversal-algorithm/blob/master/overview/FastVoxelTraversalOverview.md
 		// https://github.com/francisengelmann/fast_voxel_traversal/blob/master/main.cpp
+		// FIXME Supercover line does not include initial tile in result
 		public Position[] GetSupercoverLine(Position origin, Position p1)
 		{
 			Vector3 ray = ((p1 - origin).ToVector3());
@@ -169,9 +170,11 @@ namespace TAC.World
 			int stepY = Abs(ray.Y) < float.Epsilon ? 0 : (ray.Y < 0 ? -1 : 1);
 			int stepZ = Abs(ray.Z) < float.Epsilon ? 0 : (ray.Z < 0 ? -1 : 1);
 
-			if (stepX == 0 && stepY == 0 && stepZ == 0) return null;
-
 			Position i = origin;
+			List<Position> points = new List<Position>() { origin };
+
+			if (stepX == 0 && stepY == 0 && stepZ == 0) return points.ToArray();
+
 			float tMaxX = stepX != 0 ? (i.x + stepX - origin.x) / ray.X : float.MaxValue;
 			float tMaxY = stepY != 0 ? (i.y + stepY - origin.y) / ray.Y : float.MaxValue;
 			float tMaxZ = stepZ != 0 ? (i.z + stepZ - origin.z) / ray.Z : float.MaxValue;
@@ -179,7 +182,6 @@ namespace TAC.World
 			float tDeltaX = stepX != 0 ? 1 / ray.X * stepX : float.MaxValue;
 			float tDeltaY = stepY != 0 ? 1 / ray.Y * stepY : float.MaxValue;
 			float tDeltaZ = stepZ != 0 ? 1 / ray.Z * stepZ : float.MaxValue;
-			List<Position> points = new List<Position>() { origin };
 
 			while (IsTileWithinBounds(i)) {
 				if (tMaxX < tMaxY) {
@@ -243,7 +245,7 @@ namespace TAC.World
 
 		public Action GetCurrentAction() => currentAction;
 		public void SetCurrentAction(Action action) => currentAction = action;
-		public void ClearCurrentAction() => currentAction = null;
+		public void ClearCurrentAction() => currentAction = currentAction.NextAction();
 
 		public void AddUnit(Unit unit)
 		{
