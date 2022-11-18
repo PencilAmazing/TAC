@@ -93,7 +93,7 @@ namespace TAC.Inner
 		public void SetGameMode(bool isEdit)
 		{
 			scene.isEdit = isEdit;
-			if (scene.isEdit == true) {
+			if (scene.isEdit == true && scene.GetCurrentAction() != null) {
 				// Cancel current action
 				scene.ClearCurrentAction();
 			}

@@ -13,7 +13,6 @@ namespace TAC.Logic
 		private Position target;
 		public Position[] line;
 
-		private ParticleEffect impactEffect;
 		public RayCollision collision;
 
 		public ActionSelectTarget(Scene scene, Unit start, Item item, Position target) : base(scene)
@@ -24,12 +23,11 @@ namespace TAC.Logic
 			this.target = target;
 			line = scene.GetSupercoverLine(start.position, target);
 			collision = CalculateImpactPoint();
-			impactEffect = new ParticleEffect(item.impactEffect, 12,
-				collision.hit ? collision.point : line[line.Length - 1].ToVector3(), Vector2.One);
 
 		}
 
 		// Return exact coordinates where ray line hits a model in a tile
+		// FIXME line tracing sometimes fails when intersecting an edge. Replace with alternative line tracing function
 		private RayCollision CalculateImpactPoint()
 		{
 			RayCollision result = new RayCollision();
@@ -51,6 +49,7 @@ namespace TAC.Logic
 		}
 
 		// As opposed to think gravity
+		// Just animate the equiped item firing and projectile travelling
 		private void ThinkStraight(float dt)
 		{
 			if (start.phase == 0) {
@@ -58,10 +57,10 @@ namespace TAC.Logic
 			} else if (start.phase / 8 < 4) {
 				//actionEffect.position = Vector3.Lerp(start.position.ToVector3(), target.ToVector3(), start.phase * 4 / 8);
 			} else if (start.phase / 8 == 4) {
-				if (collision.hit)
-					scene.AddParticleEffect(impactEffect);
+				//if (collision.hit)
+				//	scene.AddParticleEffect(impactEffect);
 			} else if (start.phase / 8 < 8) {
-				impactEffect.phase += 1;
+				//impactEffect.phase += 1;
 			} else if (start.phase / 8 <= 12) {
 				Done();
 			}
@@ -84,7 +83,8 @@ namespace TAC.Logic
 		public override void Done()
 		{
 			base.Done();
-			impactEffect.Done();
+			//actionEffect.Done();
+			this.nextAction = collision.hit ? new ActionTargetImpact(scene, item, collision.point + collision.normal*0.2f) : null;
 		}
 	}
 }
