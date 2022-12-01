@@ -81,11 +81,17 @@ namespace TAC.Inner
 			DrawSphereWires(position.ToVector3() + diff / 2, 0.1f, 4, 4, Color.BLUE);
 
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
-				scene.ToggleBrush(position, wall, 1); // Also toggles wall, BTW
-				//scene.ToggleWall(position, wall);
+				// Also toggles wall, BTW
+				//Console.Write("From " + Convert.ToString(scene.GetTile(position).walls, 2).PadLeft(8, '0'));
+				scene.ToggleBrush(position, wall, 1);
+				//Console.WriteLine("To " + Convert.ToString(scene.GetTile(position).walls, 2).PadLeft(8, '0'));
 			}
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
-				scene.ToggleWall(position, (Wall)((byte)wall << 2));
+				/** FIXME This thing has caused me so much trouble
+					Can sometimes just delete all wall bits i think? **/
+				//Console.Write("From " + Convert.ToString(scene.GetTile(position).walls, 2).PadLeft(8, '0'));
+				//scene.ToggleWall(position, (Wall)((byte)wall << 2));
+				//Console.WriteLine("To " + Convert.ToString(scene.GetTile(position).walls, 2).PadLeft(8, '0'));
 			}
 		}
 
@@ -107,7 +113,9 @@ namespace TAC.Inner
 				if (collide.hit) {
 					collide.point += Vector3.One / 2;
 					// Floor
-					return new Position((int)(collide.point.X), 0, (int)(collide.point.Z));
+					Position mousePos = new Position((int)(collide.point.X), 0, (int)(collide.point.Z));
+					//scene.PushDebugText(new DebugText(mousePos.ToString(), 50, 50, 12, Color.BLACK));
+					return mousePos;
 				}
 			}
 			return Position.Negative;

@@ -120,6 +120,10 @@ namespace TAC.Render
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.backloc, cache.tiles[tex.back]);
 
 			DrawMesh(cache.cube, cache.wallMaterial, transform); // Magic!
+			//BoundingBox box = GetMeshBoundingBox(cache.cube);
+			//box.min = Vector3Transform(box.min, transform);
+			//box.max = Vector3Transform(box.max, transform);
+			//DrawBoundingBox(box, Color.RED);
 		}
 
 		public void DrawSkybox(Camera3D camera, ResourceCache cache)

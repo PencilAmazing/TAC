@@ -18,6 +18,7 @@ namespace TAC.World
 			this.z = z;
 		}
 
+		// FIXME where Y coord
 		public Position(Vector3 world)
 		{
 			world += Vector3.One / 2;
