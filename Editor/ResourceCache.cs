@@ -147,10 +147,10 @@ namespace TAC.Editor
 			LoadTexture(AssetUnitPrefix + "mech.png", TextureType.TEX_UNIT);
 		}
 
-		private void LoadEffects()
+		private void LoadSprites()
 		{
 			LoadTexture(AssetScenePrefix + "sprite/explosion_11.png", TextureType.TEX_MISC);
-
+			LoadTexture(AssetScenePrefix + "sprite/ProjectileArranged.png", TextureType.TEX_MISC);
 		}
 
 		private void LoadShaders()
@@ -210,7 +210,7 @@ namespace TAC.Editor
 			// DONT CHANGE ORDER!
 			LoadTiles();
 			LoadUnits();
-			LoadEffects();
+			LoadSprites();
 			LoadShaders();
 			GenerateUploadMeshes();
 			LoadBrushes();

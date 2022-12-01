@@ -21,8 +21,8 @@ namespace TAC
 				engine.scene.AddUnit(new Unit(0, new Position(0, 0, 0), "Bruh-bot 9001", UnitDirection.North));
 				// This all should be loaded by cache from 
 				Sprite impactEffect = new Sprite(0, 6, 32, 32);
-				//Sprite actionEffect = engine.resourceCache.sprites[1];
-				Item stick = new Item("Stick", 2, impactEffect, null);
+				Sprite actionEffect = new Sprite(1, 6, 256, 64);
+				Item stick = new Item("Stick", 2, impactEffect, actionEffect);
 
 				engine.scene.units[0].AddToInventory(stick);
 			}

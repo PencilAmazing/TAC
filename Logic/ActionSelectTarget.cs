@@ -6,14 +6,18 @@ using static Raylib_cs.Raymath;
 
 namespace TAC.Logic
 {
+
 	public class ActionSelectTarget : Action
 	{
 		private Item item;
 		public Unit start;
-		private Position target;
+		public Position target;
 		public Position[] line;
 
 		public RayCollision collision;
+		public TargetImpactData impactData;
+
+		private ParticleEffect actionEffect;
 
 		public ActionSelectTarget(Scene scene, Unit start, Item item, Position target) : base(scene)
 		{
@@ -21,28 +25,57 @@ namespace TAC.Logic
 			this.start = start;
 			this.start.phase = 0;
 			this.target = target;
-			line = scene.GetSupercoverLine(start.position, target);
+			Vector3 chestHeight = start.position.ToVector3() + start.equipOffset;
+			line = scene.GetSupercoverLine(chestHeight, target.ToVector3());
 			collision = CalculateImpactPoint();
-
 		}
 
-		// Return exact coordinates where ray line hits a model in a tile
-		// FIXME line tracing sometimes fails when intersecting an edge. Replace with alternative line tracing function
+		// Return collision data where ray line hits a model in a tile
 		private RayCollision CalculateImpactPoint()
 		{
 			RayCollision result = new RayCollision();
+			impactData = new TargetImpactData(new Vector3(float.PositiveInfinity), Position.Negative, (Wall)(3));
+
 			foreach (Position pos in line) {
-				if (scene.IsTileOccupied(pos) || scene.GetTile(pos).HasWall(Wall.North) || scene.GetTile(pos).HasWall(Wall.West)) {
+				// I'll let Bill Gates optimize this mess
+				if (scene.IsTileOccupied(pos) || scene.IsTileBlocking(pos)) {
 					Vector3 chestHeight = start.position.ToVector3() + start.equipOffset;
-					Ray ray = new Ray(chestHeight, target.ToVector3() - chestHeight);
-					// impactpoint = collision trace
+					Ray ray = new Ray(chestHeight, Vector3.Normalize(target.ToVector3() - chestHeight));
 					Tile tile = scene.GetTile(pos);
+
+					/* Test collisiion with all walls, all objects, and the unit itself
+					 * then sort by distance along line to find first hit. inefficient,
+					 * and there's a reason xcom used voxels but i have an i7 dammit
+					 */
+
 					if (tile.HasWall(Wall.North)) {
-						result = Raylib.GetRayCollisionMesh(ray, scene.cache.cube, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformNorth);
-					} else if (tile.HasWall(Wall.West)) {
-						result = Raylib.GetRayCollisionMesh(ray, scene.cache.cube, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformWest);
-					} // else if(tile.HasThing()) {}
-					if (result.hit) break;
+						BoundingBox box = new(-0.5f * Vector3.One, 0.5f * Vector3.One); // Constant for our cube mesh
+						box.min = Vector3Transform(box.min, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformNorth);
+						box.max = Vector3Transform(box.max, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformNorth);
+						result = Raylib.GetRayCollisionBox(ray, box);
+						// If collision is closer than current one
+						if (result.hit && Vector3.DistanceSquared(chestHeight, result.point) < Vector3.DistanceSquared(chestHeight, impactData.Point)) {
+							impactData.Point = result.point;
+							impactData.Tile = pos;
+							impactData.HitType = Wall.North;
+						}
+					}
+
+					if (tile.HasWall(Wall.West)) {
+						BoundingBox box = new(-0.5f * Vector3.One, 0.5f * Vector3.One);
+						box.min = Vector3Transform(box.min, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformWest);
+						box.max = Vector3Transform(box.max, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformWest);
+						result = Raylib.GetRayCollisionBox(ray, box);
+						if (result.hit && Vector3.DistanceSquared(chestHeight, result.point) < Vector3.DistanceSquared(chestHeight, impactData.Point)) {
+							impactData.Point = result.point;
+							impactData.Tile = pos;
+							impactData.HitType = Wall.West;
+						}
+					}
+
+					if (tile.HasThing()) {
+						// Moshi Moshi
+					}
 				}
 			}
 			return result;
@@ -52,16 +85,19 @@ namespace TAC.Logic
 		// Just animate the equiped item firing and projectile travelling
 		private void ThinkStraight(float dt)
 		{
+			Vector3 final = collision.hit ? collision.point : line[line.Length - 1].ToVector3();
+			float projectileSpeed = 0.1f;
+			// Absolutely horrendous
+			int endPhase = (int)System.MathF.Ceiling(Vector3.Distance(start.position.ToVector3(), final) / projectileSpeed);
+
 			if (start.phase == 0) {
-				//scene.AddParticleEffect(actionEffect);
-			} else if (start.phase / 8 < 4) {
-				//actionEffect.position = Vector3.Lerp(start.position.ToVector3(), target.ToVector3(), start.phase * 4 / 8);
-			} else if (start.phase / 8 == 4) {
-				//if (collision.hit)
-				//	scene.AddParticleEffect(impactEffect);
-			} else if (start.phase / 8 < 8) {
-				//impactEffect.phase += 1;
-			} else if (start.phase / 8 <= 12) {
+				actionEffect = new(item.actionEffect, 8, start.position.ToVector3(), Vector2.One * 0.25f);
+				scene.AddParticleEffect(actionEffect);
+			} else if (start.phase < endPhase) {
+				actionEffect.position = Vector3.Lerp(start.position.ToVector3(), final, start.phase / endPhase);
+			} else if (start.phase == endPhase) {
+				scene.RemoveParticleEffect(actionEffect);
+			} else if (start.phase >= endPhase) {
 				Done();
 			}
 		}
@@ -84,7 +120,11 @@ namespace TAC.Logic
 		{
 			base.Done();
 			//actionEffect.Done();
-			this.nextAction = collision.hit ? new ActionTargetImpact(scene, item, collision.point + collision.normal*0.2f) : null;
+			if (collision.hit) {
+				nextAction = new ActionTargetImpact(scene, item, impactData);
+			} else {
+				nextAction = null;
+			}
 		}
 	}
 }

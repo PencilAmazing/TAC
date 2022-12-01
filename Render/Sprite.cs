@@ -1,8 +1,9 @@
-﻿using System.Numerics;
-
-namespace TAC.Render
+﻿namespace TAC.Render
 {
-	// Data only class, no functionality whatsoever
+	/// <summary>
+	/// Data only class
+	/// All sprites must scroll horizontally only
+	/// </summary>
 	public class Sprite
 	{
 		public int id; // ID of effect texture stored in misc cache

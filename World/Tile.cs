@@ -86,6 +86,9 @@ namespace TAC.World
 
 		public bool HasWall(Wall wall) => (walls & (int)wall) != 0;
 
+		// TODO Implement things
+		public bool HasThing() => false;
+
 		public static bool operator ==(Tile l, Tile r)
 		{
 			return l.type == r.type &&

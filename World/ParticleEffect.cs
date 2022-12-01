@@ -10,12 +10,14 @@ namespace TAC.World
 
 		public int phase;
 		public int interval;
+		/// <summary> World position </summary>
 		public Vector3 position;
+		/// <summary> World scale </summary>
 		public Vector2 scale;
 
-		public ParticleEffect(Sprite sprite, int interval, Vector3 position, Vector2 scale)
+		public ParticleEffect(Sprite actionEffectMaterial, int interval, Vector3 position, Vector2 scale)
 		{
-			this.sprite = sprite;
+			this.sprite = actionEffectMaterial;
 			this.phase = 0;
 			this.interval = interval;
 			this.position = position;
