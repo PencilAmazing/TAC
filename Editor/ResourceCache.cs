@@ -188,8 +188,7 @@ namespace TAC.Editor
 			//SetMaterialTexture(ref wallMaterial, MATERIAL_MAP_DIFFUSE, tiles[1]);
 
 			// NOTE transform would be easier if mesh origin was at center bottom probably?
-			// HACK slightly increase wall size to make sure collisions hit. Fixed by having a decent linetracing solution
-			Matrix4x4 transform = MatrixScale(1.01f, 2.0f, 0.1f); // Scale box to wall shape
+			Matrix4x4 transform = MatrixScale(1.0f, 2.0f, 0.1f); // Scale box to wall shape
 			WallTransformNorth = MatrixTranslate(0.0f, 1.0f, -0.5f) * transform; // Offset to edge of tile
 			WallTransformWest = MatrixRotateY(MathF.PI / 2) * WallTransformNorth; // Rotate if west wall
 

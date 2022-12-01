@@ -96,6 +96,7 @@ namespace TAC.World
 		public virtual void DrawDebug3D(Camera3D camera)
 		{
 			//if (debugPath != null) renderer.DrawDebugPath(debugPath.ToArray());
+			//Raylib.DrawSphere(Vector3.Zero, 0.1f, Color.PINK);
 
 			ActionMoveUnit move = GetCurrentAction() as ActionMoveUnit;
 			if (move != null) {
@@ -108,7 +109,7 @@ namespace TAC.World
 				if (select.collision.hit)
 					renderer.DrawDebugLine(select.start.position.ToVector3() + select.start.equipOffset, select.collision.point, Color.BEIGE);
 				else
-					renderer.DrawDebugLine(select.start.position.ToVector3() + select.start.equipOffset, select.line[select.line.Length - 1].ToVector3(), Color.BEIGE);
+					renderer.DrawDebugLine(select.start.position.ToVector3() + select.start.equipOffset, select.target.ToVector3(), Color.BEIGE);
 				return;
 			}
 		}
@@ -158,30 +159,43 @@ namespace TAC.World
 			}
 		}
 
+		public Position[] GetSupercoverLine(Position origin, Position end)
+		{
+			return GetSupercoverLine(origin.ToVector3(), end.ToVector3());
+		}
+
 		// https://www.redblobgames.com/grids/line-drawing.html#supercover
 		// https://github.com/cgyurgyik/fast-voxel-traversal-algorithm/blob/master/overview/FastVoxelTraversalOverview.md
-		// https://github.com/francisengelmann/fast_voxel_traversal/blob/master/main.cpp
-		// FIXME Supercover line does not include initial tile in result
-		public Position[] GetSupercoverLine(Position origin, Position p1)
+		// https://gitlab.com/athilenius/fast-voxel-traversal-rs/-/blob/main/src/raycast_3d.rs
+		// Supercover line does include initial tile in result because line technically passes through it
+		public Position[] GetSupercoverLine(Vector3 origin, Vector3 end)
 		{
-			Vector3 ray = ((p1 - origin).ToVector3());
+			Vector3 d = Vector3.Normalize(end - origin);
 
-			int stepX = Abs(ray.X) < float.Epsilon ? 0 : (ray.X < 0 ? -1 : 1);
-			int stepY = Abs(ray.Y) < float.Epsilon ? 0 : (ray.Y < 0 ? -1 : 1);
-			int stepZ = Abs(ray.Z) < float.Epsilon ? 0 : (ray.Z < 0 ? -1 : 1);
+			int stepX = Sign(d.X);
+			int stepY = Sign(d.Y);
+			int stepZ = Sign(d.Z);
 
-			Position i = origin;
-			List<Position> points = new List<Position>() { origin };
+			// Starting voxel
+			Position i = new Position(origin);
+			List<Position> points = new List<Position>() { new Position(origin) };
 
-			if (stepX == 0 && stepY == 0 && stepZ == 0) return points.ToArray();
+			if (Vector3.DistanceSquared(end, origin) < float.Epsilon) return points.ToArray();
 
-			float tMaxX = stepX != 0 ? (i.x + stepX - origin.x) / ray.X : float.MaxValue;
-			float tMaxY = stepY != 0 ? (i.y + stepY - origin.y) / ray.Y : float.MaxValue;
-			float tMaxZ = stepZ != 0 ? (i.z + stepZ - origin.z) / ray.Z : float.MaxValue;
+			float tDeltaX = Abs(d.X) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.X);
+			float tDeltaY = Abs(d.Y) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.Y);
+			float tDeltaZ = Abs(d.Z) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.Z);	
 
-			float tDeltaX = stepX != 0 ? 1 / ray.X * stepX : float.MaxValue;
-			float tDeltaY = stepY != 0 ? 1 / ray.Y * stepY : float.MaxValue;
-			float tDeltaZ = stepZ != 0 ? 1 / ray.Z * stepZ : float.MaxValue;
+			// Offset by 0.5f to find fractional part, since out tiles are centered at 0,0
+			// Other algorithms have tiles centered at 0.5, 0.5, so we try to cancel it out
+			// Dont try to remove this \/, this is cell size and is 1.0f for now
+			float distX = stepX > 0 ? (1.0f - 0.5f - origin.X + i.x) : (origin.X - i.x + 0.5f);
+			float distY = stepY > 0 ? (1.0f - 0.5f - origin.Y + i.y) : (origin.Y - i.y + 0.5f);
+			float distZ = stepZ > 0 ? (1.0f - 0.5f - origin.Z + i.z) : (origin.Z - i.z + 0.5f);
+
+			float tMaxX = tDeltaX < float.PositiveInfinity ? distX * tDeltaX : float.PositiveInfinity;
+			float tMaxY = tDeltaY < float.PositiveInfinity ? distY * tDeltaY : float.PositiveInfinity;
+			float tMaxZ = tDeltaZ < float.PositiveInfinity ? distZ * tDeltaZ : float.PositiveInfinity;
 
 			while (IsTileWithinBounds(i)) {
 				if (tMaxX < tMaxY) {
@@ -203,7 +217,6 @@ namespace TAC.World
 				}
 				points.Add(i);
 			}
-
 			return points.ToArray();
 		}
 
