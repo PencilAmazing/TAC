@@ -42,12 +42,19 @@ namespace TAC.Logic
 		public override void Think(float deltaTime)
 		{
 			base.Think(deltaTime);
+			if (phase == 0) {
+				// NOTE maybe impact has radius?
+				if (scene.IsTileWithinBounds(new Position(impact.Point))) {
 
-			if (phase / 8 <= 4) {
+					if ((int)impact.HitType == 0) {
+						// Thing hit
+					} else if (impact.HitType == Wall.North || impact.HitType == Wall.West) {
+						scene.ClearBrush(impact.Tile, impact.HitType);
+					}
+				}
+			} else if (phase / 8 <= 4) {
 				impactEffect.phase += 1;
-			} else {
-				Done();
-			}
+			} else Done();
 
 			phase += 1;
 		}

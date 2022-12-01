@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace TAC.World
+﻿namespace TAC.World
 {
+	[System.Flags]
 	public enum Wall : byte
 	{
 		North = 1 << 0,
@@ -77,14 +76,14 @@ namespace TAC.World
 			this.West = west;
 			this.thing = thing;
 			this.walls = 0;
-			if(north > 0)
+			if (north > 0)
 				this.walls |= (byte)Wall.North;
 			if (west > 0)
 				this.walls |= (byte)Wall.West;
 			this.unit = null;
 		}
 
-		public bool HasWall(Wall wall) => (walls & (int)wall) != 0;
+		public bool HasWall(Wall wall) => (walls & (byte)wall) != 0;
 
 		// TODO Implement things
 		public bool HasThing() => false;

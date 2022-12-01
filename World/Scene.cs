@@ -127,16 +127,37 @@ namespace TAC.World
 				   pos.x < size.x && pos.y < size.y && pos.z < size.z;
 		}
 
+		/// <summary>
+		/// Does tile contain a unit?
+		/// </summary>
 		public bool IsTileOccupied(Position pos)
 		{
 			Tile tile = floor.GetTile(pos.x, pos.z);
 			return tile != Tile.nullTile && (tile.unit != null); // Or tile has object
 		}
 
+		/// <summary>
+		/// Does tile block line of sight or line of fire?
+		/// </summary>
+		public bool IsTileBlocking(Position pos)
+		{
+			Tile tile = floor.GetTile(pos.x, pos.z);
+			return tile != Tile.nullTile && (tile.HasWall(Wall.North | Wall.West) || tile.HasThing());
+		}
+
 		public void ToggleWall(Position pos, Wall wall)
 		{
-			int result = (floor[pos.x, pos.z].walls) ^ (byte)wall;
-			floor[pos.x, pos.z].walls = (byte)(result);
+			floor[pos.x, pos.z].walls ^= (byte)wall;
+		}
+
+		public void SetWall(Position pos, Wall wall)
+		{
+			floor[pos.x, pos.z].walls = (byte)wall;
+		}
+
+		public void ClearWall(Position pos, Wall wall)
+		{
+			floor[pos.x, pos.z].walls &= (byte)~wall;
 		}
 
 		/// <summary>
@@ -156,6 +177,17 @@ namespace TAC.World
 				else
 					floor[pos.x, pos.z].West = brushID;
 				ToggleWall(pos, wall);
+			}
+		}
+
+		public void ClearBrush(Position pos, Wall wall)
+		{
+			if (wall == Wall.North) {
+				floor[pos.x, pos.z].North = 0;
+				ClearWall(pos, Wall.North | Wall.FlipNorth);
+			} else if (wall == Wall.West) {
+				floor[pos.x, pos.z].West = 0;
+				ClearWall(pos, Wall.West | Wall.FlipWest);
 			}
 		}
 
