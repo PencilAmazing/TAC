@@ -80,7 +80,10 @@ namespace TAC.Render
 
 			Rlgl.rlDisableBackfaceCulling();
 			SetMaterialTexture(ref cache.crossMaterial, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, misctex);
-			DrawMesh(cache.cross, cache.crossMaterial, MatrixTranslate(effect.position.X, effect.position.Y, effect.position.Z));
+			DrawMesh(cache.cross, cache.crossMaterial,
+					 MatrixTranslate(effect.position.X, effect.position.Y, effect.position.Z) *
+					 MatrixRotateXYZ(effect.rotate) *
+					 MatrixScale(effect.scale.X, effect.scale.Y, effect.scale.Z));
 			Rlgl.rlEnableBackfaceCulling();
 		}
 

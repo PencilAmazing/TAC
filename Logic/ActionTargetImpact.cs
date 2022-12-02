@@ -35,7 +35,7 @@ namespace TAC.Logic
 		{
 			this.phase = 0;
 			this.impact = impact;
-			impactEffect = new ParticleEffect(item.impactEffect, 12, impact.Point, Vector2.One);
+			impactEffect = new ParticleEffect(item.impactEffect, 12, impact.Point, Vector3.One, Vector3.Zero);
 			scene.AddParticleEffect(impactEffect);
 		}
 

@@ -13,15 +13,19 @@ namespace TAC.World
 		/// <summary> World position </summary>
 		public Vector3 position;
 		/// <summary> World scale </summary>
-		public Vector2 scale;
+		public Vector3 scale;
+		/// <summary> World rotate </summary>
+		public Vector3 rotate;
 
-		public ParticleEffect(Sprite actionEffectMaterial, int interval, Vector3 position, Vector2 scale)
+		public ParticleEffect(Sprite actionEffectMaterial, int interval, Vector3 position, Vector3 scale, Vector3 rotate)
 		{
 			this.sprite = actionEffectMaterial;
 			this.phase = 0;
 			this.interval = interval;
+
 			this.position = position;
 			this.scale = scale;
+			this.rotate = rotate;
 		}
 
 		// Ends and removes particle effect from scene

@@ -3,6 +3,7 @@ using TAC.World;
 using Raylib_cs;
 using TAC.Editor;
 using static Raylib_cs.Raymath;
+using System;
 
 namespace TAC.Logic
 {
@@ -91,10 +92,16 @@ namespace TAC.Logic
 			int endPhase = (int)System.MathF.Ceiling(Vector3.Distance(start.position.ToVector3(), final) / projectileSpeed);
 
 			if (start.phase == 0) {
-				actionEffect = new(item.actionEffect, 8, start.position.ToVector3(), Vector2.One * 0.1f);
+				Vector3 rod = final - start.position.ToVector3() - start.equipOffset;
+				float angleV = -MathF.Atan2(rod.Z, rod.X);
+
+				actionEffect = new(item.actionEffect, 8,
+					start.position.ToVector3() + start.equipOffset,
+					Vector3.One,
+					Vector3.UnitY * angleV);
 				scene.AddParticleEffect(actionEffect);
 			} else if (start.phase < endPhase) {
-				actionEffect.position = Vector3.Lerp(start.position.ToVector3(), final, (float)start.phase / (float)endPhase);
+				actionEffect.position = Vector3.Lerp(start.position.ToVector3() + start.equipOffset, final, (float)start.phase / (float)endPhase);
 			} else if (start.phase == endPhase) {
 				scene.RemoveParticleEffect(actionEffect);
 			} else if (start.phase >= endPhase) {
