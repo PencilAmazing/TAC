@@ -34,7 +34,9 @@ namespace TAC.Render
 		public void DrawUnits(Camera3D camera, List<Unit> units, ResourceCache cache)
 		{
 			if (units.Count == 0) return;
-
+			SetShaderValueV(cache.BillboardShader, cache.BillboardTexCoordShiftLoc,
+				new float[] { 0, 1 }, // No scrolling, take whole texture
+				ShaderUniformDataType.SHADER_UNIFORM_VEC2, 1);
 			BeginShaderMode(cache.BillboardShader);
 			foreach (Unit unit in units) {
 				Texture2D tex = cache.units[unit.type];
@@ -57,12 +59,29 @@ namespace TAC.Render
 
 		internal void DrawEffect(Camera3D camera, ParticleEffect effect, ResourceCache cache)
 		{
-			BeginShaderMode(cache.BillboardShader);
 			Texture2D misctex = cache.misc[effect.sprite.id];
 			int stage = effect.GetStage();
 			Rectangle rect = effect.sprite.GetRectangle(stage);
-			DrawBillboardPro(camera, misctex, rect, effect.position+Vector3.UnitY/2, Vector3.UnitY, Vector2.One*2, Vector2.Zero, 0, Color.WHITE);
-			EndShaderMode();
+			//DrawBillboardPro(camera, misctex, rect, effect.position + Vector3.UnitY / 2, Vector3.UnitY, Vector2.One * 2, Vector2.Zero, 0, Color.WHITE);
+			//Span<float> texcoords;
+			//unsafe {
+			//	texcoords = new Span<float>(cache.cross.texcoords, cache.cross.vertexCount * 2);
+			//}
+
+			//for (int x = 0; x <= 1; x++)
+			//	for (int z = 0; z <= 1; z++) {
+			//		texcoords[z * 2 + x * 4] = texcoords[8 + z * 2 + x * 4] = (0.5f * x);
+			//		texcoords[z * 2 + x * 4 + 1] = texcoords[8 + z * 2 + x * 4 + 1] = (0.5f * z);
+			//	}
+
+			SetShaderValueV(cache.BillboardShader, cache.BillboardTexCoordShiftLoc,
+							new float[] { rect.x / misctex.width, rect.width / misctex.width },
+							ShaderUniformDataType.SHADER_UNIFORM_VEC2, 1);
+
+			Rlgl.rlDisableBackfaceCulling();
+			SetMaterialTexture(ref cache.crossMaterial, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, misctex);
+			DrawMesh(cache.cross, cache.crossMaterial, MatrixTranslate(effect.position.X, effect.position.Y, effect.position.Z));
+			Rlgl.rlEnableBackfaceCulling();
 		}
 
 
@@ -120,10 +139,10 @@ namespace TAC.Render
 			SetShaderValueTexture(cache.wallMaterial.shader, cache.backloc, cache.tiles[tex.back]);
 
 			DrawMesh(cache.cube, cache.wallMaterial, transform); // Magic!
-			//BoundingBox box = GetMeshBoundingBox(cache.cube);
-			//box.min = Vector3Transform(box.min, transform);
-			//box.max = Vector3Transform(box.max, transform);
-			//DrawBoundingBox(box, Color.RED);
+																 //BoundingBox box = GetMeshBoundingBox(cache.cube);
+																 //box.min = Vector3Transform(box.min, transform);
+																 //box.max = Vector3Transform(box.max, transform);
+																 //DrawBoundingBox(box, Color.RED);
 		}
 
 		public void DrawSkybox(Camera3D camera, ResourceCache cache)

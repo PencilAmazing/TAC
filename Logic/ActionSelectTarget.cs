@@ -85,16 +85,16 @@ namespace TAC.Logic
 		// Just animate the equiped item firing and projectile travelling
 		private void ThinkStraight(float dt)
 		{
-			Vector3 final = collision.hit ? collision.point : line[line.Length - 1].ToVector3();
+			Vector3 final = collision.hit ? collision.point : target.ToVector3();
 			float projectileSpeed = 0.1f;
 			// Absolutely horrendous
 			int endPhase = (int)System.MathF.Ceiling(Vector3.Distance(start.position.ToVector3(), final) / projectileSpeed);
 
 			if (start.phase == 0) {
-				actionEffect = new(item.actionEffect, 8, start.position.ToVector3(), Vector2.One * 0.25f);
+				actionEffect = new(item.actionEffect, 8, start.position.ToVector3(), Vector2.One * 0.1f);
 				scene.AddParticleEffect(actionEffect);
 			} else if (start.phase < endPhase) {
-				actionEffect.position = Vector3.Lerp(start.position.ToVector3(), final, start.phase / endPhase);
+				actionEffect.position = Vector3.Lerp(start.position.ToVector3(), final, (float)start.phase / (float)endPhase);
 			} else if (start.phase == endPhase) {
 				scene.RemoveParticleEffect(actionEffect);
 			} else if (start.phase >= endPhase) {

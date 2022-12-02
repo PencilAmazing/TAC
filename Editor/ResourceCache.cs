@@ -50,13 +50,21 @@ namespace TAC.Editor
 		public List<Brush> brushes { get; }
 		public List<Model> things { get; }
 
+		// Discard transparent pixels and shift texture
+		// Assumes that texcoords are either 0 or 1 only
 		public Shader BillboardShader;
+		public int BillboardTexCoordShiftLoc;
+
 		public Shader SkyboxShader;
 		public Shader WallShader;
 
 		// General purpose cube mesh
 		public Mesh cube;
 		public Material wallMaterial;
+
+		// Cross mesh for particles
+		public Mesh cross;
+		public Material crossMaterial;
 
 		/// <summary>
 		/// UNTRANSLATED transforms <br></br>
@@ -155,7 +163,9 @@ namespace TAC.Editor
 
 		private void LoadShaders()
 		{
-			BillboardShader = LoadShader(null, AssetShaderPrefix + "billboard.fs");
+			BillboardShader = LoadShader(null, AssetShaderPrefix + "billboard.frag");
+			BillboardTexCoordShiftLoc = GetShaderLocation(BillboardShader, "texCoordShift");
+
 			SkyboxShader = LoadShader(AssetShaderPrefix + "skybox.vs", AssetShaderPrefix + "skybox.fs");
 			SetShaderValue(SkyboxShader, GetShaderLocation(SkyboxShader, "environmentMap"), (int)MATERIAL_MAP_CUBEMAP, SHADER_UNIFORM_INT);
 			SetShaderValue(SkyboxShader, GetShaderLocation(SkyboxShader, "vflipped"), 1, SHADER_UNIFORM_INT);
@@ -169,6 +179,18 @@ namespace TAC.Editor
 			frontloc = GetShaderLocation(WallShader, "front");
 		}
 
+		unsafe static void AllocateMeshData(Mesh* mesh, int vertexCount, int triangleCount)
+		{
+			mesh->vertexCount = vertexCount;
+			mesh->triangleCount = triangleCount;
+			unsafe {
+				mesh->vertices = (float*)MemAlloc(mesh->vertexCount * 3 * sizeof(float));
+				mesh->texcoords = (float*)MemAlloc(mesh->vertexCount * 2 * sizeof(float));
+				mesh->normals = (float*)MemAlloc(mesh->vertexCount * 3 * sizeof(float));
+				mesh->indices = (ushort*)MemAlloc(mesh->triangleCount * 3 * sizeof(ushort));
+			}
+		}
+
 		// Interally generated meshes only please
 		// And other frequently used matrices i guess too
 		private void GenerateUploadMeshes()
@@ -177,6 +199,66 @@ namespace TAC.Editor
 			cube = GenMeshCube(1, 1, 1);
 			SkyboxMaterial = LoadMaterialDefault();
 			SkyboxMaterial.shader = SkyboxShader;
+
+			// Front faces are CCW although disable culling when drawing either way
+			float[] vertices = new float[] {
+					// XZ plane
+					-0.5f, 0, -0.5f,
+					-0.5f, 0, 0.5f,
+					0.5f, 0, -0.5f,
+					0.5f, 0, 0.5f ,
+					// XY plane
+					-0.5f, -0.5f, 0,
+					-0.5f, 0.5f, 0,
+					0.5f, -0.5f, 0,
+					0.5f, 0.5f, 0
+				};
+
+			float[] normals = new float[] {
+					// Up
+					0, 1.0f, 0,
+					0, 1.0f, 0,
+					0, 1.0f, 0,
+					0, 1.0f, 0,
+					// Forward
+					1.0f, 0, 0,
+					1.0f, 0, 0,
+					1.0f, 0, 0,
+					1.0f, 0, 0
+				};
+
+			float[] texcoords = new float[8 * 2];
+			for (int x = 0; x <= 1; x++)
+				for (int z = 0; z <= 1; z++) {
+					texcoords[z * 2 + x * 4] = x;
+					texcoords[z * 2 + x * 4 + 1] = z;
+				}
+
+			for (int x = 0; x <= 1; x++)
+				for (int y = 0; y <= 1; y++) {
+					texcoords[8 + y * 2 + x * 4] = x;
+					texcoords[8 + y * 2 + x * 4 + 1] = y;
+				}
+
+			// Two faces, two triangles each, three vertices each
+			ushort[] indices = new ushort[] {0, 2, 1, 1, 2, 3,
+											 4, 6, 5, 5, 6, 7};
+
+			cross = new Mesh();
+			unsafe {
+				fixed (Mesh* mesh = &cross) {
+					AllocateMeshData(mesh, vertices.Length / 3, 2 * 2);
+				}
+				vertices.CopyTo(new Span<float>(cross.vertices, vertices.Length));
+
+				normals.CopyTo(new Span<float>(cross.normals, normals.Length));
+				texcoords.CopyTo(new Span<float>(cross.texcoords, texcoords.Length));
+				indices.CopyTo(new Span<ushort>(cross.indices, indices.Length));
+			}
+			UploadMesh(ref cross, false);
+
+			crossMaterial = LoadMaterialDefault();
+			crossMaterial.shader = BillboardShader;
 
 			Image SkyboxImage = LoadImage(AssetScenePrefix + "skybox/skybox.png");
 			SkyboxCubemap = LoadTextureCubemap(SkyboxImage, CubemapLayout.CUBEMAP_LAYOUT_AUTO_DETECT);
