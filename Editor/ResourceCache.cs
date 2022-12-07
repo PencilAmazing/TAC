@@ -313,9 +313,9 @@ namespace TAC.Editor
 				}
 				writer.WriteLine("[Units]");
 				foreach (Unit unit in scene.units) {
-					str.Append(unit.type);
+					str.Append(unit.Type);
 					str.Append(',');
-					str.Append(unit.name);
+					str.Append(unit.Name);
 					str.Append(',');
 					str.Append(unit.position.ToString());
 					str.Append(',');

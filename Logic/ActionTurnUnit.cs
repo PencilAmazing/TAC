@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 using System;
 using System.Reflection.Metadata;
+using System.Threading.Tasks;
 using TAC.World;
 
 namespace TAC.Logic
@@ -10,35 +11,43 @@ namespace TAC.Logic
 	/// </summary>
 	public class ActionTurnUnit : Action
 	{
-		private Unit unit;
-		private UnitDirection targetDirection;
+		private readonly Unit unit;
+		private readonly UnitDirection targetDirection;
 
-		private int phase; // TODO move to base class
-
+		/// <summary>
+		/// Turns a unit around, costs 1 time unit.
+		/// Can return ActionOutOfTime instead of nextAction
+		/// </summary>
 		public ActionTurnUnit(Scene scene, Unit unit, UnitDirection targetDirection) : base(scene)
 		{
 			this.scene = scene;
 			this.unit = unit;
 			this.targetDirection = targetDirection;
-
-			this.phase = 0;
+			this.TimeCost = 1;
 		}
 
 		public override void Think(float deltaTime)
 		{
 			base.Think(deltaTime);
 
-			// https://math.stackexchange.com/a/2898118
-			// Distance of target enum from current ennum
-			int delta = ((int)targetDirection - (int)unit.direction + 12) % 8 - 4;
+			int delta = Pathfinding.GetDirectionDelta(unit.direction, targetDirection);
 
 			phase += 1;
 			if (phase > 8) {
-				if (delta == 0) Done();
+				if (delta == 0) { // Still have more turns to do
+					Done();
+					return;
+				}
+				if (unit.TimeUnits < TimeCost) {
+					nextAction = new ActionOutOfTime(scene); // Can't afford it
+					Done();
+					return;
+				}
+
 				phase = 0;
-				UnitDirection nextDirection = (UnitDirection)(((int)unit.direction + Math.Sign(delta)) % 8);
+				UnitDirection nextDirection = (UnitDirection)(((int)unit.direction + Math.Sign(delta) + 8) % 8);
 				unit.direction = nextDirection;
-				delta -= 1;
+				unit.TimeUnits -= TimeCost;
 			}
 		}
 	}

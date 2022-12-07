@@ -29,10 +29,10 @@ namespace TAC.World
 				Vector3.Normalize(Vector3.UnitZ-Vector3.UnitX)
 		};
 
-		public string name;
-		public int type { get; }
-		public int faction { get; }
-		public int time { get; }
+		public string Name;
+		public int Type { get; }
+		public int Faction { get; }
+		public int TimeUnits;
 		public List<Item> inventory;
 
 		public Position position;
@@ -46,11 +46,12 @@ namespace TAC.World
 
 		public Unit(int type, Position position, string name, UnitDirection direction = UnitDirection.North, List<Item> inventory = null)
 		{
-			this.type = type;
+			this.Type = type;
 			this.position = position;
 			this.direction = direction;
-			this.name = name;
+			this.Name = name;
 			this.phase = 0;
+			this.TimeUnits = 100;
 			this.inventory = inventory == null ? new List<Item>() : inventory;
 		}
 

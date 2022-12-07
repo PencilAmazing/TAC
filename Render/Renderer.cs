@@ -39,7 +39,7 @@ namespace TAC.Render
 				ShaderUniformDataType.SHADER_UNIFORM_VEC2, 1);
 			BeginShaderMode(cache.BillboardShader);
 			foreach (Unit unit in units) {
-				Texture2D tex = cache.units[unit.type];
+				Texture2D tex = cache.units[unit.Type];
 				Vector3 position = unit.position.ToVector3() + Vector3.UnitY;
 				// TODO: move this to GPU
 				// Vector from unit to camera
@@ -50,7 +50,8 @@ namespace TAC.Render
 				// Offset tile by unit direction to get display angle
 				int unitForward = (int)unit.direction;
 				// No clue what's going on here
-				int offset = ((int)(8 * angle + 8.5) - unitForward) % 8;
+				// FIXME added 8 since offset can become negative sometimes. Make something better ffs
+				int offset = ((int)(8 * angle + 8.5) - unitForward + 8) % 8;
 				Rectangle rec = new Rectangle(128 * offset, 0, 128, 128);
 				DrawBillboardPro(camera, tex, rec, position, Vector3.UnitY, Vector2.One * 2, Vector2.Zero, 0.0f, Color.WHITE);
 			}

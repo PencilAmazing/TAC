@@ -4,6 +4,7 @@ using Raylib_cs;
 using TAC.Editor;
 using static Raylib_cs.Raymath;
 using System;
+using System.Reflection;
 
 namespace TAC.Logic
 {
@@ -11,7 +12,7 @@ namespace TAC.Logic
 	public class ActionSelectTarget : Action
 	{
 		private Item item;
-		public Unit start;
+		public Unit unit;
 		public Position target;
 		public Position[] line;
 
@@ -20,13 +21,13 @@ namespace TAC.Logic
 
 		private ParticleEffect actionEffect;
 
-		public ActionSelectTarget(Scene scene, Unit start, Item item, Position target) : base(scene)
+		public ActionSelectTarget(Scene scene, Unit unit, Item item, Position target) : base(scene)
 		{
 			this.item = item;
-			this.start = start;
-			this.start.phase = 0;
+			this.unit = unit;
+			this.phase = 0;
 			this.target = target;
-			Vector3 chestHeight = start.position.ToVector3() + start.equipOffset;
+			Vector3 chestHeight = unit.position.ToVector3() + unit.equipOffset;
 			line = scene.GetSupercoverLine(chestHeight, target.ToVector3());
 			collision = CalculateImpactPoint();
 		}
@@ -40,13 +41,15 @@ namespace TAC.Logic
 			foreach (Position pos in line) {
 				// I'll let Bill Gates optimize this mess
 				if (scene.IsTileOccupied(pos) || scene.IsTileBlocking(pos)) {
-					Vector3 chestHeight = start.position.ToVector3() + start.equipOffset;
+					Vector3 chestHeight = unit.position.ToVector3() + unit.equipOffset;
 					Ray ray = new Ray(chestHeight, Vector3.Normalize(target.ToVector3() - chestHeight));
 					Tile tile = scene.GetTile(pos);
 
 					/* Test collisiion with all walls, all objects, and the unit itself
 					 * then sort by distance along line to find first hit. inefficient,
 					 * and there's a reason xcom used voxels but i have an i7 dammit
+					 * FIXME simulate bullet width by making up a whole damn algorithm
+					 * or read a paper or something you lazy code monkey
 					 */
 
 					if (tile.HasWall(Wall.North)) {
@@ -87,51 +90,57 @@ namespace TAC.Logic
 		private void ThinkStraight(float dt)
 		{
 			Vector3 final = collision.hit ? collision.point : target.ToVector3();
+
 			float projectileSpeed = 0.1f;
 			// Absolutely horrendous
-			int endPhase = (int)System.MathF.Ceiling(Vector3.Distance(start.position.ToVector3(), final) / projectileSpeed);
+			int endPhase = (int)MathF.Ceiling(Vector3.Distance(unit.position.ToVector3(), final) / projectileSpeed);
 
-			if (start.phase == 0) {
-				Vector3 rod = final - start.position.ToVector3() - start.equipOffset;
+			if (phase == 0) {
+				Vector3 rod = final - unit.position.ToVector3() - unit.equipOffset;
 				float angleV = -MathF.Atan2(rod.Z, rod.X);
 
 				actionEffect = new(item.actionEffect, 8,
-					start.position.ToVector3() + start.equipOffset,
-					Vector3.One,
-					Vector3.UnitY * angleV);
+					unit.position.ToVector3() + unit.equipOffset,
+					Vector3.One, Vector3.UnitY * angleV);
 				scene.AddParticleEffect(actionEffect);
-			} else if (start.phase < endPhase) {
-				actionEffect.position = Vector3.Lerp(start.position.ToVector3() + start.equipOffset, final, (float)start.phase / (float)endPhase);
-			} else if (start.phase == endPhase) {
+			} else if (phase < endPhase) {
+				actionEffect.position = Vector3.Lerp(unit.position.ToVector3() + unit.equipOffset, final, phase / (float)endPhase);
+			} else if (phase == endPhase) {
 				scene.RemoveParticleEffect(actionEffect);
-			} else if (start.phase >= endPhase) {
+			} else if (phase >= endPhase) {
 				Done();
 			}
+
+			phase += 1;
 		}
 
 		public override void Think(float deltaTime)
 		{
 			base.Think(deltaTime);
 
-			if (item.projectileType == ProjectileType.Straight) {
+			UnitDirection targetDir = Pathfinding.GetDirection(unit.position, target);
+			if (unit.direction != targetDir) {
+				nextAction = new ActionTurnUnit(scene, unit, Pathfinding.GetDirection(unit.position, target));
+				nextAction.SetNextAction(new ActionPassthrough(scene, this)); // Return to this once done
+				Done();
+			} else if (item.projectileType == ProjectileType.Straight) {
 				ThinkStraight(deltaTime);
 			} else if (item.projectileType == ProjectileType.Gravity) {
 				Done();
 			} else {
 				Done();
 			}
-			start.phase += 1;
 		}
 
 		public override void Done()
 		{
+			// Don't set isDone flag just yet
+			// TODO replace isDone flag with a ActionIsDone maybe>
 			base.Done();
-			//actionEffect.Done();
+
 			if (collision.hit) {
 				nextAction = new ActionTargetImpact(scene, item, impactData);
-			} else {
-				nextAction = null;
-			}
+			};
 		}
 	}
 }

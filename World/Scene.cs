@@ -107,9 +107,9 @@ namespace TAC.World
 			if (select != null) {
 				renderer.DrawDebugPath(select.line);
 				if (select.collision.hit)
-					renderer.DrawDebugLine(select.start.position.ToVector3() + select.start.equipOffset, select.collision.point, Color.BEIGE);
+					renderer.DrawDebugLine(select.unit.position.ToVector3() + select.unit.equipOffset, select.collision.point, Color.BEIGE);
 				else
-					renderer.DrawDebugLine(select.start.position.ToVector3() + select.start.equipOffset, select.target.ToVector3(), Color.BEIGE);
+					renderer.DrawDebugLine(select.unit.position.ToVector3() + select.unit.equipOffset, select.target.ToVector3(), Color.BEIGE);
 				return;
 			}
 		}
@@ -318,6 +318,13 @@ namespace TAC.World
 			if (unit == null || currentAction != null) return;
 			if (IsTileWithinBounds(target)) {
 				SetCurrentAction(new ActionSelectTarget(this, unit, item, target));
+			}
+		}
+
+		public void PushActionTurnUnit(Unit unit, Position target)
+		{
+			if (unit != null && currentAction == null) {
+				SetCurrentAction(new ActionTurnUnit(this, unit, Pathfinding.GetDirection(unit.position, target)));
 			}
 		}
 

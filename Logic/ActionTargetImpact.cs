@@ -29,13 +29,11 @@ namespace TAC.Logic
 		private TargetImpactData impact;
 
 		private ParticleEffect impactEffect;
-		private int phase; // TODO move this to base class maybe
 
 		public ActionTargetImpact(Scene scene, Item item, TargetImpactData impact) : base(scene)
 		{
-			this.phase = 0;
 			this.impact = impact;
-			impactEffect = new ParticleEffect(item.impactEffect, 12, impact.Point, Vector3.One, Vector3.Zero);
+			impactEffect = new ParticleEffect(item.impactEffect, 12, impact.Point, Vector3.One*2, Vector3.Zero);
 			scene.AddParticleEffect(impactEffect);
 		}
 

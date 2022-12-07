@@ -69,9 +69,10 @@ namespace TAC.Inner
 
 			if (player.selectedUnit != null) {
 				SetNextWindowPos(Vector2.UnitY * screenHeight, ImGuiCond.None, Vector2.UnitY);
-				Begin("info", ImGuiWindowFlags.NoDecoration);
+				Begin("info", ImGuiWindowFlags.NoDecoration|ImGuiWindowFlags.AlwaysAutoResize);
 				SetWindowFontScale(1.5f);
-				Text(player.selectedUnit.name);
+				ProgressBar((float)player.selectedUnit.TimeUnits / 100.0f, new Vector2(-1,0), player.selectedUnit.TimeUnits.ToString());
+				Text(player.selectedUnit.Name);
 				End();
 
 				SetNextWindowPos(new Vector2(screenWidth, screenHeight), ImGuiCond.None, Vector2.One);

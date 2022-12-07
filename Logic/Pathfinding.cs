@@ -27,6 +27,14 @@ namespace TAC.Logic
 			return new Position(x[(int)dir], y[(int)dir], z[(int)dir]);
 		}
 
+		public static int GetDirectionDelta(UnitDirection from, UnitDirection to)
+		{
+			// https://math.stackexchange.com/a/2898118
+			// Distance of target enum from current ennum
+			// FIXME pregenerate values into a table since there can only be so many possible deltas
+			return ((int)to - (int)from + 12) % 8 - 4;
+		}
+
 		/// <summary>
 		/// Finds path from unit to position on grid <br/>
 		/// Stores unit and goal inside
@@ -34,9 +42,10 @@ namespace TAC.Logic
 		/// <returns>True if path is possible</returns>
 		public bool FindPathForUnit(Unit unit, Position goal)
 		{
-			// Skip if tile is occupied
-			if (scene.IsTileOccupied(goal))
+			// Skip if tile is impossible to walk in to
+			if (!scene.IsTileWithinBounds(goal) || scene.IsTileOccupied(goal)) {
 				return false;
+			}
 			Position start = unit.position;
 
 			Queue<Position> frontier = new();
@@ -75,7 +84,7 @@ namespace TAC.Logic
 				}
 			}
 
-			if(!camefrom.ContainsKey(goal)) {
+			if (!camefrom.ContainsKey(goal)) {
 				return false;
 			}
 

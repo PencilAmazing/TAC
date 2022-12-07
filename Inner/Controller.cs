@@ -35,16 +35,18 @@ namespace TAC.Inner
 		// Has access to render loop
 		public void UpdateGameControl()
 		{
-			Position position = GetMouseTilePosition();
-			Tile selected = scene.GetTile(position);
+			Position selectedPosition = GetMouseTilePosition();
+			Tile selected = scene.GetTile(selectedPosition);
 			if (selected != Tile.nullTile)
-				DrawCubeWiresV(position.ToVector3(), Vector3.One, Color.ORANGE);
+				DrawCubeWiresV(selectedPosition.ToVector3(), Vector3.One, Color.ORANGE);
 
 			if (mode == GameSelection.SelectUnit && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				if (selectedUnit == null)
 					selectedUnit = selected.unit; // Shouldn't be called often
 				else
-					scene.PushActionMoveUnit(selectedUnit, position);
+					scene.PushActionMoveUnit(selectedUnit, selectedPosition);
+			} else if (mode == GameSelection.SelectUnit && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
+				scene.PushActionTurnUnit(selectedUnit, selectedPosition);
 			} else if (mode == GameSelection.SelectTarget) {
 				// Potential target
 				Position potential = GetMouseTilePosition();
