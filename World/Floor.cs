@@ -80,19 +80,19 @@ namespace TAC.World
 
 		public void SetTile(Position pos, Tile tile)
 		{
-			if (pos.x < 0 || pos.y < 0 || pos.x > map.GetUpperBound(0) || pos.y > map.GetUpperBound(1)) return;
-			map[pos.x, pos.y] = tile;
+			if (pos.x < 0 || pos.z < 0 || pos.x > map.GetUpperBound(0) || pos.z > map.GetUpperBound(1)) return;
+			map[pos.x, pos.z] = tile;
 		}
 
 		public void SetTileUnit(Position pos, Unit unit)
 		{
-			if (pos.x < 0 || pos.y < 0 || pos.x > map.GetUpperBound(0) || pos.y > map.GetUpperBound(1)) return;
-			map[pos.x, pos.y].unit = unit;
+			if (pos.x < 0 || pos.z < 0 || pos.x > map.GetUpperBound(0) || pos.z > map.GetUpperBound(1)) return;
+			map[pos.x, pos.z].unit = unit;
 		}
 		public void SetTileType(Position pos, int type)
 		{
-			if (pos.x < 0 || pos.y < 0 || pos.x >= map.GetUpperBound(0) || pos.y >= map.GetUpperBound(1)) return;
-			map[pos.x, pos.y].type = type;
+			if (pos.x < 0 || pos.z < 0 || pos.x >= map.GetUpperBound(0) || pos.z >= map.GetUpperBound(1)) return;
+			map[pos.x, pos.z].type = type;
 		}
 	}
 }
