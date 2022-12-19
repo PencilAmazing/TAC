@@ -21,7 +21,7 @@ namespace TAC.Inner
 		}
 
 		private Scene scene;
-		private GameSelection mode;
+		public GameSelection mode { get; private set; }
 		public CameraControl camera;
 		public Unit selectedUnit { get; private set; }
 
