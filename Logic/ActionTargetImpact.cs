@@ -9,7 +9,9 @@ namespace TAC.Logic
 		public Vector3 Point;
 		// Tile containing collision thing, wall
 		public Position Tile;
-		// Type of collison. 0 is thing, 1 is north wall, 2 is west wall
+		/// <summary>
+		/// Type of collison. 0 is thing, 1 is north wall, 2 is west wall, 3 is unit
+		/// </summary>
 		public Wall HitType;
 
 		public TargetImpactData(Vector3 point, Position tile, Wall hitType)
@@ -33,7 +35,7 @@ namespace TAC.Logic
 		public ActionTargetImpact(Scene scene, Item item, TargetImpactData impact) : base(scene)
 		{
 			this.impact = impact;
-			impactEffect = new ParticleEffect(item.impactEffect, 12, impact.Point, Vector3.One*2, Vector3.Zero);
+			impactEffect = new ParticleEffect(item.impactEffect, 12, impact.Point, Vector3.One * 2, Vector3.Zero);
 			scene.AddParticleEffect(impactEffect);
 		}
 
@@ -48,6 +50,8 @@ namespace TAC.Logic
 						// Thing hit
 					} else if (impact.HitType == Wall.North || impact.HitType == Wall.West) {
 						scene.ClearBrush(impact.Tile, impact.HitType);
+					} else if ((int)impact.HitType == 3) {
+						scene.AffectUnit(scene.GetUnit(impact.Tile), -10);
 					}
 				}
 			} else if (phase / 8 <= 4) {

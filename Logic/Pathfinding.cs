@@ -43,7 +43,7 @@ namespace TAC.Logic
 		public bool FindPathForUnit(Unit unit, Position goal)
 		{
 			// Skip if tile is impossible to walk in to
-			if (!scene.IsTileWithinBounds(goal) || scene.IsTileOccupied(goal)) {
+			if (!scene.IsTileWithinBounds(goal) || scene.IsTileOccupied(goal) || scene.IsTileBlocking(goal)) {
 				return false;
 			}
 			Position start = unit.position;

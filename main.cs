@@ -19,6 +19,7 @@ namespace TAC
 				engine.scene.ToggleBrush(new Position(0, 0, 0), Wall.West, 1);
 			} else {
 				engine.scene.AddUnit(new Unit(0, new Position(0, 0, 0), "Bruh-bot 9001", UnitDirection.North));
+				engine.scene.AddUnit(new Unit(0, new Position(2, 0, 5), "Poor fella"));
 				// This all should be loaded by cache from 
 				Sprite impactEffect = new Sprite(0, 6, 32, 32);
 				Sprite actionEffect = new Sprite(1, 6, 256, 64);

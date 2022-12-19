@@ -16,6 +16,7 @@ namespace TAC.Logic
 		public Position target;
 		public Position[] line;
 
+		// TODO get rid of this, cache it all in our own data structure
 		public RayCollision collision;
 		public TargetImpactData impactData;
 
@@ -36,14 +37,19 @@ namespace TAC.Logic
 		private RayCollision CalculateImpactPoint()
 		{
 			RayCollision result = new RayCollision();
-			impactData = new TargetImpactData(new Vector3(float.PositiveInfinity), Position.Negative, (Wall)(3));
+			impactData = new TargetImpactData(target.ToVector3(), target, 0);
 
 			foreach (Position pos in line) {
 				// I'll let Bill Gates optimize this mess
-				if (scene.IsTileOccupied(pos) || scene.IsTileBlocking(pos)) {
+				if (pos != unit.position && (scene.IsTileOccupied(pos) || scene.IsTileBlocking(pos))) {
 					Vector3 chestHeight = unit.position.ToVector3() + unit.equipOffset;
-					Ray ray = new Ray(chestHeight, Vector3.Normalize(target.ToVector3() - chestHeight));
 					Tile tile = scene.GetTile(pos);
+
+					Ray ray;
+					if (tile.HasUnit())
+						ray = new Ray(chestHeight, Vector3.Normalize(target.ToVector3() + tile.unit.equipOffset - chestHeight));
+					else
+						ray = new Ray(chestHeight, Vector3.Normalize(target.ToVector3() - chestHeight));
 
 					/* Test collisiion with all walls, all objects, and the unit itself
 					 * then sort by distance along line to find first hit. inefficient,
@@ -53,7 +59,7 @@ namespace TAC.Logic
 					 */
 
 					if (tile.HasWall(Wall.North)) {
-						BoundingBox box = new(-0.5f * Vector3.One, 0.5f * Vector3.One); // Constant for our cube mesh
+						BoundingBox box = Raylib.GetMeshBoundingBox(scene.cache.cube); // Constant for our cube mesh
 						box.min = Vector3Transform(box.min, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformNorth);
 						box.max = Vector3Transform(box.max, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformNorth);
 						result = Raylib.GetRayCollisionBox(ray, box);
@@ -66,7 +72,7 @@ namespace TAC.Logic
 					}
 
 					if (tile.HasWall(Wall.West)) {
-						BoundingBox box = new(-0.5f * Vector3.One, 0.5f * Vector3.One);
+						BoundingBox box = Raylib.GetMeshBoundingBox(scene.cache.cube); // Constant for our cube mesh
 						box.min = Vector3Transform(box.min, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformWest);
 						box.max = Vector3Transform(box.max, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformWest);
 						result = Raylib.GetRayCollisionBox(ray, box);
@@ -74,6 +80,16 @@ namespace TAC.Logic
 							impactData.Point = result.point;
 							impactData.Tile = pos;
 							impactData.HitType = Wall.West;
+						}
+					}
+
+					if (tile.HasUnit()) {
+						BoundingBox box = tile.unit.GetUnitBoundingBox();
+						result = Raylib.GetRayCollisionBox(ray, box);
+						if (result.hit && Vector3.DistanceSquared(chestHeight, result.point) < Vector3.DistanceSquared(chestHeight, impactData.Point)) {
+							impactData.Point = result.point;
+							impactData.Tile = pos;
+							impactData.HitType = (Wall)3;
 						}
 					}
 
@@ -122,7 +138,7 @@ namespace TAC.Logic
 			if (unit.direction != targetDir) {
 				nextAction = new ActionTurnUnit(scene, unit, Pathfinding.GetDirection(unit.position, target));
 				nextAction.SetNextAction(new ActionPassthrough(scene, this)); // Return to this once done
-				Done();
+				base.Done(); // Not actually done.
 			} else if (item.projectileType == ProjectileType.Straight) {
 				ThinkStraight(deltaTime);
 			} else if (item.projectileType == ProjectileType.Gravity) {

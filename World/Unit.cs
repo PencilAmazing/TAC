@@ -30,9 +30,11 @@ namespace TAC.World
 		};
 
 		public string Name;
+		// FIXME Make this of type UnitType or UnitTemplate maybe
 		public int Type { get; }
 		public int Faction { get; }
 		public int TimeUnits;
+		public int Health;
 		public List<Item> inventory;
 
 		public Position position;
@@ -52,11 +54,20 @@ namespace TAC.World
 			this.Name = name;
 			this.phase = 0;
 			this.TimeUnits = 100;
+			this.Health = 80;
 			this.inventory = inventory == null ? new List<Item>() : inventory;
 		}
 
 		public void Think(float deltaTime)
 		{
+		}
+
+		/// <summary>
+		/// Return false if unit should be removed from game
+		/// </summary>
+		public bool IsAlive()
+		{
+			return Health > 0;
 		}
 
 		/// <summary>
@@ -70,5 +81,14 @@ namespace TAC.World
 			}
 			return false;
 		}
+
+		public BoundingBox GetUnitBoundingBox()
+		{
+			BoundingBox box = new(new Vector3(-0.5f, 0, -0.5f), new Vector3(0.5f, 2, 0.5f));
+			box.min = Raymath.Vector3Transform(box.min, Raymath.MatrixTranslate(position.x, position.y, position.z));
+			box.max = Raymath.Vector3Transform(box.max, Raymath.MatrixTranslate(position.x, position.y, position.z));
+			return box;
+		}
+
 	}
 }

@@ -44,8 +44,12 @@ namespace TAC.World
 		public virtual void Think(float deltaTime)
 		{
 			// Is this necessary? Make it opt in if anything
-			//foreach (Unit unit in units)
-			//unit.Think(deltaTime);
+			//foreach (Unit unit in units) {
+			//	//unit.Think(deltaTime);
+			//	if (!unit.IsAlive()) {
+			//		units.Remove(unit);
+			//	}
+			//}
 
 			if (currentAction != null) {
 				currentAction.Think(deltaTime);
@@ -101,7 +105,6 @@ namespace TAC.World
 			ActionMoveUnit move = GetCurrentAction() as ActionMoveUnit;
 			if (move != null) {
 				renderer.DrawDebugPath(move.path.path.ToArray());
-				return;
 			}
 			ActionSelectTarget select = GetCurrentAction() as ActionSelectTarget;
 			if (select != null) {
@@ -110,7 +113,6 @@ namespace TAC.World
 					renderer.DrawDebugLine(select.unit.position.ToVector3() + select.unit.equipOffset, select.collision.point, Color.BEIGE);
 				else
 					renderer.DrawDebugLine(select.unit.position.ToVector3() + select.unit.equipOffset, select.target.ToVector3(), Color.BEIGE);
-				return;
 			}
 
 			foreach (Unit unit in units)
@@ -216,7 +218,7 @@ namespace TAC.World
 
 			float tDeltaX = Abs(d.X) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.X);
 			float tDeltaY = Abs(d.Y) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.Y);
-			float tDeltaZ = Abs(d.Z) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.Z);	
+			float tDeltaZ = Abs(d.Z) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.Z);
 
 			// Offset by 0.5f to find fractional part, since out tiles are centered at 0,0
 			// Other algorithms have tiles centered at 0.5, 0.5, so we try to cancel it out
@@ -332,6 +334,12 @@ namespace TAC.World
 		public Unit GetUnit(Position pos)
 		{
 			return floor.GetTile(pos.x, pos.z).unit;
+		}
+
+		// health only for now
+		public void AffectUnit(Unit unit, int effect)
+		{
+			unit.Health += effect;
 		}
 
 		public void AddParticleEffect(ParticleEffect effect)
