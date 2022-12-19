@@ -1,6 +1,8 @@
 ﻿using ImGuiNET;
 using Raylib_cs;
 using System.Numerics;
+using TAC.Inner;
+using TAC.World;
 using static ImGuiNET.ImGui;
 
 namespace TAC.UISystem
@@ -24,6 +26,64 @@ namespace TAC.UISystem
 		public void Load() { }
 
 		public void Unload() { }
+
+		public void DrawEditUI(float dt, Engine engine)
+		{
+			SetNextWindowPos(Vector2.Zero);
+
+			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+			Begin("huh", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
+
+			if (Button("Play", new Vector2(150, 40))) {
+				UIEventQueue.EventQueue.Enqueue(engine.ToggleGameMode);
+			}
+
+			PopStyleVar();
+			End();
+		}
+
+		// Move this to UI class for god's sake
+		public void DrawGameUI(float dt, Engine engine)
+		{
+			PlayerController player = engine.player;
+
+			SetNextWindowPos(Vector2.Zero);
+
+			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+			Begin("controls", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
+
+			if (Button("Edit", new Vector2(150, 40))) {
+				UIEventQueue.PushEvent(engine.ToggleGameMode);
+			}
+			End();
+
+			if (player.selectedUnit != null) {
+				SetNextWindowPos(Vector2.UnitY * Engine.screenHeight, ImGuiCond.None, Vector2.UnitY);
+				Begin("info", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize);
+				{
+					SetWindowFontScale(1.5f);
+					ProgressBar(player.selectedUnit.TimeUnits / 100.0f, new Vector2(-1, 0), player.selectedUnit.TimeUnits.ToString());
+					// Had to read source code to find the right ImGuiCol. wtf man
+					PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(1, 0, 0, 1));
+					ProgressBar(player.selectedUnit.Health / 80.0f, new Vector2(-1, 0), player.selectedUnit.Health.ToString());
+					PopStyleColor();
+					Text(player.selectedUnit.Name);
+				}
+				End();
+
+				SetNextWindowPos(new Vector2(Engine.screenWidth, Engine.screenHeight), ImGuiCond.None, Vector2.One);
+				Begin("Onhand", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
+				//SetWindowFontScale(1.5f);
+				if (player.selectedUnit.inventory.Count > 0) {
+					Item item = player.selectedUnit.inventory[0];
+					UI.ButtonWithCallback(item.name, new Vector2(200, 40), player.StartSelectingTarget);
+				}
+
+				End();
+			}
+
+			PopStyleVar();
+		}
 
 		public static void DispatchEvents()
 		{

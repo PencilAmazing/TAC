@@ -39,56 +39,6 @@ namespace TAC.Inner
 			player = new PlayerController(scene);
 		}
 
-		public void DrawEditUI(float dt)
-		{
-			SetNextWindowPos(Vector2.Zero);
-
-			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-			Begin("huh", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
-
-			if (Button("Play", new Vector2(150, 40))) {
-				UIEventQueue.EventQueue.Enqueue(ToggleGameMode);
-			}
-
-			PopStyleVar();
-			End();
-		}
-
-		// Move this to UI class for god's sake
-		public void DrawGameUI(float dt)
-		{
-			SetNextWindowPos(Vector2.Zero);
-
-			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-			Begin("controls", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
-
-			if (Button("Edit", new Vector2(150, 40))) {
-				UIEventQueue.PushEvent(ToggleGameMode);
-			}
-			End();
-
-			if (player.selectedUnit != null) {
-				SetNextWindowPos(Vector2.UnitY * screenHeight, ImGuiCond.None, Vector2.UnitY);
-				Begin("info", ImGuiWindowFlags.NoDecoration|ImGuiWindowFlags.AlwaysAutoResize);
-				SetWindowFontScale(1.5f);
-				ProgressBar((float)player.selectedUnit.TimeUnits / 100.0f, new Vector2(-1,0), player.selectedUnit.TimeUnits.ToString());
-				Text(player.selectedUnit.Name);
-				End();
-
-				SetNextWindowPos(new Vector2(screenWidth, screenHeight), ImGuiCond.None, Vector2.One);
-				Begin("Onhand", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
-				//SetWindowFontScale(1.5f);
-				if (player.selectedUnit.inventory.Count > 0) {
-					Item item = player.selectedUnit.inventory[0];
-					UI.ButtonWithCallback(item.name, new Vector2(200, 40), player.StartSelectingTarget);
-				}
-
-				End();
-			}
-
-			PopStyleVar();
-		}
-
 		public void ToggleGameMode() => SetGameMode(!scene.isEdit);
 
 		public void SetGameMode(bool isEdit)
@@ -96,14 +46,9 @@ namespace TAC.Inner
 			scene.isEdit = isEdit;
 			if (scene.isEdit == true && scene.GetCurrentAction() != null) {
 				// Cancel current action
+				// FIXME maybe call Done() beforehand to allow cleanup?
 				scene.ClearCurrentAction();
 			}
-		}
-
-		public void ConvertEditToGame()
-		{
-			SetGameMode(false);
-
 		}
 
 		public void Shmove(float deltaTime)
@@ -111,9 +56,9 @@ namespace TAC.Inner
 			imguiController.Update(deltaTime);
 			//ui.Update(deltaTime);
 			if (scene.isEdit)
-				DrawEditUI(deltaTime);
+				ui.DrawEditUI(deltaTime, this);
 			else
-				DrawGameUI(deltaTime);
+				ui.DrawGameUI(deltaTime, this);
 
 			player.camera.UpdateCamera(scene.size.ToVector3());
 			BeginDrawing();
