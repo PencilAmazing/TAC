@@ -5,6 +5,7 @@ using TAC.Editor;
 using TAC.Logic;
 using TAC.Render;
 using static System.Math;
+using static TAC.World.Position;
 
 namespace TAC.World
 {
@@ -142,6 +143,15 @@ namespace TAC.World
 		}
 
 		/// <summary>
+		/// Does tile contain a unit or a thing?
+		/// </summary>
+		public bool IsTileImpassable(Position pos)
+		{
+			Tile tile = floor.GetTile(pos.x, pos.z);
+			return tile != Tile.nullTile && (tile.HasThing() || tile.HasUnit());
+		}
+
+		/// <summary>
 		/// Does tile block line of sight or line of fire?
 		/// </summary>
 		public bool IsTileBlocking(Position pos)
@@ -260,15 +270,30 @@ namespace TAC.World
 		/// <param name="dir">Direction to walk towards</param>
 		public bool TestDirection(Position pos, UnitDirection dir)
 		{
+			// TODO think of units and objects as well!
+			// Somethings can block sight but not movement
 			// I really hope the compiler fixes this
 			int x = pos.x;
 			int z = pos.z;
-			// Can't be arsed to inline
-			// Walls around this tile
-			bool north = floor.GetTile(x, z).North > 0;
-			bool west = floor.GetTile(x, z).West > 0;
-			bool south = floor.GetTile(x, z + 1).North > 0;
-			bool east = floor.GetTile(x + 1, z).West > 0;
+
+			// Blocking cardinal direction movement
+			bool north = floor.GetTile(x, z).HasWall(Wall.North) || IsTileImpassable(pos - PositiveZ);
+			bool west = floor.GetTile(x, z).HasWall(Wall.West) || IsTileImpassable(pos - PositiveX);
+			bool south = floor.GetTile(x, z + 1).HasWall(Wall.North) || IsTileImpassable(pos + PositiveZ);
+			bool east = floor.GetTile(x + 1, z).HasWall(Wall.West) || IsTileImpassable(pos + PositiveX);
+
+			bool northeast = floor.GetTile(pos + PositiveX - PositiveZ).HasWall(Wall.West) ||
+							 floor.GetTile(pos + PositiveX).HasWall(Wall.North) ||
+							 IsTileImpassable(pos + PositiveX - PositiveZ);
+			bool northwest = floor.GetTile(pos - PositiveZ).HasWall(Wall.West) ||
+							 floor.GetTile(pos - PositiveX).HasWall(Wall.North) ||
+							 IsTileImpassable(pos - PositiveX - PositiveZ);
+			bool southeast = floor.GetTile(pos + PositiveX + PositiveZ).HasWall(Wall.North) ||
+							 floor.GetTile(pos + PositiveX + PositiveZ).HasWall(Wall.West) ||
+							 IsTileImpassable(pos + PositiveX + PositiveZ);
+			bool southwest = floor.GetTile(pos - PositiveX + PositiveZ).HasWall(Wall.North) ||
+							 floor.GetTile(pos + PositiveZ).HasWall(Wall.West) ||
+							 IsTileImpassable(pos + PositiveZ - PositiveX);
 
 			if (dir == UnitDirection.North)
 				return north;
@@ -280,13 +305,13 @@ namespace TAC.World
 				return east;
 
 			if (dir == UnitDirection.NorthEast) {
-				return north || east || floor.GetTile(x + 1, z - 1).West > 0 || floor.GetTile(x + 1, z).North > 0;
+				return north || east || northeast;
 			} else if (dir == UnitDirection.NorthWest) {
-				return north || west || floor.GetTile(x, z - 1).West > 0 || floor.GetTile(x - 1, z).North > 0;
+				return north || west || northwest;
 			} else if (dir == UnitDirection.SouthEast) {
-				return south || east || floor.GetTile(x + 1, z + 1).North > 0 || floor.GetTile(x + 1, z + 1).West > 0;
+				return south || east || southeast;
 			} else if (dir == UnitDirection.SouthWest) {
-				return south || west || floor.GetTile(x - 1, z + 1).North > 0 || floor.GetTile(x, z + 1).West > 0;
+				return south || west || southwest;
 			} else return false;
 		}
 

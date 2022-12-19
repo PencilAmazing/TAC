@@ -9,7 +9,12 @@ namespace TAC.World
 		public int y;
 		public int z;
 
+		public static readonly Position One = new Position(1, 1, 1);
 		public static readonly Position Negative = new Position(-1, -1, -1);
+
+		public static readonly Position PositiveX = new Position(1, 0, 0);
+		public static readonly Position PositiveY = new Position(0, 1, 0);
+		public static readonly Position PositiveZ = new Position(0, 0, 1);
 
 		public Position(int x, int y, int z)
 		{

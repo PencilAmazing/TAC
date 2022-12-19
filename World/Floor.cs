@@ -71,6 +71,8 @@ namespace TAC.World
 			return quad;
 		}
 
+		public Tile GetTile(Position pos) => GetTile(pos.x, pos.z);
+
 		public Tile GetTile(int x, int z)
 		{
 			if (x < 0 || z < 0 || x > map.GetUpperBound(0) || z > map.GetUpperBound(1))
