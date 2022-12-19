@@ -112,6 +112,9 @@ namespace TAC.World
 					renderer.DrawDebugLine(select.unit.position.ToVector3() + select.unit.equipOffset, select.target.ToVector3(), Color.BEIGE);
 				return;
 			}
+
+			foreach (Unit unit in units)
+				Raylib.DrawBoundingBox(unit.GetUnitBoundingBox(), Color.ORANGE);
 		}
 
 		public Model GetFloorQuad() => floor.GetQuad();
@@ -191,10 +194,7 @@ namespace TAC.World
 			}
 		}
 
-		public Position[] GetSupercoverLine(Position origin, Position end)
-		{
-			return GetSupercoverLine(origin.ToVector3(), end.ToVector3());
-		}
+		public Position[] GetSupercoverLine(Position origin, Position end) => GetSupercoverLine(origin.ToVector3(), end.ToVector3());
 
 		// https://www.redblobgames.com/grids/line-drawing.html#supercover
 		// https://github.com/cgyurgyik/fast-voxel-traversal-algorithm/blob/master/overview/FastVoxelTraversalOverview.md
@@ -292,14 +292,15 @@ namespace TAC.World
 		public void SetCurrentAction(Action action) => currentAction = action;
 		public void ClearCurrentAction() => currentAction = currentAction.NextAction();
 
-		public void AddUnit(Unit unit)
+		public bool AddUnit(Unit unit)
 		{
-			if (unit == null)
-				return;
+			if (unit == null || IsTileOccupied(unit.position))
+				return false;
 			units.Add(unit);
 			Tile tile = floor.GetTile(unit.position.x, unit.position.z);
 			tile.unit = unit;
 			floor.SetTile(unit.position, tile);
+			return true;
 		}
 
 		public void PushActionMoveUnit(Unit unit, Position goal)

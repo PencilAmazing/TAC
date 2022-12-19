@@ -88,6 +88,8 @@
 		// TODO Implement things
 		public bool HasThing() => false;
 
+		public bool HasUnit() => this.unit != null;
+
 		public static bool operator ==(Tile l, Tile r)
 		{
 			return l.type == r.type &&
