@@ -38,20 +38,20 @@ namespace TAC.Render
 		public void UpdateCamera(Vector3 clamp)
 		{
 			Vector3 rod = camera.position - camera.target;
-			Vector2 angleV = Raymath.Vector3Angle(rod, Vector3.UnitY);
-			Quaternion rot = Quaternion.CreateFromAxisAngle(camera.up, angleV.X);
+			Vector2 angleV = Raymath.Vector3Angle(rod, Vector3.UnitX);
+			Quaternion rot = Raymath.QuaternionFromAxisAngle(camera.up, angleV.Y);
 
 			if (IsKeyDown(KEY_W)) {
-				camera.target += Raymath.Vector3RotateByQuaternion(Vector3.UnitZ * speed, rot);
-			}
-			if (IsKeyDown(KEY_S)) {
 				camera.target += Raymath.Vector3RotateByQuaternion(-Vector3.UnitZ * speed, rot);
 			}
+			if (IsKeyDown(KEY_S)) {
+				camera.target += Raymath.Vector3RotateByQuaternion(Vector3.UnitZ * speed, rot);
+			}
 			if (IsKeyDown(KEY_A)) {
-				camera.target += Raymath.Vector3RotateByQuaternion(Vector3.UnitX * speed, rot);
+				camera.target += Raymath.Vector3RotateByQuaternion(-Vector3.UnitX * speed, rot);
 			}
 			if (IsKeyDown(KEY_D)) {
-				camera.target += Raymath.Vector3RotateByQuaternion(-Vector3.UnitX * speed, rot);
+				camera.target += Raymath.Vector3RotateByQuaternion(Vector3.UnitX * speed, rot);
 			}
 			if (IsKeyDown(KEY_Q)) {
 				camera.target -= Vector3.UnitY * speed;
