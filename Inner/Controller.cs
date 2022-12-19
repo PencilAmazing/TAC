@@ -41,7 +41,7 @@ namespace TAC.Inner
 				DrawCubeWiresV(selectedPosition.ToVector3(), Vector3.One, Color.ORANGE);
 
 			if (mode == GameSelection.SelectUnit && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
-				if (selectedUnit == null)
+				if (selected.unit != null)
 					selectedUnit = selected.unit; // Shouldn't be called often
 				else
 					scene.PushActionMoveUnit(selectedUnit, selectedPosition);
