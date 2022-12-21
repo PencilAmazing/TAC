@@ -4,6 +4,7 @@ using static Raylib_cs.Color;
 using static Raylib_cs.MaterialMapIndex;
 using static Raylib_cs.Raylib;
 using TAC.Editor;
+using System.Collections.Generic;
 
 namespace TAC.World
 {
@@ -51,13 +52,13 @@ namespace TAC.World
 			get { return ref map[x, z]; }
 		}
 
-		public void CreateTexture(ResourceCache db)
+		public void CreateTexture(List<Texture> tileLookupTable)
 		{
 			BeginTextureMode(texture);
 			ClearBackground(WHITE);
 			for (int i = 0; i < length; i++) {
 				for (int j = 0; j < width; j++) {
-					Texture2D tex = db.tiles[map[i, j].type];
+					Texture2D tex = tileLookupTable[map[i, j].type].tex;
 					DrawTexture(tex, 128 * i, 128 * j, WHITE);
 				}
 			}

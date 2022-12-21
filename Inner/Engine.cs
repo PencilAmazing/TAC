@@ -1,11 +1,7 @@
-﻿using ImGuiNET;
-using Raylib_cs;
-using System.Numerics;
-using TAC.Editor;
+﻿using TAC.Editor;
 using TAC.Render;
 using TAC.UISystem;
 using TAC.World;
-using static ImGuiNET.ImGui;
 using static Raylib_cs.Raylib;
 
 namespace TAC.Inner
@@ -62,7 +58,7 @@ namespace TAC.Inner
 
 			player.camera.UpdateCamera(scene.size.ToVector3());
 			BeginDrawing();
-			ClearBackground(Color.RAYWHITE);
+			ClearBackground(Raylib_cs.Color.RAYWHITE);
 			BeginMode3D(player.camera.camera);
 
 			if (scene.isEdit)

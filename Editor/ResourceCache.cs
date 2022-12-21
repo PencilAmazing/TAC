@@ -1,21 +1,21 @@
 ﻿using Raylib_cs;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Numerics;
 using System.Text;
-using TAC.Render;
+using System.Text.Json.Nodes;
 using TAC.World;
 using static Raylib_cs.MaterialMapIndex;
 using static Raylib_cs.Raylib;
-using static Raylib_cs.ShaderUniformDataType;
 using static Raylib_cs.Raymath;
+using static Raylib_cs.ShaderUniformDataType;
 
 namespace TAC.Editor
 {
 	// Maps textures loaded in memory to tile IDs
 	public class ResourceCache
 	{
+		private string AssetRootPrefix = "assets/";
 		private string AssetTilePrefix = "assets/tile/";
 		private string AssetUnitPrefix = "assets/unit/";
 		private string AssetShaderPrefix = "assets/shader/";
@@ -39,15 +39,12 @@ namespace TAC.Editor
 			TEX_MISC
 		}
 
-		// Might be inefficient, whatever
-		// Here's an idea: merge them all into one mega list
-		public List<Texture2D> tiles { get; }
-		public List<Texture2D> units { get; }
-		public List<Texture2D> items { get; }
-		public List<Texture2D> misc { get; }
+		public Dictionary<string, UnitTemplate> UnitTemplates;
 
-		public List<Sprite> sprites { get; }
-		public List<Brush> brushes { get; }
+		// name, texture
+		public Dictionary<string, Texture> Textures;
+		public Dictionary<string, Brush> Brushes;
+
 		public List<Model> things { get; }
 
 		// Discard transparent pixels and shift texture
@@ -77,22 +74,15 @@ namespace TAC.Editor
 
 		public ResourceCache()
 		{
-			tiles = new List<Texture2D>();
-			units = new List<Texture2D>();
-			items = new List<Texture2D>();
-			misc = new List<Texture2D>();
-			brushes = new List<Brush>();
-			brushes.Add(null); // reserve 0 slot
+			Textures = new Dictionary<string, Texture>();
+			Brushes = new Dictionary<string, Brush>();
+			UnitTemplates = new Dictionary<string, UnitTemplate>();
 		}
 
 		~ResourceCache()
 		{
-			foreach (Texture2D tex in tiles)
-				UnloadTexture(tex);
-			foreach (Texture2D tex in units)
-				UnloadTexture(tex);
-			foreach (Texture2D tex in items)
-				UnloadTexture(tex);
+			foreach (Texture tex in Textures.Values)
+				UnloadTexture(tex.tex);
 
 			UnloadShader(BillboardShader);
 			UnloadShader(SkyboxShader);
@@ -107,58 +97,52 @@ namespace TAC.Editor
 
 		}
 
-		public int CreateBrush(Brush brush)
+		/// <summary>
+		/// Takes texture key, returns reference to loaded texture or null
+		/// </summary>
+		public Texture GetTexture(string TexturePath)
 		{
-			brushes.Add(brush);
-			return brushes.Count - 1;
+			if (Textures.ContainsKey(TexturePath)) {
+				return Textures[TexturePath];
+			} else return LoadTexture(TexturePath);
 		}
 
-
-		public int LoadTexture(string ImagePath, TextureType type)
+		public Texture LoadTexture(string TextureKey)
 		{
-			Texture2D tex = Raylib.LoadTexture(ImagePath);
+			Texture2D tex = Raylib.LoadTexture(AssetRootPrefix + TextureKey + ".png");
 			SetTextureFilter(tex, TextureFilter.TEXTURE_FILTER_POINT);
 			SetTextureWrap(tex, TextureWrap.TEXTURE_WRAP_CLAMP);
-			switch (type) {
-				case TextureType.TEX_TILE:
-					tiles.Add(tex);
-					// ID used to fetch tex later
-					return tiles.Count - 1;
-				case TextureType.TEX_UNIT:
-					units.Add(tex);
-					return units.Count - 1;
-				case TextureType.TEX_ITEM:
-					items.Add(tex);
-					return items.Count - 1;
-				case TextureType.TEX_MISC:
-					misc.Add(tex);
-					return misc.Count - 1;
-				default:
-					break;
+
+			string TextureName = TextureKey;
+			if (tex.id == 0)
+				return null;
+			else {
+				Texture loadedTexture = new Texture(TextureName, tex);
+				Textures[TextureName] = loadedTexture;
+				return loadedTexture;
 			}
-			return -1;
 		}
 
 		private void LoadTiles()
 		{
-			LoadTexture(AssetTilePrefix + "OBKMTB90.png", TextureType.TEX_TILE);
-			LoadTexture(AssetTilePrefix + "OBASEM37.png", TextureType.TEX_TILE);
-			LoadTexture(AssetTilePrefix + "OBOOKA03.png", TextureType.TEX_TILE);
-			LoadTexture(AssetTilePrefix + "OBRCKL02.png", TextureType.TEX_TILE);
-			LoadTexture(AssetTilePrefix + "OBRCKQ12.png", TextureType.TEX_TILE);
-			LoadTexture(AssetTilePrefix + "OBRCKQ44.png", TextureType.TEX_TILE);
-			LoadTexture(AssetTilePrefix + "OCHRMA14.png", TextureType.TEX_TILE);
+			//LoadTexture(AssetTilePrefix + "OBKMTB90.png");
+			//LoadTexture(AssetTilePrefix + "OBASEM37.png");
+			//LoadTexture(AssetTilePrefix + "OBOOKA03.png");
+			//LoadTexture(AssetTilePrefix + "OBRCKL02.png");
+			//LoadTexture(AssetTilePrefix + "OBRCKQ12.png");
+			//LoadTexture(AssetTilePrefix + "OBRCKQ44.png");
+			//LoadTexture(AssetTilePrefix + "OCHRMA14.png");
 		}
 
 		private void LoadUnits()
 		{
-			LoadTexture(AssetUnitPrefix + "mech.png", TextureType.TEX_UNIT);
+			//LoadTexture(AssetUnitPrefix + "mech.png");
 		}
 
 		private void LoadSprites()
 		{
-			LoadTexture(AssetScenePrefix + "sprite/explosion_11.png", TextureType.TEX_MISC);
-			LoadTexture(AssetScenePrefix + "sprite/ProjectileArranged.png", TextureType.TEX_MISC);
+			LoadTexture("scene/sprite/explosion_11");
+			LoadTexture("scene/sprite/ProjectileArranged");
 		}
 
 		private void LoadShaders()
@@ -278,13 +262,8 @@ namespace TAC.Editor
 
 		private void LoadBrushes()
 		{
-			CreateBrush(new Brush(1, 1, 1, 1, 1, 1));
-			CreateBrush(new Brush(1, 2, 3, 4, 5, 6));
-		}
-
-		private void LoadMeshes()
-		{
-			//string[] files = System.IO.Directory.GetFiles(AssetScenePrefix + "things", "*.thg");
+			//LoadBrush("brush/copper");
+			//CreateBrush("rainbow", new Brush(1, 2, 3, 4, 5, 6));
 		}
 
 		public void LoadAssets()
@@ -296,61 +275,37 @@ namespace TAC.Editor
 			LoadShaders();
 			GenerateUploadMeshes();
 			LoadBrushes();
-			LoadMeshes();
 		}
 
-		public bool WriteSceneToDisk(Scene scene, string filename = "huh.tac")
+		public UnitTemplate GetUnitTemplate(string assetname)
 		{
-			StringBuilder str = new StringBuilder();
-			using (StreamWriter writer = new StreamWriter(Path.Combine(AssetSaveDirectory, filename))) {
-				// Write Brushes
-				writer.Write("[Brush]");
-				// brushid = texture ids
-				foreach (Brush brush in brushes) {
-					str.AppendJoin(',', brush.faces);
-					writer.WriteLine(str);
-					str.Clear();
-				}
-				writer.WriteLine("[Units]");
-				foreach (Unit unit in scene.units) {
-					str.Append(unit.Type);
-					str.Append(',');
-					str.Append(unit.Name);
-					str.Append(',');
-					str.Append(unit.position.ToString());
-					str.Append(',');
-					str.Append(unit.direction.ToString());
-					writer.Write(str);
-					str.Clear();
-				}
+			string filelocation = System.IO.Path.GetFullPath(AssetRootPrefix + assetname + ".json");
+			string unitFile = System.IO.File.ReadAllText(filelocation, Encoding.UTF8);
+			JsonNode templateNode = JsonNode.Parse(unitFile);
 
-				writer.WriteLine("[Floor]");
-				writer.Write(scene.floor.length);
-				writer.Write(',');
-				writer.WriteLine(scene.floor.width);
-				writer.Write(',');
-				foreach (Tile tile in scene.floor.map) {
-					str.AppendJoin(',', tile.type, tile.North, tile.West, tile.thing, tile.walls);
-					writer.Write(str);
-					str.Clear();
-				}
-				writer.Write('\n');
-			}
+			Texture tex = GetTexture(templateNode["texture"].GetValue<string>());
+			UnitTemplate template = new UnitTemplate((int)templateNode["health"], (int)templateNode["time"], tex);
+			UnitTemplates.Add(assetname, template);
 
-			return true;
+			return template;
 		}
 
-		public bool LoadSceneFromDisk(ref Scene scene, string filename)
+		public Brush LoadBrush(string assetname)
 		{
-			using (StreamReader reader = new(Path.Combine(AssetSaveDirectory, filename))) {
-				while (!reader.EndOfStream) {
-					string line = reader.ReadLine();
-					if (line[0] == '[') {
+			string filelocation = System.IO.Path.GetFullPath(AssetRootPrefix + assetname + ".json");
+			string brushFile = System.IO.File.ReadAllText(filelocation, Encoding.UTF8);
+			JsonNode brushNode = JsonNode.Parse(brushFile);
 
-					}
-				}
-			}
-			return true;
+			JsonArray faces = brushNode["faces"].AsArray();
+			Texture[] textures = new Texture[6];
+
+			for (int i = 0; i < 6; i++)
+				textures[i] = GetTexture((string)faces[i]);
+
+			Brush brush = new Brush(assetname, textures);
+			Brushes.Add(assetname, brush);
+
+			return brush;
 		}
 	}
 }

@@ -39,7 +39,7 @@ namespace TAC.Render
 				ShaderUniformDataType.SHADER_UNIFORM_VEC2, 1);
 			BeginShaderMode(cache.BillboardShader);
 			foreach (Unit unit in units) {
-				Texture2D tex = cache.units[unit.Type];
+				Texture2D tex = unit.Type.Texture.tex;
 				Vector3 position = unit.position.ToVector3() + Vector3.UnitY;
 				// TODO: move this to GPU
 				// Vector from unit to camera
@@ -60,20 +60,9 @@ namespace TAC.Render
 
 		internal void DrawEffect(Camera3D camera, ParticleEffect effect, ResourceCache cache)
 		{
-			Texture2D misctex = cache.misc[effect.sprite.id];
+			Texture2D misctex = effect.sprite.texture.tex;
 			int stage = effect.GetStage();
 			Rectangle rect = effect.sprite.GetRectangle(stage);
-			//DrawBillboardPro(camera, misctex, rect, effect.position + Vector3.UnitY / 2, Vector3.UnitY, Vector2.One * 2, Vector2.Zero, 0, Color.WHITE);
-			//Span<float> texcoords;
-			//unsafe {
-			//	texcoords = new Span<float>(cache.cross.texcoords, cache.cross.vertexCount * 2);
-			//}
-
-			//for (int x = 0; x <= 1; x++)
-			//	for (int z = 0; z <= 1; z++) {
-			//		texcoords[z * 2 + x * 4] = texcoords[8 + z * 2 + x * 4] = (0.5f * x);
-			//		texcoords[z * 2 + x * 4 + 1] = texcoords[8 + z * 2 + x * 4 + 1] = (0.5f * z);
-			//	}
 
 			SetShaderValueV(cache.BillboardShader, cache.BillboardTexCoordShiftLoc,
 							new float[] { rect.x / misctex.width, rect.width / misctex.width },
@@ -126,27 +115,30 @@ namespace TAC.Render
 
 			transform = MatrixTranslate(center.X, center.Y, center.Z) * transform;
 
-			// Upload textures to GPU
-			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)0, cache.tiles[tex.top]);
-			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)1, cache.tiles[tex.left]);
-			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)2, cache.tiles[tex.front]);
-			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)3, cache.tiles[tex.bottom]);
-			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)4, cache.tiles[tex.right]);
-			SetMaterialTexture(ref cache.wallMaterial, (MaterialMapIndex)5, cache.tiles[tex.back]);
+			unsafe {
+				// Assign textures to locations
+				cache.wallMaterial.shader.locs[(int)ShaderLocationIndex.SHADER_LOC_MAP_DIFFUSE + 0] = cache.toploc;
+				cache.wallMaterial.shader.locs[(int)ShaderLocationIndex.SHADER_LOC_MAP_DIFFUSE + 1] = cache.leftloc;
+				cache.wallMaterial.shader.locs[(int)ShaderLocationIndex.SHADER_LOC_MAP_DIFFUSE + 2] = cache.frontloc;
+				cache.wallMaterial.shader.locs[(int)ShaderLocationIndex.SHADER_LOC_MAP_DIFFUSE + 3] = cache.bottomloc;
+				cache.wallMaterial.shader.locs[(int)ShaderLocationIndex.SHADER_LOC_MAP_DIFFUSE + 4] = cache.rightloc;
+				cache.wallMaterial.shader.locs[(int)ShaderLocationIndex.SHADER_LOC_MAP_DIFFUSE + 5] = cache.backloc;
 
-			// Bind textures to shader
-			SetShaderValueTexture(cache.wallMaterial.shader, cache.toploc, cache.tiles[tex.top]);
-			SetShaderValueTexture(cache.wallMaterial.shader, cache.leftloc, cache.tiles[tex.left]);
-			SetShaderValueTexture(cache.wallMaterial.shader, cache.frontloc, cache.tiles[tex.front]);
-			SetShaderValueTexture(cache.wallMaterial.shader, cache.bottomloc, cache.tiles[tex.bottom]);
-			SetShaderValueTexture(cache.wallMaterial.shader, cache.rightloc, cache.tiles[tex.right]);
-			SetShaderValueTexture(cache.wallMaterial.shader, cache.backloc, cache.tiles[tex.back]);
-
+				// Assign textures to shader
+				cache.wallMaterial.maps[0].texture = tex.top.tex;
+				cache.wallMaterial.maps[1].texture = tex.left.tex;
+				cache.wallMaterial.maps[2].texture = tex.front.tex;
+				cache.wallMaterial.maps[3].texture = tex.bottom.tex;
+				cache.wallMaterial.maps[4].texture = tex.right.tex;
+				cache.wallMaterial.maps[5].texture = tex.back.tex;
+			}
+			// Draw mesh internally binds texture units
 			DrawMesh(cache.cube, cache.wallMaterial, transform); // Magic!
-																 //BoundingBox box = GetMeshBoundingBox(cache.cube);
-																 //box.min = Vector3Transform(box.min, transform);
-																 //box.max = Vector3Transform(box.max, transform);
-																 //DrawBoundingBox(box, Color.RED);
+
+			/*BoundingBox box = GetMeshBoundingBox(cache.cube);
+			box.min = Vector3Transform(box.min, transform);
+			box.max = Vector3Transform(box.max, transform);
+			DrawBoundingBox(box, Color.RED);*/
 		}
 
 		public void DrawSkybox(Camera3D camera, ResourceCache cache)

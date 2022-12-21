@@ -18,6 +18,8 @@ namespace TAC.UISystem
 		public UIEvent LoadFunctionDelegate;
 		public UIEvent ConvertEditorToLevel;
 
+		private bool ShowMaterialPanel = false;
+
 		public Color GetClearColor()
 		{
 			return new Color((byte)(clearColor.X * 255), (byte)(clearColor.Y * 255), (byte)(clearColor.Z * 255), (byte)255);
@@ -30,15 +32,26 @@ namespace TAC.UISystem
 		public void DrawEditUI(float dt, Engine engine)
 		{
 			SetNextWindowPos(Vector2.Zero);
+			SetNextWindowSize(Vector2.Zero);
 
 			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 			Begin("huh", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
 
-			if (Button("Play", new Vector2(150, 40))) {
+			if (Button("Play", new Vector2(-1, 40))) {
 				UIEventQueue.EventQueue.Enqueue(engine.ToggleGameMode);
 			}
-
+			if (Button("Material Selection", new Vector2(0, 50))) {
+				ShowMaterialPanel = !ShowMaterialPanel;
+			}
+			End();
+			if(ShowMaterialPanel) DrawMaterialSelectionPanel(engine);
 			PopStyleVar();
+		}
+
+		private void DrawMaterialSelectionPanel(Engine engine)
+		{
+			Begin("Material Panel");
+			//engine.player.selectedBrush;
 			End();
 		}
 
@@ -108,6 +121,7 @@ namespace TAC.UISystem
 
 		/// <summary>
 		/// imgui button that calls UIEventQueue.PushQueue when clicked
+		/// Mostly for game affecting events
 		/// </summary>
 		public static void ButtonWithCallback(string name, Vector2 size, UIEventDelegate callback)
 		{

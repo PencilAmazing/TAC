@@ -1,4 +1,6 @@
-﻿namespace TAC.Render
+﻿using TAC.Editor;
+
+namespace TAC.Render
 {
 	/// <summary>
 	/// Data only class
@@ -6,15 +8,15 @@
 	/// </summary>
 	public class Sprite
 	{
-		public int id; // ID of effect texture stored in misc cache
+		public Texture texture; // ID of effect texture stored in misc cache
 		public int numFrames; // stage = phase/timing % numFrames
 
 		public int frameWidth; // Size of single frame
 		public int frameHeight;
 
-		public Sprite(int id, int numFrames, int frameWidth, int frameHeight)
+		public Sprite(Texture texture, int numFrames, int frameWidth, int frameHeight)
 		{
-			this.id = id;
+			this.texture = texture;
 			this.numFrames = numFrames;
 			this.frameHeight = frameHeight;
 			this.frameWidth = frameWidth;

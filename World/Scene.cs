@@ -1,5 +1,6 @@
 ﻿using Raylib_cs;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using TAC.Editor;
 using TAC.Logic;
@@ -24,6 +25,23 @@ namespace TAC.World
 		private Stack<DebugText> debugStack;
 		//public List<Position> debugPath;
 
+		// Map tile types to texture names
+		// Refreshed each map load
+		// Used to translate between references during disk IO
+		public List<Texture> TileTypeMap { get; private set; }
+		public int AddTileToMap(Texture tile)
+		{
+			TileTypeMap.Add(tile);
+			return TileTypeMap.Count - 1;
+		}
+		public List<Brush> BrushTypeMap { get; private set; }
+		public int AddBrushToMap(Brush brush)
+		{
+			BrushTypeMap.Add(brush);
+			return BrushTypeMap.Count - 1;
+		}
+
+		// TODO: replace with action stack?
 		private Action currentAction;
 
 		public Scene(Position size, Renderer renderer, ResourceCache cache, bool isEdit)
@@ -36,10 +54,22 @@ namespace TAC.World
 			this.isEdit = isEdit;
 			currentAction = null;
 
-			floor = new Floor(size.x, size.y);
-			floor.CreateTexture(cache);
-
 			debugStack = new Stack<DebugText>();
+
+			TileTypeMap = new List<Texture>();
+			BrushTypeMap = new List<Brush>();
+		}
+
+		~Scene()
+		{
+			TileTypeMap.Clear();
+			BrushTypeMap.Clear();
+		}
+
+		public void AddFloor(Floor NewFloor)
+		{
+			this.floor = NewFloor;
+			floor.CreateTexture(TileTypeMap);
 		}
 
 		public virtual void Think(float deltaTime)
@@ -73,9 +103,9 @@ namespace TAC.World
 				for (int j = 0; j < floor.width; j++) {
 					Tile tile = floor.GetTile(i, j);
 					if (tile.North > 0)
-						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), cache.brushes[tile.North], cache);
+						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), BrushTypeMap[tile.North-1], cache);
 					if (tile.West > 0)
-						renderer.DrawWall(camera, new Vector3(i, 0, j), true, tile.HasWall(Wall.FlipWest), cache.brushes[tile.West], cache);
+						renderer.DrawWall(camera, new Vector3(i, 0, j), true, tile.HasWall(Wall.FlipWest), BrushTypeMap[tile.West-1], cache);
 				}
 			}
 

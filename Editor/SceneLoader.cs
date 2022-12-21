@@ -43,9 +43,9 @@ namespace TAC.Editor
 			for (int i = 0; i < 6; i++) {
 				faces[i] = Convert.ToInt32(chars[i]);
 			}
-			scene.cache.CreateBrush(new Brush(faces));
+			//scene.cache.CreateBrush(new Brush(faces));
 		}
-
+		/*
 		void LoadUnit(string line)
 		{
 			string[] data = line.Split(',');
@@ -60,7 +60,7 @@ namespace TAC.Editor
 			Unit unit = new Unit(type, pos, name, (UnitDirection)direction);
 			scene.units.Add(unit);
 			scene.floor.SetTileUnit(pos, unit);
-		}
+		}*/
 
 		void LoadFloor(string line)
 		{
@@ -89,7 +89,7 @@ namespace TAC.Editor
 					LoadBrush(line);
 					break;
 				case LoaderState.Units:
-					LoadUnit(line);
+					//LoadUnit(line);
 					break;
 				case LoaderState.Floor:
 					LoadFloor(line);

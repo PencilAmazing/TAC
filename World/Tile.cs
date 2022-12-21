@@ -1,4 +1,6 @@
-﻿namespace TAC.World
+﻿using TAC.Editor;
+
+namespace TAC.World
 {
 	[System.Flags]
 	public enum Wall : byte
@@ -9,23 +11,30 @@
 		FlipWest = 1 << 3
 	};
 
+	// Wall brush
 	public class Brush
 	{
-		public int[] faces;
+		public Texture[] faces;
+		public string assetname;
 
 		// Just syntax sugar
-		public int top { get => faces[0]; set => faces[0] = value; }
-		public int front { get => faces[1]; set => faces[1] = value; }
-		public int bottom { get => faces[2]; set => faces[2] = value; }
-		public int back { get => faces[3]; set => faces[3] = value; }
-		public int right { get => faces[4]; set => faces[4] = value; }
-		public int left { get => faces[5]; set => faces[5] = value; }
+		public Texture top { get => faces[0]; set => faces[0] = value; }
+		public Texture front { get => faces[1]; set => faces[1] = value; }
+		public Texture bottom { get => faces[2]; set => faces[2] = value; }
+		public Texture back { get => faces[3]; set => faces[3] = value; }
+		public Texture right { get => faces[4]; set => faces[4] = value; }
+		public Texture left { get => faces[5]; set => faces[5] = value; }
 
-		public Brush() => faces = new int[] { 0, 1, 2, 3, 4, 5 };
+		public Brush() => faces = new Texture[6];
 
-		public Brush(int top = 6, int front = 1, int bottom = 2, int back = 3, int right = 4, int left = 5)
+		public Brush(string assetname,
+					 Texture top = null, Texture front = null,
+					 Texture bottom = null, Texture back = null,
+					 Texture right = null, Texture left = null)
 		{
-			this.faces = new int[6];
+			this.assetname = assetname;
+
+			this.faces = new Texture[6];
 			this.top = top;
 			this.front = front;
 			this.bottom = bottom;
@@ -34,8 +43,9 @@
 			this.left = left;
 		}
 
-		public Brush(int[] faces)
+		public Brush(string assetname, Texture[] faces)
 		{
+			this.assetname = assetname;
 			this.faces = faces;
 		}
 
@@ -48,7 +58,8 @@
 	// Maybe walls should be in a separate array?
 	public struct Tile
 	{
-		// Zero means null
+		// -1 means null
+		// Can change 
 		public int type;
 		public int North;
 		public int West;
@@ -101,5 +112,15 @@
 		public static bool operator !=(Tile l, Tile r) => !(l == r);
 
 		public static readonly Tile nullTile = new Tile(-1);
+
+		public override bool Equals(object obj)
+		{
+			throw new System.NotImplementedException();
+		}
+
+		public override int GetHashCode()
+		{
+			throw new System.NotImplementedException();
+		}
 	}
 }

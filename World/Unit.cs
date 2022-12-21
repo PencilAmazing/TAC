@@ -1,6 +1,7 @@
 ﻿using Raylib_cs;
-using System.Numerics;
 using System.Collections.Generic;
+using System.Numerics;
+using TAC.Editor;
 
 namespace TAC.World
 {
@@ -31,7 +32,7 @@ namespace TAC.World
 
 		public string Name;
 		// FIXME Make this of type UnitType or UnitTemplate maybe
-		public int Type { get; }
+		public readonly UnitTemplate Type;
 		public int Faction { get; }
 		public int TimeUnits;
 		public int Health;
@@ -46,7 +47,7 @@ namespace TAC.World
 		// General purpose counter
 		public int phase;
 
-		public Unit(int type, Position position, string name, UnitDirection direction = UnitDirection.North, List<Item> inventory = null)
+		public Unit(UnitTemplate type, Position position, string name, UnitDirection direction = UnitDirection.North, List<Item> inventory = null)
 		{
 			this.Type = type;
 			this.position = position;

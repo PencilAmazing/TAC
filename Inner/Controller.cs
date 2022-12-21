@@ -24,6 +24,7 @@ namespace TAC.Inner
 		public GameSelection mode { get; private set; }
 		public CameraControl camera;
 		public Unit selectedUnit { get; private set; }
+		public Brush selectedBrush;
 
 		public PlayerController(Scene scene, float speed = 0.5f)
 		{

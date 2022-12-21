@@ -1,10 +1,8 @@
-﻿using System.Numerics;
-using TAC.World;
-using Raylib_cs;
-using TAC.Editor;
-using static Raylib_cs.Raymath;
+﻿using Raylib_cs;
 using System;
-using System.Reflection;
+using System.Numerics;
+using TAC.World;
+using static Raylib_cs.Raymath;
 
 namespace TAC.Logic
 {
