@@ -19,7 +19,7 @@ namespace TAC.World
 
 	public class Unit
 	{
-		public static Vector3[] VectorDirections = {
+		public static readonly Vector3[] VectorDirections = {
 				Vector3.Normalize(Vector3.UnitZ),
 				Vector3.Normalize(Vector3.UnitZ+Vector3.UnitX),
 				Vector3.Normalize(Vector3.UnitX),
@@ -30,9 +30,9 @@ namespace TAC.World
 				Vector3.Normalize(Vector3.UnitZ-Vector3.UnitX)
 		};
 
-		public string Name;
-		// FIXME Make this of type UnitType or UnitTemplate maybe
 		public readonly UnitTemplate Type;
+
+		public string Name;
 		public int Faction { get; }
 		public int TimeUnits;
 		public int Health;
@@ -54,8 +54,8 @@ namespace TAC.World
 			this.direction = direction;
 			this.Name = name;
 			this.phase = 0;
-			this.TimeUnits = 100;
-			this.Health = 80;
+			this.TimeUnits = type.TimeUnits;
+			this.Health = type.Health;
 			this.inventory = inventory == null ? new List<Item>() : inventory;
 		}
 

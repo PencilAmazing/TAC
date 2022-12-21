@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 using Raylib_cs;
 using System.Numerics;
+using TAC.Editor;
 using TAC.Inner;
 using TAC.World;
 using static ImGuiNET.ImGui;
@@ -76,15 +77,16 @@ namespace TAC.UISystem
 		{
 			PlayerController player = engine.player;
 			Unit selectedUnit = player.selectedUnit;
+			UnitTemplate template = selectedUnit.Type;
 
 			SetNextWindowPos(Vector2.UnitY * Engine.screenHeight, ImGuiCond.None, Vector2.UnitY);
 			Begin("info", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize);
 			{
 				SetWindowFontScale(1.5f);
-				ProgressBar(selectedUnit.TimeUnits / 100.0f, new Vector2(-1, 0), selectedUnit.TimeUnits.ToString());
+				ProgressBar((float)selectedUnit.TimeUnits / template.TimeUnits, new Vector2(-1, 0), selectedUnit.TimeUnits.ToString());
 				// Had to read source code to find the right ImGuiCol. wtf man
 				PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(1, 0, 0, 1));
-				ProgressBar(selectedUnit.Health / 80.0f, new Vector2(-1, 0), selectedUnit.Health.ToString());
+				ProgressBar((float)selectedUnit.Health / template.Health, new Vector2(-1, 0), selectedUnit.Health.ToString());
 				PopStyleColor();
 				Text(selectedUnit.Name);
 			}
