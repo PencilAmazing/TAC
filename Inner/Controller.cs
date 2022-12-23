@@ -23,14 +23,28 @@ namespace TAC.Inner
 		private Scene scene;
 		public GameSelection mode { get; private set; }
 		public CameraControl camera;
+
 		public Unit selectedUnit { get; private set; }
-		public Brush selectedBrush;
+		// Boy I sure do love maintaining state
+		public struct ControlEditState
+		{
+			public Brush selectedBrush;
+			public bool FlipBrush;
+
+			public ControlEditState(Brush selectedBrush, bool FlipBrush)
+			{
+				this.selectedBrush = selectedBrush;
+				this.FlipBrush = FlipBrush;
+			}
+		}
+		public ControlEditState EditState;
 
 		public PlayerController(Scene scene, float speed = 0.5f)
 		{
 			this.scene = scene;
 			camera = new CameraControl(scene, speed);
 			mode = GameSelection.SelectUnit;
+			EditState = new ControlEditState();
 		}
 
 		// Has access to render loop
@@ -85,9 +99,12 @@ namespace TAC.Inner
 
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				// Also toggles wall, BTW
-				//Console.Write("From " + Convert.ToString(scene.GetTile(position).walls, 2).PadLeft(8, '0'));
-				scene.ToggleBrush(position, wall, 1);
-				//Console.WriteLine("To " + Convert.ToString(scene.GetTile(position).walls, 2).PadLeft(8, '0'));
+				if (EditState.selectedBrush != null) {
+					if (EditState.FlipBrush)
+						scene.ToggleBrush(position, wall | (Wall)((byte)wall << 2), EditState.selectedBrush);
+					else
+						scene.ToggleBrush(position, wall, EditState.selectedBrush);
+				}
 			}
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
 				/** FIXME This thing has caused me so much trouble

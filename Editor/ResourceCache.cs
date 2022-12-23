@@ -87,6 +87,7 @@ namespace TAC.Editor
 			UnloadShader(BillboardShader);
 			UnloadShader(SkyboxShader);
 
+			// Should also unload MemAllocated vertices
 			UnloadMesh(ref cube);
 			UnloadMaterial(wallMaterial);
 			UnloadMaterial(SkyboxMaterial);

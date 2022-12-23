@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using Raylib_cs;
+using System;
 using System.Numerics;
 using TAC.Editor;
 using TAC.Inner;
@@ -19,7 +20,8 @@ namespace TAC.UISystem
 		public UIEvent LoadFunctionDelegate;
 		public UIEvent ConvertEditorToLevel;
 
-		private bool ShowMaterialPanel = false;
+		private bool ShowMaterialPanel = true;
+		private int currentItemIndex = 0;
 
 		public Color GetClearColor()
 		{
@@ -45,15 +47,45 @@ namespace TAC.UISystem
 				ShowMaterialPanel = !ShowMaterialPanel;
 			}
 			End();
-			if(ShowMaterialPanel) DrawMaterialSelectionPanel(engine);
+			if (ShowMaterialPanel) DrawMaterialSelectionPanel(engine);
 			PopStyleVar();
 		}
 
 		private void DrawMaterialSelectionPanel(Engine engine)
 		{
-			Begin("Material Panel");
-			//engine.player.selectedBrush;
-			End();
+			//PushStyleVar(ImGuiStyleVar.ScrollbarRounding)
+			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One * 5);
+			PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(150, -1));
+			if (Begin("Material Panel", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse)) {
+				Brush current = engine.player.EditState.selectedBrush;
+				if (current != null) {
+					//int currentItemIndex = 0;
+					if (BeginListBox("")) {
+						Text("Brush: " + current.assetname);
+						SameLine();
+						Checkbox("Flip", ref engine.player.EditState.FlipBrush);
+						for (int i = 0; i < current.faces.Length; i++) {
+							PushID(i);
+							if (Selectable(current.faces[i].assetname, currentItemIndex == i)) currentItemIndex = i;
+							PopID();
+						}
+					}
+					EndListBox();
+					SameLine();
+					Image((IntPtr)current.faces[currentItemIndex].tex.id, Vector2.One * 128);
+				}
+
+				Separator();
+				foreach (string key in engine.resourceCache.Brushes.Keys) {
+					Brush brush = engine.resourceCache.Brushes[key];
+					if (Button(brush.assetname)) {
+						engine.player.EditState.selectedBrush = brush;
+					}
+				}
+				End();
+			}
+			PopStyleVar();
+			PopStyleVar();
 		}
 
 		public void DrawGameUI(float dt, Engine engine)

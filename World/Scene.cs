@@ -103,9 +103,9 @@ namespace TAC.World
 				for (int j = 0; j < floor.width; j++) {
 					Tile tile = floor.GetTile(i, j);
 					if (tile.North > 0)
-						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), BrushTypeMap[tile.North-1], cache);
+						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), BrushTypeMap[tile.North - 1], cache);
 					if (tile.West > 0)
-						renderer.DrawWall(camera, new Vector3(i, 0, j), true, tile.HasWall(Wall.FlipWest), BrushTypeMap[tile.West-1], cache);
+						renderer.DrawWall(camera, new Vector3(i, 0, j), true, tile.HasWall(Wall.FlipWest), BrushTypeMap[tile.West - 1], cache);
 				}
 			}
 
@@ -192,7 +192,12 @@ namespace TAC.World
 
 		public void ToggleWall(Position pos, Wall wall)
 		{
-			floor[pos.x, pos.z].walls ^= (byte)wall;
+			// Do your magic, rosyln
+			Wall select = (Wall)floor[pos.x, pos.z].walls;
+			select ^= wall;
+			// Clear flip bits if wall bits are not set
+			select &= (Wall)((int)select << 2);
+			floor[pos.x, pos.z].walls ^= (byte)select;
 		}
 
 		public void SetWall(Position pos, Wall wall)
@@ -205,18 +210,24 @@ namespace TAC.World
 			floor[pos.x, pos.z].walls &= (byte)~wall;
 		}
 
+		public void ToggleBrush(Position pos, Wall wall, Brush brush)
+		{
+			int brushID = BrushTypeMap.IndexOf(brush) + 1;
+			ToggleBrush(pos, wall, brushID);
+		}
+
 		/// <summary>
 		/// Calls ToggleWall aswell
 		/// </summary>
 		public void ToggleBrush(Position pos, Wall wall, int brushID)
 		{
-			if (wall == Wall.North) {
+			if (wall.HasFlag(Wall.North)) {
 				if (floor[pos.x, pos.z].North > 0)
 					floor[pos.x, pos.z].North = 0;
 				else
 					floor[pos.x, pos.z].North = brushID;
 				ToggleWall(pos, wall);
-			} else if (wall == Wall.West) {
+			} else if (wall.HasFlag(Wall.West)) {
 				if (floor[pos.x, pos.z].West > 0)
 					floor[pos.x, pos.z].West = 0;
 				else

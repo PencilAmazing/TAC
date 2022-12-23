@@ -4,15 +4,15 @@ namespace TAC.Editor
 {
 	public class Texture
 	{
-		public readonly string TextureName;
+		public readonly string assetname;
 		public readonly Texture2D tex;
 
 		public Texture(string textureName, Texture2D tex)
 		{
-			TextureName = textureName;
+			assetname = textureName;
 			this.tex = tex;
 		}
 
-		public override string ToString() => TextureName;
+		public override string ToString() => assetname;
 	}
 }
