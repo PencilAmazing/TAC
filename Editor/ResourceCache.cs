@@ -110,6 +110,7 @@ namespace TAC.Editor
 
 		public Texture LoadTexture(string TextureKey)
 		{
+			if (!System.IO.File.Exists(AssetRootPrefix + TextureKey + ".png")) return null;
 			Texture2D tex = Raylib.LoadTexture(AssetRootPrefix + TextureKey + ".png");
 			SetTextureFilter(tex, TextureFilter.TEXTURE_FILTER_POINT);
 			SetTextureWrap(tex, TextureWrap.TEXTURE_WRAP_CLAMP);
@@ -289,6 +290,13 @@ namespace TAC.Editor
 			UnitTemplates.Add(assetname, template);
 
 			return template;
+		}
+
+		public Brush GetBrush(string assetname)
+		{
+			if (Textures.ContainsKey(assetname)) {
+				return Brushes[assetname];
+			} else return LoadBrush(assetname);
 		}
 
 		public Brush LoadBrush(string assetname)
