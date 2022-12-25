@@ -22,7 +22,7 @@ namespace TAC.Inner
 		public Engine()
 		{
 			imguiController = new();
-			ui = new();
+			ui = new UI(this);
 
 			imguiController.Load(screenWidth, screenHeight);
 			ui.Load();
@@ -51,10 +51,7 @@ namespace TAC.Inner
 		{
 			imguiController.Update(deltaTime);
 			//ui.Update(deltaTime);
-			if (scene.isEdit)
-				ui.DrawEditUI(deltaTime, this);
-			else
-				ui.DrawGameUI(deltaTime, this);
+			ui.DrawHUD(deltaTime, scene.isEdit);
 
 			player.camera.UpdateCamera(scene.size.ToVector3());
 			BeginDrawing();

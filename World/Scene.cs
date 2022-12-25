@@ -196,7 +196,7 @@ namespace TAC.World
 			Wall select = (Wall)floor[pos.x, pos.z].walls;
 			select ^= wall;
 			// Clear flip bits if wall bits are not set
-			select &= (Wall)((int)select << 2);
+			select &= (Wall)((int)select << 2 | (int)select);
 			floor[pos.x, pos.z].walls ^= (byte)select;
 		}
 
@@ -213,6 +213,10 @@ namespace TAC.World
 		public void ToggleBrush(Position pos, Wall wall, Brush brush)
 		{
 			int brushID = BrushTypeMap.IndexOf(brush) + 1;
+			if (brushID == 0) {
+				// brush not preloaded
+				brushID = AddBrushToMap(brush);
+			}
 			ToggleBrush(pos, wall, brushID);
 		}
 

@@ -20,8 +20,22 @@ namespace TAC.UISystem
 		public UIEvent LoadFunctionDelegate;
 		public UIEvent ConvertEditorToLevel;
 
-		private bool ShowMaterialPanel = true;
-		private int currentItemIndex = 0;
+		private bool ShowMaterialPanel;
+		private int currentItemIndex;
+		private readonly string texturePickerLabel = "Texture picker popup";
+		private string editTextureName;
+		private string newBrushName;
+
+		private Engine engine;
+
+		public UI(Engine engine)
+		{
+			this.engine = engine;
+			ShowMaterialPanel = true;
+			currentItemIndex = 0;
+			editTextureName = "";
+			newBrushName = "brush/";
+		}
 
 		public Color GetClearColor()
 		{
@@ -32,7 +46,15 @@ namespace TAC.UISystem
 
 		public void Unload() { }
 
-		public void DrawEditUI(float dt, Engine engine)
+		public void DrawHUD(float dt, bool isEdit)
+		{
+			if (isEdit)
+				DrawEditUI(dt);
+			else
+				DrawGameUI(dt);
+		}
+
+		public void DrawEditUI(float dt)
 		{
 			SetNextWindowPos(Vector2.Zero);
 			SetNextWindowSize(Vector2.Zero);
@@ -47,16 +69,28 @@ namespace TAC.UISystem
 				ShowMaterialPanel = !ShowMaterialPanel;
 			}
 			End();
-			if (ShowMaterialPanel) DrawMaterialSelectionPanel(engine);
+			if (ShowMaterialPanel) DrawMaterialSelectionPanel();
+
 			PopStyleVar();
 		}
 
-		private void DrawMaterialSelectionPanel(Engine engine)
+		private void DrawTextureSelectionPanel(Brush brush, int editFace)
+		{
+			foreach (Texture tex in engine.resourceCache.Textures.Values) {
+				if (Selectable(tex.assetname)) {
+					brush.faces[editFace] = tex;
+					CloseCurrentPopup();
+				}
+			}
+			EndPopup();
+		}
+
+		private void DrawMaterialSelectionPanel()
 		{
 			//PushStyleVar(ImGuiStyleVar.ScrollbarRounding)
 			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One * 5);
 			PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(150, -1));
-			if (Begin("Material Panel", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse)) {
+			if (Begin("Material Panel", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
 				Brush current = engine.player.EditState.selectedBrush;
 				if (current != null) {
 					//int currentItemIndex = 0;
@@ -66,13 +100,27 @@ namespace TAC.UISystem
 						Checkbox("Flip", ref engine.player.EditState.FlipBrush);
 						for (int i = 0; i < current.faces.Length; i++) {
 							PushID(i);
-							if (Selectable(current.faces[i].assetname, currentItemIndex == i)) currentItemIndex = i;
+							//if (Selectable(current.faces[i].assetname, currentItemIndex == i)) currentItemIndex = i;
+							editTextureName = current.faces[i] != null ? current.faces[i].assetname : "";
+							// Magic number lol
+							if (InputText("", ref editTextureName, (uint)256) || IsItemClicked()) {
+								currentItemIndex = i;
+								// New texture inputted
+								Texture newTex = engine.scene.cache.GetTexture(editTextureName);
+								if (newTex != null) {
+									current.faces[i] = newTex;
+								}
+							}
+							SameLine();
+							if (Button("pick")) OpenPopup(texturePickerLabel);
+							if (BeginPopup(texturePickerLabel)) DrawTextureSelectionPanel(current, i);
 							PopID();
 						}
 					}
 					EndListBox();
 					SameLine();
-					Image((IntPtr)current.faces[currentItemIndex].tex.id, Vector2.One * 128);
+					if (current.faces[currentItemIndex] != null)
+						Image((IntPtr)current.faces[currentItemIndex].tex.id, Vector2.One * 128);
 				}
 
 				Separator();
@@ -82,13 +130,23 @@ namespace TAC.UISystem
 						engine.player.EditState.selectedBrush = brush;
 					}
 				}
+
+				if (Button("New Brush")) {
+					Brush newBrush = new Brush(newBrushName, new Texture[6]);
+					engine.resourceCache.Brushes.Add(newBrush.assetname, newBrush);
+					engine.player.EditState.selectedBrush = newBrush;
+				}
+				SameLine();
+				InputText("asset/", ref newBrushName, (uint)256);
+				SameLine();
+				if (Button("Close")) ShowMaterialPanel = false;
 				End();
 			}
 			PopStyleVar();
 			PopStyleVar();
 		}
 
-		public void DrawGameUI(float dt, Engine engine)
+		public void DrawGameUI(float dt)
 		{
 			SetNextWindowPos(Vector2.Zero);
 
@@ -100,12 +158,12 @@ namespace TAC.UISystem
 			}
 			End();
 
-			if (engine.player.selectedUnit != null) DrawUnitStats(engine);
+			if (engine.player.selectedUnit != null) DrawUnitStats();
 
 			PopStyleVar();
 		}
 
-		private void DrawUnitStats(Engine engine)
+		private void DrawUnitStats()
 		{
 			PlayerController player = engine.player;
 			Unit selectedUnit = player.selectedUnit;
