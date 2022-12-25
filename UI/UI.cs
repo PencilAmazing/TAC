@@ -148,10 +148,10 @@ namespace TAC.UISystem
 			}
 		}
 
-		public static bool IsMouseUnderUI()
-		{
-			return ImGui.GetIO().WantCaptureMouse;
-		}
+		public static bool IsMouseUnderUI() => ImGui.GetIO().WantCaptureMouse;
+
+		// WantCaptureKeyboard is not always accurate, pray to god you don't need it
+		public static bool IsKeyboardCapturedByUI() => ImGui.GetIO().WantTextInput;
 
 		/// <summary>
 		/// imgui button that calls UIEventQueue.PushQueue when clicked
@@ -163,6 +163,7 @@ namespace TAC.UISystem
 		}
 
 		public static bool GetMouseButtonPress(MouseButton button) => !IsMouseUnderUI() && Raylib.IsMouseButtonPressed(button);
+		public static bool IsKeyDown(KeyboardKey key) => !IsKeyboardCapturedByUI() && (bool)Raylib.IsKeyDown(key);
 
 		public void Update(float dt)
 		{

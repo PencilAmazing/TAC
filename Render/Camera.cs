@@ -4,7 +4,7 @@ using System.Numerics;
 using TAC.World;
 using static Raylib_cs.CameraProjection;
 using static Raylib_cs.KeyboardKey;
-using static Raylib_cs.Raylib;
+using static TAC.UISystem.UI;
 
 namespace TAC.Render
 {
@@ -29,7 +29,7 @@ namespace TAC.Render
 			camera.fovy = 45.0f;
 			camera.projection = CAMERA_PERSPECTIVE;
 
-			SetCameraMode(camera, CameraMode.CAMERA_CUSTOM);
+			Raylib.SetCameraMode(camera, CameraMode.CAMERA_CUSTOM);
 
 			this.speed = speed;
 		}
@@ -59,10 +59,10 @@ namespace TAC.Render
 				camera.target += Vector3.UnitY * speed;
 			}
 			camera.target = Vector3.Clamp(camera.target, Vector3.Zero, clamp);
-			zoom += GetMouseWheelMove();
+			zoom += Raylib.GetMouseWheelMove();
 
-			if (IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT)) {
-				Vector2 mouse = -GetMouseDelta();
+			if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT)) {
+				Vector2 mouse = -Raylib.GetMouseDelta();
 				// Directly apply mouse delta to angle
 				angle += mouse * sensitivity;
 				angle.Y = (float)Math.Clamp(angle.Y, MathF.PI / 2 + 0.1, MathF.PI - 0.1);
