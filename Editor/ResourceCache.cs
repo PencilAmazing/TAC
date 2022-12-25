@@ -301,7 +301,7 @@ namespace TAC.Editor
 
 		public Brush LoadBrush(string assetname)
 		{
-			if (!System.IO.File.Exists(AssetRootPrefix + assetname + ".png")) return null;
+			if (!System.IO.File.Exists(AssetRootPrefix + assetname + ".xml")) return null;
 			string filelocation = System.IO.Path.GetFullPath(AssetRootPrefix + assetname + ".json");
 			string brushFile = System.IO.File.ReadAllText(filelocation, Encoding.UTF8);
 			JsonNode brushNode = JsonNode.Parse(brushFile);
