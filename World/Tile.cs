@@ -51,7 +51,7 @@ namespace TAC.World
 		}
 
 		public static readonly Brush nullBrush = null;
-		
+
 		public override bool Equals(object obj)
 		{
 			if (!(obj is Brush brush)) return false;
@@ -60,9 +60,15 @@ namespace TAC.World
 			}
 			return this.assetname == brush.assetname;
 		}
-		// Use the resource cache
-		//public static readonly Brush One = new Brush(1, 1, 1, 1, 1, 1);
-		//public static readonly Brush Random = new Brush(1, 2, 3, 4, 5, 6);
+
+		public static bool IsBrushValid(Brush brush)
+		{
+			if (brush == null) return false;
+			if (string.IsNullOrWhiteSpace(brush.assetname)) return false;
+			for (int i = 0; i < brush.faces.Length; i++) { if (brush.faces[i] == null) return false; }
+			return true;
+
+		}
 	}
 	// Maybe walls should be in a separate array?
 	public struct Tile

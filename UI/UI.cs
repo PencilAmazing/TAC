@@ -34,7 +34,7 @@ namespace TAC.UISystem
 			ShowMaterialPanel = true;
 			currentItemIndex = 0;
 			editTextureName = "";
-			newBrushName = "brush/";
+			newBrushName = "";
 		}
 
 		public Color GetClearColor()
@@ -87,62 +87,78 @@ namespace TAC.UISystem
 
 		private void DrawMaterialSelectionPanel()
 		{
-			//PushStyleVar(ImGuiStyleVar.ScrollbarRounding)
 			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One * 5);
-			PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(150, -1));
+			SetNextWindowSize(-Vector2.One);
 			if (Begin("Material Panel", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
-				Brush current = engine.player.EditState.selectedBrush;
-				if (current != null) {
-					//int currentItemIndex = 0;
-					if (BeginListBox("")) {
+				if (BeginTable("Material Panel Content", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingFixedFit)) {
+					TableNextColumn();
+					foreach (string key in engine.resourceCache.Brushes.Keys) {
+						Brush brush = engine.resourceCache.Brushes[key];
+						if (Button(brush.assetname, Vector2.UnitX*100)) {
+							// Attempt to set selected brush
+							engine.player.EditState.selectedBrush = brush;
+						}
+					}
+
+					TableNextColumn();
+					Brush current = engine.player.EditState.selectedBrush;
+					if (current != null) {
+						//int currentItemIndex = 0;
+						BeginGroup();
 						Text("Brush: " + current.assetname);
 						SameLine();
 						Checkbox("Flip", ref engine.player.EditState.FlipBrush);
-						for (int i = 0; i < current.faces.Length; i++) {
-							PushID(i);
-							//if (Selectable(current.faces[i].assetname, currentItemIndex == i)) currentItemIndex = i;
-							editTextureName = current.faces[i] != null ? current.faces[i].assetname : "";
-							// Magic number lol
-							if (InputText("", ref editTextureName, (uint)256) || IsItemClicked()) {
-								currentItemIndex = i;
-								// New texture inputted
-								Texture newTex = engine.scene.cache.GetTexture(editTextureName);
-								if (newTex != null) {
-									current.faces[i] = newTex;
+						EndGroup();
+
+						BeginGroup();
+						if (BeginListBox("##TexturesListBox", -Vector2.UnitX)) {
+							for (int i = 0; i < current.faces.Length; i++) {
+								PushID(i);
+								//PushItemWidth(-1);
+								editTextureName = current.faces[i] != null ? current.faces[i].assetname : "";
+								// Magic number lol
+								if (InputText("", ref editTextureName, (uint)256) || IsItemClicked()) {
+									currentItemIndex = i;
+									// New texture inputted
+									Texture newTex = engine.scene.cache.GetTexture(editTextureName);
+									if (newTex != null) {
+										current.faces[i] = newTex;
+									}
 								}
+								SameLine();
+								if (Button("pick", Vector2.UnitX*50)) OpenPopup(texturePickerLabel);
+								if (BeginPopup(texturePickerLabel)) DrawTextureSelectionPanel(current, i);
+								//PopItemWidth();
+								PopID();
 							}
-							SameLine();
-							if (Button("pick")) OpenPopup(texturePickerLabel);
-							if (BeginPopup(texturePickerLabel)) DrawTextureSelectionPanel(current, i);
-							PopID();
 						}
+						EndGroup();
+						EndListBox();
+
+						TableNextColumn();
+						if (current.faces[currentItemIndex] != null)
+							Image((IntPtr)current.faces[currentItemIndex].tex.id, Vector2.One * 128);
 					}
-					EndListBox();
+					EndTable();
+
+					Spacing();
+					Separator();
+					BeginGroup();
+					if (Button("New Brush") && !String.IsNullOrWhiteSpace(newBrushName)) {
+						newBrushName = newBrushName.Replace(" ", string.Empty);
+						// TODO wtf
+						Brush newBrush = new Brush("brush/" + newBrushName, new Texture[6]);
+						engine.resourceCache.Brushes.Add(newBrush.assetname, newBrush);
+						engine.player.EditState.selectedBrush = newBrush;
+					}
 					SameLine();
-					if (current.faces[currentItemIndex] != null)
-						Image((IntPtr)current.faces[currentItemIndex].tex.id, Vector2.One * 128);
+					InputText("", ref newBrushName, (uint)256);
+					SameLine();
+					if (Button("Close")) ShowMaterialPanel = false;
+					EndGroup();
 				}
-
-				Separator();
-				foreach (string key in engine.resourceCache.Brushes.Keys) {
-					Brush brush = engine.resourceCache.Brushes[key];
-					if (Button(brush.assetname)) {
-						engine.player.EditState.selectedBrush = brush;
-					}
-				}
-
-				if (Button("New Brush")) {
-					Brush newBrush = new Brush(newBrushName, new Texture[6]);
-					engine.resourceCache.Brushes.Add(newBrush.assetname, newBrush);
-					engine.player.EditState.selectedBrush = newBrush;
-				}
-				SameLine();
-				InputText("asset/", ref newBrushName, (uint)256);
-				SameLine();
-				if (Button("Close")) ShowMaterialPanel = false;
 				End();
 			}
-			PopStyleVar();
 			PopStyleVar();
 		}
 

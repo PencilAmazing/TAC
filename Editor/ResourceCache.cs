@@ -15,12 +15,14 @@ namespace TAC.Editor
 	// Maps textures loaded in memory to tile IDs
 	public class ResourceCache
 	{
-		private string AssetRootPrefix = "assets/";
-		private string AssetTilePrefix = "assets/tile/";
-		private string AssetUnitPrefix = "assets/unit/";
-		private string AssetShaderPrefix = "assets/shader/";
-		private string AssetScenePrefix = "assets/scene/";
-		private string AssetSaveDirectory = "assets/save";
+		// TODO remove repetition, make them configurable maybe too
+		public readonly string AssetRootPrefix = "assets/";
+		public readonly string AssetTilePrefix = "assets/tile/";
+		public readonly string AssetBrushPrefix = "assets/brush/";
+		public readonly string AssetUnitPrefix = "assets/unit/";
+		public readonly string AssetShaderPrefix = "assets/shader/";
+		public readonly string AssetScenePrefix = "assets/scene/";
+		public readonly string AssetSaveDirectory = "assets/save";
 
 		// Texture locations in the wall shader.
 		public int toploc;

@@ -212,6 +212,7 @@ namespace TAC.World
 
 		public void ToggleBrush(Position pos, Wall wall, Brush brush)
 		{
+			if (!Brush.IsBrushValid(brush)) return;
 			int brushID = BrushTypeMap.IndexOf(brush) + 1;
 			if (brushID == 0) {
 				// brush not preloaded

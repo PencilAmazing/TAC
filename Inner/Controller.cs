@@ -154,5 +154,10 @@ namespace TAC.Inner
 			}
 			return -Vector3.One;
 		}
+
+		public void SetSelectedBrush(Brush brush)
+		{
+			if (Brush.IsBrushValid(brush)) EditState.selectedBrush = brush;
+		}
 	}
 }
