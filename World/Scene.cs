@@ -196,8 +196,15 @@ namespace TAC.World
 			Wall select = (Wall)floor[pos.x, pos.z].walls;
 			select ^= wall;
 			// Clear flip bits if wall bits are not set
-			select &= (Wall)((int)select << 2 | (int)select);
-			floor[pos.x, pos.z].walls ^= (byte)select;
+			//select &= (Wall)((int)select << 2 | (int)select);
+			// Extract parts of wall structure
+			Wall visible = select & (Wall.North | Wall.West);
+			Wall flips = select & (Wall.FlipNorth | Wall.FlipWest);
+			// Keep flip flags that are necessary
+			flips &= (Wall)((byte)visible << 2);
+			// Collect parts
+			select = flips | visible;
+			floor[pos.x, pos.z].walls = (byte)select;
 		}
 
 		public void SetWall(Position pos, Wall wall)
@@ -316,8 +323,6 @@ namespace TAC.World
 		/// <param name="dir">Direction to walk towards</param>
 		public bool TestDirection(Position pos, UnitDirection dir)
 		{
-			// TODO think of units and objects as well!
-			// Somethings can block sight but not movement
 			// I really hope the compiler fixes this
 			int x = pos.x;
 			int z = pos.z;

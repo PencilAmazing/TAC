@@ -71,7 +71,21 @@ namespace TAC.UISystem
 			End();
 			if (ShowMaterialPanel) DrawMaterialSelectionPanel();
 
+			DrawWallInfo();
+
 			PopStyleVar();
+		}
+
+		private void DrawWallInfo()
+		{
+			Begin("Wall info");
+			PlayerController player = engine.player;
+
+			Position pos = player.GetMouseTilePosition();
+			Tile tile = engine.scene.GetTile(pos);
+			Text("Tile location: " + pos.ToString());
+			Text("Wall data: " + Convert.ToString(tile.walls, 2).PadLeft(4, '0'));
+			End();
 		}
 
 		private void DrawTextureSelectionPanel(Brush brush, int editFace)
@@ -94,7 +108,7 @@ namespace TAC.UISystem
 					TableNextColumn();
 					foreach (string key in engine.resourceCache.Brushes.Keys) {
 						Brush brush = engine.resourceCache.Brushes[key];
-						if (Button(brush.assetname, Vector2.UnitX*100)) {
+						if (Button(brush.assetname, Vector2.UnitX * 100)) {
 							// Attempt to set selected brush
 							engine.player.EditState.selectedBrush = brush;
 						}
@@ -126,7 +140,7 @@ namespace TAC.UISystem
 									}
 								}
 								SameLine();
-								if (Button("pick", Vector2.UnitX*50)) OpenPopup(texturePickerLabel);
+								if (Button("pick", Vector2.UnitX * 50)) OpenPopup(texturePickerLabel);
 								if (BeginPopup(texturePickerLabel)) DrawTextureSelectionPanel(current, i);
 								//PopItemWidth();
 								PopID();
