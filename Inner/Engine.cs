@@ -60,8 +60,9 @@ namespace TAC.Inner
 
 			if (scene.isEdit)
 				player.UpdateEditControl();
-			else
+			else if (scene.IsTeamInPlay(player.GameState.SelectedTeam)) {
 				player.UpdateGameControl();
+			}
 
 			UI.DispatchEvents();
 			scene.Think(deltaTime);

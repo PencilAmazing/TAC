@@ -188,7 +188,7 @@ namespace TAC.UISystem
 			}
 			End();
 
-			if (engine.player.selectedUnit != null) DrawUnitStats();
+			if (engine.player.SelectedUnit != null) DrawUnitStats();
 
 			PopStyleVar();
 		}
@@ -196,7 +196,7 @@ namespace TAC.UISystem
 		private void DrawUnitStats()
 		{
 			PlayerController player = engine.player;
-			Unit selectedUnit = player.selectedUnit;
+			Unit selectedUnit = player.SelectedUnit;
 			UnitTemplate template = selectedUnit.Type;
 
 			SetNextWindowPos(Vector2.UnitY * Engine.screenHeight, ImGuiCond.None, Vector2.UnitY);
@@ -217,13 +217,13 @@ namespace TAC.UISystem
 			//SetWindowFontScale(1.5f);	
 			if (selectedUnit.inventory.Count > 0) {
 				Item item = selectedUnit.inventory[0];
-				if (player.mode == PlayerController.GameSelection.SelectTarget) {
+				if (player.SelectionMode == PlayerController.GameSelection.SelectTarget) {
 					PushStyleColor(ImGuiCol.Button, new Vector4(0.96f, 0.54f, 0.17f, 1));
 					PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.96f, 0.54f, 0.17f, 1));
 					PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.96f, 0.54f, 0.17f, 1));
 				}
 				UI.ButtonWithCallback(item.name, new Vector2(200, 40), player.StartSelectingTarget);
-				if (player.mode == PlayerController.GameSelection.SelectTarget) PopStyleColor(3);
+				if (player.SelectionMode == PlayerController.GameSelection.SelectTarget) PopStyleColor(3);
 			}
 			End();
 		}

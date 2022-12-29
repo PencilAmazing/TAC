@@ -1,8 +1,9 @@
 ﻿using Raylib_cs;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using TAC.Editor;
+using TAC.Inner;
 using TAC.Logic;
 using TAC.Render;
 using static System.Math;
@@ -12,8 +13,14 @@ namespace TAC.World
 {
 	public class Scene
 	{
+		public List<Team> teams;
 		public List<Unit> units;
 		public List<ParticleEffect> particleEffects;
+
+		/// <summary>
+		/// Index of team in play
+		/// </summary>
+		public int CurrentTeamInPlay;
 
 		public Floor floor;
 
@@ -47,12 +54,15 @@ namespace TAC.World
 		public Scene(Position size, Renderer renderer, ResourceCache cache, bool isEdit)
 		{
 			this.size = size;
-			this.cache = cache;
 			this.renderer = renderer;
-			this.units = new();
-			particleEffects = new();
+			this.cache = cache;
 			this.isEdit = isEdit;
+
 			currentAction = null;
+
+			particleEffects = new List<ParticleEffect>();
+			units = new List<Unit>();
+			teams = new List<Team>();
 
 			debugStack = new Stack<DebugText>();
 
@@ -72,20 +82,43 @@ namespace TAC.World
 			floor.CreateTexture(TileTypeMap);
 		}
 
+		public void EndTurn()
+		{
+			// No effect if unit is still moving
+			if (GetCurrentAction() != null) return;
+
+			Team currentTeam = teams[CurrentTeamInPlay];
+			for (int i = 0; i < currentTeam.Members.Count; i++) {
+				// Reset each unit and unitAI in team
+				currentTeam.Members[i].Reset();
+			}
+
+			// Switch to next team
+			CurrentTeamInPlay += 1;
+			CurrentTeamInPlay %= teams.Count;
+		}
+
 		public virtual void Think(float deltaTime)
 		{
-			// Is this necessary? Make it opt in if anything
-			//foreach (Unit unit in units) {
-			//	//unit.Think(deltaTime);
-			//	if (!unit.IsAlive()) {
-			//		units.Remove(unit);
-			//	}
-			//}
+			Team currentTeam = teams[CurrentTeamInPlay];
+
+			if (currentTeam.IsControlledByAI) {
+				// Search for a unit we didn't process fully yet
+				// All because selectedUnit is per player instead of per scene
+				foreach (Unit unit in currentTeam.Members) {
+					if (unit.UnitAI != null && unit.UnitAI.StillThinking()) {
+						SetCurrentAction(unit.UnitAI.Think());
+						break;
+					}
+				}
+			}
 
 			if (currentAction != null) {
 				currentAction.Think(deltaTime);
 				if (currentAction.isDone) ClearCurrentAction();
 			}
+
+			if (currentTeam.IsControlledByAI && currentTeam.AllUnitsDone()) EndTurn();
 
 			// Copy list
 			foreach (ParticleEffect effect in particleEffects.ToArray()) {
@@ -157,11 +190,8 @@ namespace TAC.World
 		/// <summary>
 		/// Is position within size of scene?
 		/// </summary>
-		public bool IsTileWithinBounds(Position pos)
-		{
-			return pos.x >= 0 && pos.y >= 0 && pos.z >= 0 &&
+		public bool IsTileWithinBounds(Position pos) => pos.x >= 0 && pos.y >= 0 && pos.z >= 0 &&
 				   pos.x < size.x && pos.y < size.y && pos.z < size.z;
-		}
 
 		/// <summary>
 		/// Does tile contain a unit?
@@ -370,16 +400,54 @@ namespace TAC.World
 		public void SetCurrentAction(Action action) => currentAction = action;
 		public void ClearCurrentAction() => currentAction = currentAction.NextAction();
 
-		public bool AddUnit(Unit unit)
+		/// <summary>
+		/// Add unit to scene.
+		/// </summary>
+		public bool AddUnit(Unit unit, int factionID)
 		{
-			if (unit == null || IsTileOccupied(unit.position))
-				return false;
+			// Check arguments validity
+			if (unit == null || IsTileOccupied(unit.position) ||
+				factionID < 0 || factionID > teams.Count) return false;
+
+			// Bind to team
+			teams[factionID].AddUnit(unit);
+			unit.TeamID = factionID;
+
+			// Add unit to game scene
 			units.Add(unit);
-			Tile tile = floor.GetTile(unit.position.x, unit.position.z);
+			Tile tile = floor.GetTile(unit.position);
 			tile.unit = unit;
 			floor.SetTile(unit.position, tile);
+
 			return true;
 		}
+
+		public bool AddUnit(Unit unit, Team team)
+		{
+			int factionID = teams.IndexOf(team);
+			return AddUnit(unit, factionID);
+		}
+
+		/// <summary>
+		/// UNIMPLEMENTED. Could be an alternative to storing faction ID in Unit
+		/// </summary>
+		/// <exception cref="System.NotImplementedException"></exception>
+		public Team GetUnitTeam(Unit unit)
+		{
+			throw new System.NotImplementedException();
+			//foreach(Team team in teams) {
+			//	if (team.HasUnit(unit)) return team;
+			//}
+			//return null;
+		}
+
+		public void AddTeam(Team team)
+		{
+			if (!teams.Contains(team)) teams.Add(team);
+		}
+
+		public Team GetCurrentTeamInPlay() => teams[CurrentTeamInPlay];
+		public bool IsTeamInPlay(Team team) => team == GetCurrentTeamInPlay();
 
 		public void PushActionMoveUnit(Unit unit, Position goal)
 		{

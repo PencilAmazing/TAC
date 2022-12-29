@@ -1,6 +1,7 @@
 ﻿using Raylib_cs;
 using System;
 using System.Numerics;
+using TAC.Inner.ControllerStates;
 using TAC.Render;
 using TAC.UISystem;
 using TAC.World;
@@ -21,29 +22,21 @@ namespace TAC.Inner
 		}
 
 		private Scene scene;
-		public GameSelection mode { get; private set; }
 		public CameraControl camera;
 
-		public Unit selectedUnit { get; private set; }
 		// Boy I sure do love maintaining state
-		public struct ControlEditState
-		{
-			public Brush selectedBrush;
-			public bool FlipBrush;
-
-			public ControlEditState(Brush selectedBrush, bool FlipBrush)
-			{
-				this.selectedBrush = selectedBrush;
-				this.FlipBrush = FlipBrush;
-			}
-		}
 		public ControlEditState EditState;
+		public ControlGameState GameState;
+
+		// Properties suck
+		public Unit SelectedUnit { get { return GameState.SelectedUnit; } set { GameState.SelectedUnit = value; } }
+		public GameSelection SelectionMode { get { return GameState.Mode; } }
 
 		public PlayerController(Scene scene, float speed = 0.5f)
 		{
 			this.scene = scene;
 			camera = new CameraControl(scene, speed);
-			mode = GameSelection.SelectUnit;
+			GameState = new ControlGameState();
 			EditState = new ControlEditState();
 		}
 
@@ -55,21 +48,24 @@ namespace TAC.Inner
 			if (selected != Tile.nullTile)
 				DrawCubeWiresV(selectedPosition.ToVector3(), Vector3.One, Color.ORANGE);
 
-			if (mode == GameSelection.SelectUnit && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
-				if (selected.unit != null)
-					selectedUnit = selected.unit; // Shouldn't be called often
+			if (GameState.Mode == GameSelection.SelectUnit && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
+				if (selected.unit != null && GameState.SelectedTeam.HasUnit(selected.unit))
+					GameState.SelectedUnit = selected.unit; // Select unit only if in team
 				else
-					scene.PushActionMoveUnit(selectedUnit, selectedPosition);
-			} else if (mode == GameSelection.SelectUnit && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
-				scene.PushActionTurnUnit(selectedUnit, selectedPosition);
-			} else if (mode == GameSelection.SelectTarget) {
+					scene.PushActionMoveUnit(GameState.SelectedUnit, selectedPosition);
+			} else if (GameState.Mode == GameSelection.SelectUnit && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
+				scene.PushActionTurnUnit(GameState.SelectedUnit, selectedPosition);
+			} else if (GameState.Mode == GameSelection.SelectTarget) {
 				// Potential target
 				Position potential = GetMouseTilePosition();
 				if (scene.IsTileWithinBounds(potential) && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
-					//scene.debugPath = scene.GetSupercoverLine(selectedUnit.position, potential);
-					this.mode = GameSelection.SelectUnit;
-					scene.PushActionSelectTarget(selectedUnit, selectedUnit.inventory[0], potential);
+					GameState.Mode = GameSelection.SelectUnit;
+					scene.PushActionSelectTarget(GameState.SelectedUnit, GameState.SelectedUnit.inventory[0], potential);
 				}
+			}
+
+			if(UI.IsKeyDown(KeyboardKey.KEY_LEFT_CONTROL) && UI.IsKeyDown(KeyboardKey.KEY_ENTER)) {
+				scene.EndTurn();
 			}
 		}
 
@@ -106,13 +102,8 @@ namespace TAC.Inner
 						scene.ToggleBrush(position, wall, EditState.selectedBrush);
 				}
 			}
-			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) {
-				/** FIXME This thing has caused me so much trouble
-					Can sometimes just delete all wall bits i think? **/
-				//Console.Write("From " + Convert.ToString(scene.GetTile(position).walls, 2).PadLeft(8, '0'));
-				//scene.ToggleWall(position, (Wall)((byte)wall << 2));
-				//Console.WriteLine("To " + Convert.ToString(scene.GetTile(position).walls, 2).PadLeft(8, '0'));
-			}
+			// Much better
+			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) EditState.FlipBrush = !EditState.FlipBrush;
 		}
 
 		/// <summary>
@@ -121,22 +112,23 @@ namespace TAC.Inner
 		/// </summary>
 		public void StartSelectingTarget()
 		{
-			this.mode = GameSelection.SelectTarget;
+			GameState.Mode = GameSelection.SelectTarget;
 		}
 
-		private Position GetMouseTilePosition()
+		public Position GetMouseTilePosition()
 		{
 			Ray ray = GetMouseRay(GetMousePosition(), camera.camera);
+			RayCollision collide;
 			unsafe {
-				// replace this with GetRayCollisionQuad instead
-				RayCollision collide = GetRayCollisionMesh(ray, scene.GetFloorQuad().meshes[0], scene.GetFloorQuad().transform);
-				if (collide.hit) {
-					collide.point += Vector3.One / 2;
-					// Floor
-					Position mousePos = new Position((int)(collide.point.X), 0, (int)(collide.point.Z));
-					//scene.PushDebugText(new DebugText(mousePos.ToString(), 50, 50, 12, Color.BLACK));
-					return mousePos;
-				}
+				// TODO replace this with GetRayCollisionQuad instead
+				collide = GetRayCollisionMesh(ray, scene.GetFloorQuad().meshes[0], scene.GetFloorQuad().transform);
+			}
+			if (collide.hit) {
+				collide.point += Vector3.One / 2;
+				// Floor
+				Position mousePos = new Position((int)(collide.point.X), 0, (int)(collide.point.Z));
+				//scene.PushDebugText(new DebugText(mousePos.ToString(), 50, 50, 12, Color.BLACK));
+				return mousePos;
 			}
 			return Position.Negative;
 		}
@@ -145,7 +137,7 @@ namespace TAC.Inner
 		{
 			Ray ray = GetMouseRay(GetMousePosition(), camera.camera);
 			unsafe {
-				// replace this with GetRayCollisionQuad instead
+				// TODO replace this with GetRayCollisionQuad instead
 				RayCollision collide = GetRayCollisionMesh(ray, scene.GetFloorQuad().meshes[0], scene.GetFloorQuad().transform);
 				if (collide.hit) {
 					//collide.point += Vector3.One / 2;

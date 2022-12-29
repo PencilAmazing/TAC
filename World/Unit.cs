@@ -1,7 +1,9 @@
 ﻿using Raylib_cs;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using TAC.Editor;
+using TAC.Logic;
 
 namespace TAC.World
 {
@@ -16,6 +18,12 @@ namespace TAC.World
 		West,
 		NorthWest,
 	};
+
+	/// <summary>
+	/// Gameplay represenation of a unit that moves and interacts with a scene.<br></br>
+	/// Not for database representation, use something else.
+	/// All values here are volatile and constantly changing, owned by the game scene
+	/// </summary>
 
 	public class Unit
 	{
@@ -33,7 +41,11 @@ namespace TAC.World
 		public readonly UnitTemplate Type;
 
 		public string Name;
-		public int Faction { get; }
+		/// <summary>
+		/// Index of team in scene team list
+		/// TODO replace with Team reference
+		/// </summary>
+		public int TeamID;
 		public int TimeUnits;
 		public int Health;
 		public List<Item> inventory;
@@ -47,6 +59,9 @@ namespace TAC.World
 		// General purpose counter
 		public int phase;
 
+		public UnitAIModule UnitAI;
+		public bool isDone;
+
 		public Unit(UnitTemplate type, Position position, string name, UnitDirection direction = UnitDirection.North, List<Item> inventory = null)
 		{
 			this.Type = type;
@@ -57,6 +72,8 @@ namespace TAC.World
 			this.TimeUnits = type.TimeUnits;
 			this.Health = type.Health;
 			this.inventory = inventory == null ? new List<Item>() : inventory;
+
+			UnitAI = null;
 		}
 
 		public void Think(float deltaTime)
@@ -91,5 +108,11 @@ namespace TAC.World
 			return box;
 		}
 
+		public void Reset()
+		{
+			if(UnitAI != null) UnitAI.Reset();
+			TimeUnits = Type.TimeUnits;
+			isDone = false;
+		}
 	}
 }
