@@ -11,6 +11,7 @@ namespace TAC.Logic
 		{
 			this.path = path;
 			this.TimeCost = 4;
+			if (path == null) Done();
 		}
 
 		public override void Think(float deltaTime)

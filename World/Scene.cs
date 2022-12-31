@@ -114,8 +114,10 @@ namespace TAC.World
 			}
 
 			if (currentAction != null) {
-				currentAction.Think(deltaTime);
-				if (currentAction.isDone) ClearCurrentAction();
+				if (currentAction.isDone)
+					ClearCurrentAction();
+				else
+					currentAction.Think(deltaTime);
 			}
 
 			if (currentTeam.IsControlledByAI && currentTeam.AllUnitsDone()) EndTurn();

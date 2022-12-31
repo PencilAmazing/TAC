@@ -70,13 +70,19 @@ namespace TAC.World
 
 		}
 	}
-	// Maybe walls should be in a separate array?
+
+	/// <summary>
+	/// Game representation of a 3D tile block. Contains walls, floor, things, a unit, and an inventory
+	/// </summary>
 	public struct Tile
 	{
 		// -1 means null
 		// Can change 
+		// Floor type
 		public int type;
+		// North wall type
 		public int North;
+		// West wall type
 		public int West;
 		public int thing;
 
@@ -89,7 +95,7 @@ namespace TAC.World
 		public Tile(int type = 0, byte walls = 0)
 		{
 			this.type = type;
-			this.walls = 0;
+			this.walls = walls;
 			this.North = this.West = 0;
 			this.unit = null;
 			this.thing = 0;

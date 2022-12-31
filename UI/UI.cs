@@ -185,8 +185,11 @@ namespace TAC.UISystem
 			if (IsPlayerTeamInPlay(engine.player)) {
 				////////////////
 				SetNextWindowPos(Vector2.Zero);
+				if (engine.scene.CurrentActionInProgress()) BeginDisabled();
 				Begin("Game Controls", controlFlags);
-				Button("Next turn", new Vector2(150, 40));
+				if(Button("Next turn", new Vector2(150, 40))) {
+					engine.scene.EndTurn();
+				}
 				End();
 				////////////////
 				SetNextWindowPos(new Vector2(GetWindowViewport().Size.X - 150, 0));
@@ -194,6 +197,7 @@ namespace TAC.UISystem
 				if (Button("Edit", new Vector2(150, 40)))
 					UIEventQueue.PushEvent(engine.ToggleGameMode);
 				End();
+				if (engine.scene.CurrentActionInProgress()) EndDisabled();
 				////////////////
 				if (engine.player.SelectedUnit != null)
 					DrawUnitStats();
