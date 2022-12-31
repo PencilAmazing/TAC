@@ -1,9 +1,7 @@
 ﻿using Raylib_cs;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
 using TAC.Editor;
-using TAC.Inner;
 using TAC.Logic;
 using TAC.Render;
 using static System.Math;
@@ -102,9 +100,11 @@ namespace TAC.World
 		{
 			Team currentTeam = teams[CurrentTeamInPlay];
 
-			if (currentTeam.IsControlledByAI) {
+			// If AI in play and no action in progress, get new action to perform
+			if (currentTeam.IsControlledByAI && !CurrentActionInProgress()) {
 				// Search for a unit we didn't process fully yet
 				// All because selectedUnit is per player instead of per scene
+				// TODO iterate on player controllers instead of teams directly
 				foreach (Unit unit in currentTeam.Members) {
 					if (unit.UnitAI != null && unit.UnitAI.StillThinking()) {
 						SetCurrentAction(unit.UnitAI.Think());
@@ -399,6 +399,7 @@ namespace TAC.World
 		public Action GetCurrentAction() => currentAction;
 		public void SetCurrentAction(Action action) => currentAction = action;
 		public void ClearCurrentAction() => currentAction = currentAction.NextAction();
+		public bool CurrentActionInProgress() => currentAction != null;
 
 		/// <summary>
 		/// Add unit to scene.

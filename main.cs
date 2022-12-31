@@ -46,6 +46,10 @@ namespace TAC
 			Unit PoorFella = new Unit(template, new Position(2, 0, 5), "Poor fella");
 			engine.scene.AddUnit(PoorFella, enemyTeam);
 			PoorFella.UnitAI = new UnitAIModule(engine.scene, PoorFella);
+
+			Unit AnotherFella = new Unit(template, new Position(6, 0, 1), "Another fool");
+			engine.scene.AddUnit(AnotherFella, enemyTeam);
+			AnotherFella.UnitAI = new UnitAIModule(engine.scene, AnotherFella);
 		}
 
 		public static int Main()

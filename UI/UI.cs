@@ -130,7 +130,7 @@ namespace TAC.UISystem
 								PushID(i);
 								//PushItemWidth(-1);
 								editTextureName = current.faces[i] != null ? current.faces[i].assetname : "";
-								// Magic number lol
+								// FIXME Magic number lol
 								if (InputText("", ref editTextureName, (uint)256) || IsItemClicked()) {
 									currentItemIndex = i;
 									// New texture inputted
@@ -178,17 +178,41 @@ namespace TAC.UISystem
 
 		public void DrawGameUI(float dt)
 		{
-			SetNextWindowPos(Vector2.Zero);
+			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One);
 
-			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-			Begin("controls", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground);
+			ImGuiWindowFlags controlFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.AlwaysAutoResize;
 
-			if (Button("Edit", new Vector2(150, 40))) {
-				UIEventQueue.PushEvent(engine.ToggleGameMode);
+			if (IsPlayerTeamInPlay(engine.player)) {
+				////////////////
+				SetNextWindowPos(Vector2.Zero);
+				Begin("Game Controls", controlFlags);
+				Button("Next turn", new Vector2(150, 40));
+				End();
+				////////////////
+				SetNextWindowPos(new Vector2(GetWindowViewport().Size.X - 150, 0));
+				Begin("Hidden Controls", controlFlags);
+				if (Button("Edit", new Vector2(150, 40)))
+					UIEventQueue.PushEvent(engine.ToggleGameMode);
+				End();
+				////////////////
+				if (engine.player.SelectedUnit != null)
+					DrawUnitStats();
+			} else {
+				// Draw waiting UI
+				Vector2 windowPos = GetMainViewport().Size;
+				string TeamInPlayName = "Waiting for " + engine.scene.GetCurrentTeamInPlay().Name;
+
+				PushStyleColor(ImGuiCol.Text, ColorConvertFloat4ToU32(new Vector4(1, 0.4f, 0.2f, 1)));
+				Vector2 TextSize = CalcTextSize(TeamInPlayName);
+				windowPos.X = (windowPos.X - TextSize.X) / 2;
+				windowPos.Y -= GetTextLineHeightWithSpacing() * 2;
+				SetNextWindowPos(windowPos);
+				Begin("Waiting", controlFlags);
+				SetWindowFontScale(2.0f); // IDGAF it works bro
+				Text(TeamInPlayName);
+				End();
+				PopStyleColor();
 			}
-			End();
-
-			if (engine.player.SelectedUnit != null) DrawUnitStats();
 
 			PopStyleVar();
 		}
@@ -235,6 +259,8 @@ namespace TAC.UISystem
 				del();
 			}
 		}
+
+		private bool IsPlayerTeamInPlay(PlayerController player) => engine.scene.IsTeamInPlay(player.GameState.SelectedTeam);
 
 		public static bool IsMouseUnderUI() => ImGui.GetIO().WantCaptureMouse;
 
