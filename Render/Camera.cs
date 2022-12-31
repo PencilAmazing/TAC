@@ -37,8 +37,8 @@ namespace TAC.Render
 		public void UpdateCamera(Vector3 clamp)
 		{
 			Vector3 rod = camera.position - camera.target;
-			Vector2 angleV = Raymath.Vector3Angle(rod, Vector3.UnitX);
-			Quaternion rot = Raymath.QuaternionFromAxisAngle(camera.up, angleV.Y);
+			float theta = MathF.Atan2(rod.X, rod.Z);
+			Quaternion rot = Raymath.QuaternionFromAxisAngle(camera.up, theta);
 
 			if (IsKeyDown(KEY_W)) {
 				camera.target += Raymath.Vector3RotateByQuaternion(-Vector3.UnitZ * speed, rot);
