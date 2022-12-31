@@ -11,7 +11,7 @@ uniform mat4 mvp;
 
 void main()
 {
-    fragTexCoord = vertexTexCoord;
+    fragTexCoord = vec2(1,1) - vertexTexCoord;
     face = -1;
     if(vertexNormal.x > 0) {
     face = 0;
