@@ -31,7 +31,7 @@ namespace TAC.Inner
 			resourceCache.LoadAssets();
 			renderer = new Renderer();
 
-			scene = new Scene(new Position(32, 32, 32), renderer, resourceCache, false);
+			scene = new Scene(renderer, resourceCache, false);
 			player = new PlayerController(scene);
 		}
 
@@ -53,7 +53,7 @@ namespace TAC.Inner
 			//ui.Update(deltaTime);
 			ui.DrawHUD(deltaTime, scene.isEdit);
 
-			player.camera.UpdateCamera(scene.size.ToVector3());
+			player.camera.UpdateCamera(scene.Size.ToVector3());
 			BeginDrawing();
 			ClearBackground(Raylib_cs.Color.RAYWHITE);
 			BeginMode3D(player.camera.camera);

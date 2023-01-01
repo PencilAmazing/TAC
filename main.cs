@@ -20,7 +20,7 @@ namespace TAC
 			engine.scene.AddBrushToMap(coppperBrush); // Should be done during scene load
 			engine.scene.AddTileToMap(floorTexture);
 
-			engine.scene.AddFloor(new Floor(engine.scene.size.x, engine.scene.size.y));
+			engine.scene.SetTileSpace(new SceneTileSpace(new Position(32, 2, 32)));
 
 			// Load items and effects
 			Sprite impactEffect = new Sprite(engine.resourceCache.GetTexture("scene/sprite/explosion_11"), 6, 32, 32);

@@ -23,13 +23,14 @@ namespace TAC.World
 			this.z = z;
 		}
 
-		// FIXME where Y coord
+		/// <summary>
+		/// Rounds float vector to nearest tile position
+		/// </summary>
 		public Position(Vector3 world)
 		{
-			world += Vector3.One / 2;
-			x = (int)world.X;
-			y = 0; // ehh
-			z = (int)world.Z;
+			x = (int)(world.X + 0.5f);
+			y = (int)world.Y;
+			z = (int)(world.Z + 0.5f);
 		}
 
 		public Vector3 ToVector3()

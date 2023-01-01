@@ -20,11 +20,12 @@ namespace TAC.World
 		/// </summary>
 		public int CurrentTeamInPlay;
 
-		public Floor floor;
+		// Ideally interact via Scene object
+		private SceneTileSpace TileSpace;
 
 		public ResourceCache cache;
 		public Renderer renderer { get; }
-		public Position size { get; }
+		public Position Size { get => TileSpace.Size; }
 		public bool isEdit;
 
 		private Stack<DebugText> debugStack;
@@ -49,9 +50,8 @@ namespace TAC.World
 		// TODO: replace with action stack?
 		private Action currentAction;
 
-		public Scene(Position size, Renderer renderer, ResourceCache cache, bool isEdit)
+		public Scene(Renderer renderer, ResourceCache cache, bool isEdit)
 		{
-			this.size = size;
 			this.renderer = renderer;
 			this.cache = cache;
 			this.isEdit = isEdit;
@@ -74,10 +74,11 @@ namespace TAC.World
 			BrushTypeMap.Clear();
 		}
 
-		public void AddFloor(Floor NewFloor)
+		public void SetTileSpace(SceneTileSpace TileSpace)
 		{
-			this.floor = NewFloor;
-			floor.CreateTexture(TileTypeMap);
+			this.TileSpace = TileSpace;
+			// Just in case
+			this.TileSpace.GenerateFloorMeshes(TileTypeMap);
 		}
 
 		public void EndTurn()
@@ -131,12 +132,15 @@ namespace TAC.World
 		public virtual void Draw(Camera3D camera)
 		{
 			renderer.DrawSkybox(camera, cache);
-			renderer.DrawFloor(camera, floor, cache);
+			for (int i = 0; i < TileSpace.Height; i++) {
+				renderer.DrawFloor(camera, GetFloorModel(i), TileTypeMap);
+			}
 
 			// Draw wall
-			for (int i = 0; i < floor.length; i++) {
-				for (int j = 0; j < floor.width; j++) {
-					Tile tile = floor.GetTile(i, j);
+			// FIXME 3D walls brother
+			for (int i = 0; i < TileSpace.Length; i++) {
+				for (int j = 0; j < TileSpace.Width; j++) {
+					Tile tile = TileSpace[i, 0, j];
 					if (tile.North > 0)
 						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), BrushTypeMap[tile.North - 1], cache);
 					if (tile.West > 0)
@@ -185,22 +189,22 @@ namespace TAC.World
 				Raylib.DrawBoundingBox(unit.GetUnitBoundingBox(), Color.ORANGE);
 		}
 
-		public Model GetFloorQuad() => floor.GetQuad();
+		public Model GetFloorModel(int level) => TileSpace.GetFloorModel(level);
 
-		public Tile GetTile(Position pos) => floor.GetTile(pos.x, pos.z);
+		public Tile GetTile(Position pos) => TileSpace.GetTile(pos);
 
 		/// <summary>
 		/// Is position within size of scene?
 		/// </summary>
 		public bool IsTileWithinBounds(Position pos) => pos.x >= 0 && pos.y >= 0 && pos.z >= 0 &&
-				   pos.x < size.x && pos.y < size.y && pos.z < size.z;
+				   pos.x < Size.x && pos.y < Size.y && pos.z < Size.z;
 
 		/// <summary>
 		/// Does tile contain a unit?
 		/// </summary>
 		public bool IsTileOccupied(Position pos)
 		{
-			Tile tile = floor.GetTile(pos.x, pos.z);
+			Tile tile = TileSpace.GetTile(pos);
 			return tile != Tile.nullTile && (tile.unit != null); // Or tile has object
 		}
 
@@ -209,7 +213,7 @@ namespace TAC.World
 		/// </summary>
 		public bool IsTileImpassable(Position pos)
 		{
-			Tile tile = floor.GetTile(pos.x, pos.z);
+			Tile tile = TileSpace.GetTile(pos);
 			return tile != Tile.nullTile && (tile.HasThing() || tile.HasUnit());
 		}
 
@@ -218,14 +222,14 @@ namespace TAC.World
 		/// </summary>
 		public bool IsTileBlocking(Position pos)
 		{
-			Tile tile = floor.GetTile(pos.x, pos.z);
+			Tile tile = TileSpace.GetTile(pos);
 			return tile != Tile.nullTile && (tile.HasWall(Wall.North | Wall.West) || tile.HasThing());
 		}
 
 		public void ToggleWall(Position pos, Wall wall)
 		{
 			// Do your magic, rosyln
-			Wall select = (Wall)floor[pos.x, pos.z].walls;
+			Wall select = (Wall)TileSpace[pos].walls;
 			select ^= wall;
 			// Clear flip bits if wall bits are not set
 			//select &= (Wall)((int)select << 2 | (int)select);
@@ -236,17 +240,17 @@ namespace TAC.World
 			flips &= (Wall)((byte)visible << 2);
 			// Collect parts
 			select = flips | visible;
-			floor[pos.x, pos.z].walls = (byte)select;
+			TileSpace[pos].walls = (byte)select;
 		}
 
 		public void SetWall(Position pos, Wall wall)
 		{
-			floor[pos.x, pos.z].walls = (byte)wall;
+			TileSpace[pos].walls = (byte)wall;
 		}
 
 		public void ClearWall(Position pos, Wall wall)
 		{
-			floor[pos.x, pos.z].walls &= (byte)~wall;
+			TileSpace[pos].walls &= (byte)~wall;
 		}
 
 		public void ToggleBrush(Position pos, Wall wall, Brush brush)
@@ -266,16 +270,16 @@ namespace TAC.World
 		public void ToggleBrush(Position pos, Wall wall, int brushID)
 		{
 			if (wall.HasFlag(Wall.North)) {
-				if (floor[pos.x, pos.z].North > 0)
-					floor[pos.x, pos.z].North = 0;
+				if (TileSpace[pos].North > 0)
+					TileSpace[pos].North = 0;
 				else
-					floor[pos.x, pos.z].North = brushID;
+					TileSpace[pos].North = brushID;
 				ToggleWall(pos, wall);
 			} else if (wall.HasFlag(Wall.West)) {
-				if (floor[pos.x, pos.z].West > 0)
-					floor[pos.x, pos.z].West = 0;
+				if (TileSpace[pos].West > 0)
+					TileSpace[pos].West = 0;
 				else
-					floor[pos.x, pos.z].West = brushID;
+					TileSpace[pos].West = brushID;
 				ToggleWall(pos, wall);
 			}
 		}
@@ -283,10 +287,10 @@ namespace TAC.World
 		public void ClearBrush(Position pos, Wall wall)
 		{
 			if (wall == Wall.North) {
-				floor[pos.x, pos.z].North = 0;
+				TileSpace[pos].North = 0;
 				ClearWall(pos, Wall.North | Wall.FlipNorth);
 			} else if (wall == Wall.West) {
-				floor[pos.x, pos.z].West = 0;
+				TileSpace[pos].West = 0;
 				ClearWall(pos, Wall.West | Wall.FlipWest);
 			}
 		}
@@ -360,22 +364,22 @@ namespace TAC.World
 			int z = pos.z;
 
 			// Blocking cardinal direction movement
-			bool north = floor.GetTile(x, z).HasWall(Wall.North) || IsTileImpassable(pos - PositiveZ);
-			bool west = floor.GetTile(x, z).HasWall(Wall.West) || IsTileImpassable(pos - PositiveX);
-			bool south = floor.GetTile(x, z + 1).HasWall(Wall.North) || IsTileImpassable(pos + PositiveZ);
-			bool east = floor.GetTile(x + 1, z).HasWall(Wall.West) || IsTileImpassable(pos + PositiveX);
+			bool north = TileSpace.GetTile(pos).HasWall(Wall.North) || IsTileImpassable(pos - PositiveZ);
+			bool west = TileSpace.GetTile(pos).HasWall(Wall.West) || IsTileImpassable(pos - PositiveX);
+			bool south = TileSpace.GetTile(pos + PositiveZ).HasWall(Wall.North) || IsTileImpassable(pos + PositiveZ);
+			bool east = TileSpace.GetTile(pos + PositiveX).HasWall(Wall.West) || IsTileImpassable(pos + PositiveX);
 
-			bool northeast = floor.GetTile(pos + PositiveX - PositiveZ).HasWall(Wall.West) ||
-							 floor.GetTile(pos + PositiveX).HasWall(Wall.North) ||
+			bool northeast = TileSpace.GetTile(pos + PositiveX - PositiveZ).HasWall(Wall.West) ||
+							 TileSpace.GetTile(pos + PositiveX).HasWall(Wall.North) ||
 							 IsTileImpassable(pos + PositiveX - PositiveZ);
-			bool northwest = floor.GetTile(pos - PositiveZ).HasWall(Wall.West) ||
-							 floor.GetTile(pos - PositiveX).HasWall(Wall.North) ||
+			bool northwest = TileSpace.GetTile(pos - PositiveZ).HasWall(Wall.West) ||
+							 TileSpace.GetTile(pos - PositiveX).HasWall(Wall.North) ||
 							 IsTileImpassable(pos - PositiveX - PositiveZ);
-			bool southeast = floor.GetTile(pos + PositiveX + PositiveZ).HasWall(Wall.North) ||
-							 floor.GetTile(pos + PositiveX + PositiveZ).HasWall(Wall.West) ||
+			bool southeast = TileSpace.GetTile(pos + PositiveX + PositiveZ).HasWall(Wall.North) ||
+							 TileSpace.GetTile(pos + PositiveX + PositiveZ).HasWall(Wall.West) ||
 							 IsTileImpassable(pos + PositiveX + PositiveZ);
-			bool southwest = floor.GetTile(pos - PositiveX + PositiveZ).HasWall(Wall.North) ||
-							 floor.GetTile(pos + PositiveZ).HasWall(Wall.West) ||
+			bool southwest = TileSpace.GetTile(pos - PositiveX + PositiveZ).HasWall(Wall.North) ||
+							 TileSpace.GetTile(pos + PositiveZ).HasWall(Wall.West) ||
 							 IsTileImpassable(pos + PositiveZ - PositiveX);
 
 			if (dir == UnitDirection.North)
@@ -418,9 +422,9 @@ namespace TAC.World
 
 			// Add unit to game scene
 			units.Add(unit);
-			Tile tile = floor.GetTile(unit.position);
+			Tile tile = TileSpace.GetTile(unit.position);
 			tile.unit = unit;
-			floor.SetTile(unit.position, tile);
+			TileSpace.SetTile(tile, unit.position);
 
 			return true;
 		}
@@ -478,9 +482,19 @@ namespace TAC.World
 			}
 		}
 
-		public Unit GetUnit(Position pos)
+		public Unit GetUnit(Position pos) => TileSpace.GetTile(pos).unit;
+
+		/// <summary>
+		/// Moves a unit from it's old position to <paramref name="newPos"/>
+		/// </summary>
+		public void MoveUnitToTile(Unit unit, Position newPos)
 		{
-			return floor.GetTile(pos.x, pos.z).unit;
+			// Remove reference to unit in old tile
+			TileSpace[unit.position.x, unit.position.y, unit.position.z].unit = null;
+			// Update position
+			unit.position = newPos;
+			// Set reference in new tile
+			TileSpace[newPos.x, newPos.y, newPos.z].unit = unit;
 		}
 
 		// health only for now

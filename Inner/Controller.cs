@@ -64,7 +64,7 @@ namespace TAC.Inner
 				}
 			}
 
-			if(UI.IsKeyDown(KeyboardKey.KEY_LEFT_CONTROL) && UI.IsKeyDown(KeyboardKey.KEY_ENTER)) {
+			if (UI.IsKeyDown(KeyboardKey.KEY_LEFT_CONTROL) && UI.IsKeyDown(KeyboardKey.KEY_ENTER)) {
 				scene.EndTurn();
 			}
 		}
@@ -118,33 +118,47 @@ namespace TAC.Inner
 		public Position GetMouseTilePosition()
 		{
 			Ray ray = GetMouseRay(GetMousePosition(), camera.camera);
-			RayCollision collide;
-			unsafe {
-				// TODO replace this with GetRayCollisionQuad instead
-				collide = GetRayCollisionMesh(ray, scene.GetFloorQuad().meshes[0], scene.GetFloorQuad().transform);
+			bool everHit = false;
+			RayCollision collide = new RayCollision();
+			Position outHit = Position.Negative;
+
+			for (int y = 0; y < scene.Size.y; y++) {
+				unsafe {
+					collide = GetRayCollisionMesh(ray, scene.GetFloorModel(y).meshes[0], scene.GetFloorModel(y).transform);
+				}
+				// if hit and (never hit or closer to origin than last)
+				if (collide.hit && (!everHit ||
+					Vector3.DistanceSquared(ray.position, collide.point) < Vector3.DistanceSquared(ray.position, outHit.ToVector3()))) {
+					collide.point += Vector3.One / 2;
+					// Floor values of hit
+					outHit = new Position((int)collide.point.X, (int)collide.point.Y, (int)collide.point.Z);
+					everHit = true;
+				}
 			}
-			if (collide.hit) {
-				collide.point += Vector3.One / 2;
-				// Floor
-				Position mousePos = new Position((int)(collide.point.X), 0, (int)(collide.point.Z));
-				//scene.PushDebugText(new DebugText(mousePos.ToString(), 50, 50, 12, Color.BLACK));
-				return mousePos;
-			}
-			return Position.Negative;
+
+			return outHit;
 		}
 
 		private Vector3 CollideMouseWithPlane()
 		{
 			Ray ray = GetMouseRay(GetMousePosition(), camera.camera);
-			unsafe {
-				// TODO replace this with GetRayCollisionQuad instead
-				RayCollision collide = GetRayCollisionMesh(ray, scene.GetFloorQuad().meshes[0], scene.GetFloorQuad().transform);
-				if (collide.hit) {
+			bool everHit = false;
+			RayCollision collide;
+			Vector3 outHit = -Vector3.One;
+
+			for (int i = 0; i < scene.Size.y; i++) {
+				unsafe {
+					// TODO replace this with GetRayCollisionQuad instead
+					collide = GetRayCollisionMesh(ray, scene.GetFloorModel(i).meshes[0], scene.GetFloorModel(i).transform);
+				}
+				if (collide.hit && (!everHit ||
+					Vector3.DistanceSquared(ray.position, collide.point) < Vector3.DistanceSquared(ray.position, outHit))) {
 					//collide.point += Vector3.One / 2;
-					return new Vector3(collide.point.X, 0, collide.point.Z);
+					outHit = collide.point;
+					everHit = true;
 				}
 			}
-			return -Vector3.One;
+			return outHit;
 		}
 
 		public void SetSelectedBrush(Brush brush)

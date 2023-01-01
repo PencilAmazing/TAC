@@ -93,10 +93,14 @@ namespace TAC.Render
 			}
 		}
 
-		public void DrawFloor(Camera3D camera, Floor floor, ResourceCache cache)
+		/// <summary>
+		/// Draw tiles on ground
+		/// </summary>
+		public void DrawFloor(Camera3D camera, Model FloorModel, List<Texture> TileLookupTable)
 		{
 			// Offset ground in transform matrix to make other rendering easier
-			DrawModel(floor.GetQuad(), Vector3.Zero, 1, Color.WHITE);
+			// FIXME Texture arrays do not exist in raylib bro wtf
+			DrawModel(FloorModel, Vector3.Zero, 1, Color.WHITE);
 		}
 
 		/// <summary>

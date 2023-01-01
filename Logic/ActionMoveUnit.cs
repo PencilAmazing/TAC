@@ -49,11 +49,8 @@ namespace TAC.Logic
 				}
 
 				// Advance unit
-				scene.floor[path.unit.position.x, path.unit.position.z].unit = null;
-
-				path.unit.position = path.path[0];
+				scene.MoveUnitToTile(path.unit, path.path[0]);
 				path.path.RemoveAt(0);
-				scene.floor[path.unit.position.x, path.unit.position.z].unit = path.unit;
 
 				path.unit.TimeUnits -= 4;
 				if (path.path.Count == 0) Done();

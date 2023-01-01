@@ -84,6 +84,7 @@ namespace TAC.World
 		public int North;
 		// West wall type
 		public int West;
+		// Thing type index
 		public int thing;
 
 		/// <summary>
