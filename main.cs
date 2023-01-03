@@ -1,4 +1,5 @@
-﻿using TAC.Editor;
+﻿using Raylib_cs;
+using TAC.Editor;
 using TAC.Inner;
 using TAC.Logic;
 using TAC.Render;
@@ -15,9 +16,19 @@ namespace TAC
 		{
 			// Load scene geometry and textures
 			Brush coppperBrush = engine.resourceCache.LoadBrush("brush/copper");
+			// No need to add this, gets added automatically
 			Brush yellowBrush = engine.resourceCache.LoadBrush("brush/yellow");
-			Texture floorTexture = engine.resourceCache.LoadTexture("tile/OBKMTB90");
 			engine.scene.AddBrushToMap(coppperBrush); // Should be done during scene load
+
+			Texture transparentTexture;
+			{
+				Image i = GenImageColor(128, 128, Color.BLANK);
+				Texture2D tex = LoadTextureFromImage(i);
+				UnloadImage(i);
+				transparentTexture = engine.resourceCache.LoadTexture(tex, "tile/null");
+			}
+			Texture floorTexture = engine.resourceCache.LoadTexture("tile/OBKMTB90");
+			engine.scene.AddTileToMap(transparentTexture);
 			engine.scene.AddTileToMap(floorTexture);
 
 			engine.scene.SetTileSpace(new SceneTileSpace(new Position(32, 2, 32)));

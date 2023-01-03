@@ -39,28 +39,30 @@ namespace TAC.World
 			FloorTextures = new RenderTexture2D[Height];
 		}
 
-		public void GenerateFloorMeshes(List<Texture> TileLookupTable)
+		public void GenerateFloorMeshes(List<Texture> TileLookupTable, ResourceCache cache)
 		{
-			for (int i = 0; i < Height; i++) {
-				FloorModels[i] = LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1));
-				Matrix4x4 scale = Raymath.MatrixScale(Width, Height, Length);
-				Matrix4x4 translate = Raymath.MatrixTranslate(Width / 2 - 0.5f, i * 1.5f, Length / 2 - 0.5f);
-				FloorModels[i].transform = Raymath.MatrixMultiply(scale, translate);
-			}
-
 			for (int y = 0; y < Height; y++) {
+				// Push vertices
+				FloorModels[y] = LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1));
+				Matrix4x4 scale = Raymath.MatrixScale(Width, Height, Length);
+				Matrix4x4 translate = Raymath.MatrixTranslate(Width / 2 - 0.5f, y * 2.0f, Length / 2 - 0.5f);
+				FloorModels[y].transform = Raymath.MatrixMultiply(scale, translate);
+
+				// Attach textures
 				FloorTextures[y] = LoadRenderTexture(128 * Width, 128 * Length);
 				BeginTextureMode(FloorTextures[y]);
-				ClearBackground(Color.WHITE);
+				ClearBackground(Color.BLANK);
 				for (int x = 0; x < Width; x++) {
 					for (int z = 0; z < Length; z++) {
-						Texture2D tex = TileLookupTable[TileMap[x, y, z].type].tex;
+						int type = TileMap[x, y, z].type;
+						Texture2D tex = TileLookupTable[type].tex;
 						DrawTexture(tex, 128 * x, 128 * z, Color.WHITE);
 					}
 				}
 				EndTextureMode();
 
 				SetMaterialTexture(ref FloorModels[y], 0, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, ref FloorTextures[y].texture);
+				SetMaterialShader(ref FloorModels[y], 0, ref cache.TilemapShader);
 			}
 		}
 

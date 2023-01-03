@@ -56,6 +56,7 @@ namespace TAC.Editor
 
 		public Shader SkyboxShader;
 		public Shader WallShader;
+		public Shader TilemapShader;
 
 		// General purpose cube mesh
 		public Mesh cube;
@@ -127,8 +128,8 @@ namespace TAC.Editor
 		{
 			Texture loadedTexture = new Texture(TextureKey, tex);
 			Textures[TextureKey] = loadedTexture;
-				return loadedTexture;
-			}
+			return loadedTexture;
+		}
 
 		private void LoadTiles()
 		{
@@ -168,6 +169,8 @@ namespace TAC.Editor
 			bottomloc = GetShaderLocation(WallShader, "bottom");
 			backloc = GetShaderLocation(WallShader, "back");
 			frontloc = GetShaderLocation(WallShader, "front");
+
+			TilemapShader = LoadShader(null, AssetShaderPrefix + "tilemap.frag");
 		}
 
 		unsafe static void AllocateMeshData(Mesh* mesh, int vertexCount, int triangleCount)
