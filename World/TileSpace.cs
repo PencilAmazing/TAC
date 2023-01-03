@@ -34,6 +34,12 @@ namespace TAC.World
 			this.Size = Size;
 			// FIXME put z coordinate in last index for cache locality
 			TileMap = new Tile[Width, Height, Length];
+			// Clear last floor
+			for(int x = 0; x < Width; x++) {
+				for(int z = 0; z < Length; z++) {
+					TileMap[x, 0, z] = new Tile(1, 0);
+				}
+			}
 			TileItemMap = new Dictionary<Position, List<Item>>();
 			FloorModels = new Model[Height];
 			FloorTextures = new RenderTexture2D[Height];

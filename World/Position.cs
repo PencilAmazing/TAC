@@ -29,7 +29,7 @@ namespace TAC.World
 		public Position(Vector3 world)
 		{
 			x = (int)(world.X + 0.5f);
-			y = (int)world.Y;
+			y = (int)(world.Y / 2.0f + 0.5f);
 			z = (int)(world.Z + 0.5f);
 		}
 

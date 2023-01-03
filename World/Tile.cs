@@ -1,4 +1,4 @@
-using TAC.Editor;
+﻿using TAC.Editor;
 
 namespace TAC.World
 {
@@ -67,6 +67,11 @@ namespace TAC.World
 			for (int i = 0; i < brush.faces.Length; i++) { if (brush.faces[i] == null) return false; }
 			return true;
 
+		}
+
+		public override int GetHashCode()
+		{
+			throw new System.NotImplementedException();
 		}
 	}
 

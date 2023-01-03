@@ -47,6 +47,9 @@ namespace TAC.Logic
 				return false;
 			}
 			Position start = unit.position;
+			// FIXME: fun fact up down messes up everything
+			// add it to the dirs list sometime
+			if (goal.y - start.y != 0) return false;
 
 			Queue<Position> frontier = new();
 			frontier.Enqueue(start);

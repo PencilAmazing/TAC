@@ -73,7 +73,7 @@ namespace TAC.World
 		{
 			this.TileSpace = TileSpace;
 			// Just in case
-			this.TileSpace.GenerateFloorMeshes(TileTypeMap);
+			this.TileSpace.GenerateFloorMeshes(TileTypeMap, cache);
 		}
 
 		public void EndTurn()
@@ -128,18 +128,19 @@ namespace TAC.World
 		{
 			renderer.DrawSkybox(camera, cache);
 			for (int i = 0; i < TileSpace.Height; i++) {
-				renderer.DrawFloor(camera, GetFloorModel(i), TileTypeMap);
+				renderer.DrawFloor(cache, GetFloorModel(i), TileTypeMap);
 			}
 
 			// Draw wall
-			// FIXME 3D walls brother
-			for (int i = 0; i < TileSpace.Length; i++) {
-				for (int j = 0; j < TileSpace.Width; j++) {
-					Tile tile = TileSpace[i, 0, j];
-					if (tile.North > 0)
-						renderer.DrawWall(camera, new Vector3(i, 0, j), false, tile.HasWall(Wall.FlipNorth), BrushTypeMap[tile.North - 1], cache);
-					if (tile.West > 0)
-						renderer.DrawWall(camera, new Vector3(i, 0, j), true, tile.HasWall(Wall.FlipWest), BrushTypeMap[tile.West - 1], cache);
+			for (int k = 0; k < TileSpace.Height; k++) {
+				for (int i = 0; i < TileSpace.Length; i++) {
+					for (int j = 0; j < TileSpace.Width; j++) {
+						Tile tile = TileSpace[i, k, j];
+						if (tile.North > 0)
+							renderer.DrawWall(camera, new Vector3(i, k, j), false, tile.HasWall(Wall.FlipNorth), BrushTypeMap[tile.North - 1], cache);
+						if (tile.West > 0)
+							renderer.DrawWall(camera, new Vector3(i, k, j), true, tile.HasWall(Wall.FlipWest), BrushTypeMap[tile.West - 1], cache);
+					}
 				}
 			}
 

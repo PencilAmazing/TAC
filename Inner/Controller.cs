@@ -46,7 +46,7 @@ namespace TAC.Inner
 			Position selectedPosition = GetMouseTilePosition();
 			Tile selected = scene.GetTile(selectedPosition);
 			if (selected != Tile.nullTile)
-				DrawCubeWiresV(selectedPosition.ToVector3(), Vector3.One, Color.ORANGE);
+				DrawCubeWiresV(selectedPosition.ToVector3() + Vector3.UnitY * selectedPosition.y, Vector3.One, Color.ORANGE);
 
 			if (GameState.Mode == GameSelection.SelectUnit && UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				if (selected.unit != null && GameState.SelectedTeam.HasUnit(selected.unit))
@@ -72,11 +72,11 @@ namespace TAC.Inner
 		public void UpdateEditControl()
 		{
 			Vector3 point = CollideMouseWithPlane();
-			Position position = new Position((int)(point.X + 0.5f), 0, (int)(point.Z + 0.5f));
+			Position position = new Position(point);
 
 			Tile selected = scene.GetTile(position);
 			if (selected == Tile.nullTile) return;
-			DrawCubeWiresV(position.ToVector3(), Vector3.One, Color.ORANGE);
+			DrawCubeWiresV(position.ToVector3() + Vector3.UnitY * position.y, Vector3.One, Color.ORANGE);
 
 			Vector3 diff = point - position.ToVector3();
 			Wall wall = Wall.North;
@@ -91,7 +91,7 @@ namespace TAC.Inner
 				diff = -Vector3.UnitZ;
 			}
 
-			DrawSphereWires(position.ToVector3() + diff / 2, 0.1f, 4, 4, Color.BLUE);
+			DrawSphereWires(position.ToVector3() + diff / 2 + Vector3.UnitY * position.y, 0.1f, 4, 4, Color.BLUE);
 
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				// Also toggles wall, BTW
@@ -117,26 +117,11 @@ namespace TAC.Inner
 
 		public Position GetMouseTilePosition()
 		{
-			Ray ray = GetMouseRay(GetMousePosition(), camera.camera);
-			bool everHit = false;
-			RayCollision collide = new RayCollision();
-			Position outHit = Position.Negative;
+			Vector3 worldHit = CollideMouseWithPlane();
 
-			for (int y = 0; y < scene.Size.y; y++) {
-				unsafe {
-					collide = GetRayCollisionMesh(ray, scene.GetFloorModel(y).meshes[0], scene.GetFloorModel(y).transform);
-				}
-				// if hit and (never hit or closer to origin than last)
-				if (collide.hit && (!everHit ||
-					Vector3.DistanceSquared(ray.position, collide.point) < Vector3.DistanceSquared(ray.position, outHit.ToVector3()))) {
-					collide.point += Vector3.One / 2;
-					// Floor values of hit
-					outHit = new Position((int)collide.point.X, (int)collide.point.Y, (int)collide.point.Z);
-					everHit = true;
-				}
-			}
+			if (worldHit == -Vector3.One) return Position.Negative;
 
-			return outHit;
+			return new Position(worldHit);
 		}
 
 		private Vector3 CollideMouseWithPlane()
@@ -151,9 +136,10 @@ namespace TAC.Inner
 					// TODO replace this with GetRayCollisionQuad instead
 					collide = GetRayCollisionMesh(ray, scene.GetFloorModel(i).meshes[0], scene.GetFloorModel(i).transform);
 				}
+
 				if (collide.hit && (!everHit ||
 					Vector3.DistanceSquared(ray.position, collide.point) < Vector3.DistanceSquared(ray.position, outHit))) {
-					//collide.point += Vector3.One / 2;
+					if (scene.GetTile(new Position(collide.point)).type == 0) continue; // If we hit clear floor skip
 					outHit = collide.point;
 					everHit = true;
 				}

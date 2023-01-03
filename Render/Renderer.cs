@@ -78,7 +78,7 @@ namespace TAC.Render
 		/// <summary>
 		/// Draw tiles on ground
 		/// </summary>
-		public void DrawFloor(Camera3D camera, Model FloorModel, List<Texture> TileLookupTable)
+		public void DrawFloor(ResourceCache cache, Model FloorModel, List<Texture> TileLookupTable)
 		{
 			// Offset ground in transform matrix to make other rendering easier
 			// FIXME Texture arrays do not exist in raylib bro wtf
@@ -99,7 +99,7 @@ namespace TAC.Render
 			Matrix4x4 transform = rotate ? cache.WallTransformWest : cache.WallTransformNorth;
 			if (flip) transform = transform * MatrixRotateY(MathF.PI); // rotate 180 to flip texture
 
-			transform = MatrixTranslate(center.X, center.Y, center.Z) * transform;
+			transform = MatrixTranslate(center.X, center.Y*2, center.Z) * transform;
 
 			unsafe {
 				// Assign textures to locations
