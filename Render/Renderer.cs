@@ -9,23 +9,6 @@ using static Raylib_cs.Raymath;
 
 namespace TAC.Render
 {
-	public struct DebugText
-	{
-		public string text;
-		public int posx;
-		public int posy;
-		public int fontSize;
-		public Color color;
-		public DebugText(string text, int posx, int posy, int fontSize, Color color)
-		{
-			this.text = text;
-			this.posx = posx;
-			this.posy = posy;
-			this.fontSize = fontSize;
-			this.color = color;
-		}
-	}
-
 	// Consider making static?
 	public class Renderer
 	{
@@ -58,7 +41,7 @@ namespace TAC.Render
 			EndShaderMode();
 		}
 
-		internal void DrawEffect(Camera3D camera, ParticleEffect effect, ResourceCache cache)
+		public void DrawEffect(Camera3D camera, ParticleEffect effect, ResourceCache cache)
 		{
 			Texture2D misctex = effect.sprite.texture.tex;
 			int stage = effect.GetStage();
@@ -76,7 +59,6 @@ namespace TAC.Render
 					 MatrixScale(effect.scale.X, effect.scale.Y, effect.scale.Z));
 			Rlgl.rlEnableBackfaceCulling();
 		}
-
 
 		public void DrawUnitDebug(Camera3D camera, List<Unit> units, ResourceCache cache)
 		{

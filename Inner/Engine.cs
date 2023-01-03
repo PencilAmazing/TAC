@@ -71,7 +71,7 @@ namespace TAC.Inner
 			scene.DrawDebug3D(player.camera.camera);
 			EndMode3D();
 
-			scene.DrawDebug();
+			//scene.DrawDebug();
 			//scene.DrawUI();
 			imguiController.Draw();
 			EndDrawing();

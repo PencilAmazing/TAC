@@ -28,9 +28,6 @@ namespace TAC.World
 		public Position Size { get => TileSpace.Size; }
 		public bool isEdit;
 
-		private Stack<DebugText> debugStack;
-		//public List<Position> debugPath;
-
 		// Map tile types to texture names
 		// Refreshed each map load
 		// Used to translate between references during disk IO
@@ -61,8 +58,6 @@ namespace TAC.World
 			particleEffects = new List<ParticleEffect>();
 			units = new List<Unit>();
 			teams = new List<Team>();
-
-			debugStack = new Stack<DebugText>();
 
 			TileTypeMap = new List<Texture>();
 			BrushTypeMap = new List<Brush>();
@@ -156,22 +151,12 @@ namespace TAC.World
 			renderer.DrawUnitDebug(camera, units, cache);
 		}
 
-		public void PushDebugText(DebugText text) => debugStack.Push(text);
-
-		public void DrawDebug()
-		{
-			while (debugStack.Count > 0) {
-				DebugText text = debugStack.Pop();
-				Raylib.DrawText(text.text, text.posx, text.posy, text.fontSize, text.color);
-			}
-			debugStack.TrimExcess();
-		}
-
 		public virtual void DrawDebug3D(Camera3D camera)
 		{
 			//if (debugPath != null) renderer.DrawDebugPath(debugPath.ToArray());
 			//Raylib.DrawSphere(Vector3.Zero, 0.1f, Color.PINK);
 
+			// FIXME move this to virtual functions in each class
 			ActionMoveUnit move = GetCurrentAction() as ActionMoveUnit;
 			if (move != null) {
 				renderer.DrawDebugPath(move.path.path.ToArray());
@@ -319,6 +304,7 @@ namespace TAC.World
 			float tDeltaY = Abs(d.Y) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.Y);
 			float tDeltaZ = Abs(d.Z) < float.Epsilon ? float.PositiveInfinity : Abs(1 / d.Z);
 
+			// FIXME Cell is not a cube, Y=2.0f you should really put it in a constant somewhere
 			// Offset by 0.5f to find fractional part, since out tiles are centered at 0,0
 			// Other algorithms have tiles centered at 0.5, 0.5, so we try to cancel it out
 			// Dont try to remove this \/, this is cell size and is 1.0f for now
