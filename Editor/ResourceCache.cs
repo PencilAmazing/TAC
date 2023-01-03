@@ -117,15 +117,18 @@ namespace TAC.Editor
 			SetTextureFilter(tex, TextureFilter.TEXTURE_FILTER_POINT);
 			SetTextureWrap(tex, TextureWrap.TEXTURE_WRAP_CLAMP);
 
-			string TextureName = TextureKey;
-			if (tex.id == 0)
-				return null;
-			else {
-				Texture loadedTexture = new Texture(TextureName, tex);
-				Textures[TextureName] = loadedTexture;
+			return tex.id == 0 ? null : LoadTexture(tex, TextureKey);
+		}
+
+		/// <summary>
+		/// Manual insert texture into cache
+		/// </summary>
+		public Texture LoadTexture(Texture2D tex, string TextureKey)
+		{
+			Texture loadedTexture = new Texture(TextureKey, tex);
+			Textures[TextureKey] = loadedTexture;
 				return loadedTexture;
 			}
-		}
 
 		private void LoadTiles()
 		{
