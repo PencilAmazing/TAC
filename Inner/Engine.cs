@@ -71,8 +71,11 @@ namespace TAC.Inner
 			scene.DrawDebug3D(player.camera.camera);
 			EndMode3D();
 
-			//scene.DrawDebug();
-			//scene.DrawUI();
+			// Has to be called outside of 3D mode loop because this
+			// changes render targets to another render texture
+			// hopefully is unnecessary with GPU based atlas rendering
+			scene.UpdateTileSpace();
+
 			imguiController.Draw();
 			EndDrawing();
 		}

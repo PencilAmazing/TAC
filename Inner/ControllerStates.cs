@@ -1,6 +1,5 @@
 ﻿using TAC.Logic;
 using TAC.World;
-using static TAC.Inner.PlayerController;
 
 namespace TAC.Inner
 {
@@ -8,27 +7,40 @@ namespace TAC.Inner
 	{
 		public struct ControlEditState
 		{
-			public Brush selectedBrush;
-			public bool FlipBrush;
+			public enum ToolType { None, Wall, Tile, Unit };
 
-			public ControlEditState(Brush selectedBrush, bool FlipBrush)
+			public Brush SelectedBrush;
+			public int SelectedTileIndex;
+			public bool FlipBrush;
+			public ToolType SelectedTool;
+
+			public ControlEditState()
 			{
-				this.selectedBrush = selectedBrush;
-				this.FlipBrush = FlipBrush;
+				SelectedBrush = null;
+				SelectedTileIndex = 0;
+				FlipBrush = false;
+				SelectedTool = ToolType.None;
 			}
 		}
 
 		public struct ControlGameState
 		{
+			public enum GameSelection
+			{
+				SelectUnit, // Default game mode, select units to view
+				SelectTarget,
+				WaitAction
+			}
+
 			public Unit SelectedUnit;
 			public Team SelectedTeam;
 			public GameSelection Mode;
 
-			public ControlGameState(Unit selectedUnit = null, Team selectedTeam = null, GameSelection mode = GameSelection.SelectUnit)
+			public ControlGameState()
 			{
-				this.SelectedUnit = selectedUnit;
-				this.SelectedTeam = selectedTeam;
-				this.Mode = mode;
+				SelectedUnit = null;
+				SelectedTeam = null;
+				Mode = GameSelection.SelectUnit;
 			}
 		}
 	}

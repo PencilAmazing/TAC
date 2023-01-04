@@ -6,21 +6,12 @@ using TAC.Render;
 using TAC.UISystem;
 using TAC.World;
 using static Raylib_cs.Raylib;
+using static TAC.Inner.ControllerStates.ControlGameState;
 
 namespace TAC.Inner
 {
 	public class PlayerController
 	{
-		/// <summary>
-		/// Game selection mode
-		/// </summary>
-		public enum GameSelection
-		{
-			SelectUnit, // Default game mode, select units to view
-			SelectTarget,
-			WaitAction
-		}
-
 		private Scene scene;
 		public CameraControl camera;
 
@@ -69,7 +60,7 @@ namespace TAC.Inner
 			}
 		}
 
-		public void UpdateEditControl()
+		private void UpdateEditControlWall()
 		{
 			Vector3 point = CollideMouseWithPlane();
 			Position position = new Position(point);
@@ -95,15 +86,47 @@ namespace TAC.Inner
 
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				// Also toggles wall, BTW
-				if (EditState.selectedBrush != null) {
+				if (EditState.SelectedBrush != null) {
 					if (EditState.FlipBrush)
-						scene.ToggleBrush(position, wall | (Wall)((byte)wall << 2), EditState.selectedBrush);
+						scene.ToggleBrush(position, wall | (Wall)((byte)wall << 2), EditState.SelectedBrush);
 					else
-						scene.ToggleBrush(position, wall, EditState.selectedBrush);
+						scene.ToggleBrush(position, wall, EditState.SelectedBrush);
 				}
 			}
 			// Much better
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_RIGHT)) EditState.FlipBrush = !EditState.FlipBrush;
+		}
+
+		private void UpdateEditControlTile()
+		{
+			Position position = GetMouseTilePosition();
+			Tile tile = scene.GetTile(position);
+			if (tile == Tile.nullTile) return;
+			DrawCubeWiresV(position.ToVector3() + Vector3.UnitY * position.y, Vector3.One, Color.ORANGE);
+
+			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
+				tile.type = EditState.SelectedTileIndex;
+				scene.SetTile(tile, position);
+				//scene.RegenerateTileSpaceFloor(pos.y);
+			}
+		}
+
+		public void UpdateEditControl()
+		{
+			switch (EditState.SelectedTool) {
+				case ControlEditState.ToolType.None:
+					break;
+				case ControlEditState.ToolType.Wall:
+					UpdateEditControlWall();
+					break;
+				case ControlEditState.ToolType.Tile:
+					UpdateEditControlTile();
+					break;
+				case ControlEditState.ToolType.Unit:
+					break;
+				default:
+					break;
+			}
 		}
 
 		/// <summary>
@@ -149,7 +172,7 @@ namespace TAC.Inner
 
 		public void SetSelectedBrush(Brush brush)
 		{
-			if (Brush.IsBrushValid(brush)) EditState.selectedBrush = brush;
+			if (Brush.IsBrushValid(brush)) EditState.SelectedBrush = brush;
 		}
 	}
 }

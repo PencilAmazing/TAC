@@ -76,6 +76,13 @@ namespace TAC.World
 			this.TileSpace.GenerateFloorMeshes(TileTypeMap, cache);
 		}
 
+		public void RegenerateTileSpaceFloor(int y)
+		{
+			if (TileSpace != null) TileSpace.UpdateFloorTexture(TileTypeMap, cache, y);
+		}
+
+		public void UpdateTileSpace() => TileSpace.UpdateFloorTextures(TileTypeMap, cache);
+
 		public void EndTurn()
 		{
 			// No effect if unit is still moving
@@ -178,6 +185,7 @@ namespace TAC.World
 		public Model GetFloorModel(int level) => TileSpace.GetFloorModel(level);
 
 		public Tile GetTile(Position pos) => TileSpace.GetTile(pos);
+		public void SetTile(Tile tile, Position pos) => TileSpace.SetTile(tile, pos);
 
 		/// <summary>
 		/// Is position within size of scene?
@@ -237,6 +245,19 @@ namespace TAC.World
 		public void ClearWall(Position pos, Wall wall)
 		{
 			TileSpace[pos].walls &= (byte)~wall;
+		}
+
+		/// <summary>
+		/// Return index of texture in <see cref="TileTypeMap"/>. Adds to map if not found.
+		/// </summary>
+		public int GetTileTypeIndexOf(Texture texture)
+		{
+			int index = TileTypeMap.IndexOf(texture);
+			if (index == -1) {
+				TileTypeMap.Add(texture);
+				index = TileTypeMap.Count - 1;
+			}
+			return index;
 		}
 
 		public void ToggleBrush(Position pos, Wall wall, Brush brush)

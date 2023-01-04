@@ -13,6 +13,9 @@ namespace TAC.World
 	{
 		// Array of tiles in scene
 		private Tile[,,] TileMap { get; }
+		// Does y level texture need re-rendering?
+		// FIXME: GPU based tilemap rendering does not need this at all
+		private bool[] IsLevelDirty;
 		// FIXME dictionary is probably better than storing per tile?
 		// Would be more logical if attached per tile?
 		// Items stored per position
@@ -34,9 +37,10 @@ namespace TAC.World
 			this.Size = Size;
 			// FIXME put z coordinate in last index for cache locality
 			TileMap = new Tile[Width, Height, Length];
+			IsLevelDirty = new bool[Height];
 			// Clear last floor
-			for(int x = 0; x < Width; x++) {
-				for(int z = 0; z < Length; z++) {
+			for (int x = 0; x < Width; x++) {
+				for (int z = 0; z < Length; z++) {
 					TileMap[x, 0, z] = new Tile(1, 0);
 				}
 			}
@@ -45,30 +49,73 @@ namespace TAC.World
 			FloorTextures = new RenderTexture2D[Height];
 		}
 
+		/// <summary>
+		/// Generate all floor meshes based of a given lookup table
+		/// </summary>
 		public void GenerateFloorMeshes(List<Texture> TileLookupTable, ResourceCache cache)
 		{
-			for (int y = 0; y < Height; y++) {
-				// Push vertices
-				FloorModels[y] = LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1));
-				Matrix4x4 scale = Raymath.MatrixScale(Width, Height, Length);
-				Matrix4x4 translate = Raymath.MatrixTranslate(Width / 2 - 0.5f, y * 2.0f, Length / 2 - 0.5f);
-				FloorModels[y].transform = Raymath.MatrixMultiply(scale, translate);
+			for (int y = 0; y < Height; y++) GenerateFloorMesh(TileLookupTable, cache, y);
+		}
 
-				// Attach textures
-				FloorTextures[y] = LoadRenderTexture(128 * Width, 128 * Length);
-				BeginTextureMode(FloorTextures[y]);
-				ClearBackground(Color.BLANK);
-				for (int x = 0; x < Width; x++) {
-					for (int z = 0; z < Length; z++) {
-						int type = TileMap[x, y, z].type;
-						Texture2D tex = TileLookupTable[type].tex;
-						DrawTexture(tex, 128 * x, 128 * z, Color.WHITE);
-					}
+		/// <summary>
+		/// Regenerate and update floor texture
+		/// </summary>
+		public void UpdateFloorTexture(List<Texture> TileLookupTable, ResourceCache cache, int y)
+		{
+			//FloorTextures[y] = LoadRenderTexture(128 * Width, 128 * Length);
+			BeginTextureMode(FloorTextures[y]);
+			ClearBackground(Color.BLANK);
+			for (int x = 0; x < Width; x++) {
+				for (int z = 0; z < Length; z++) {
+					int type = TileMap[x, y, z].type;
+					Texture2D tex = TileLookupTable[type].tex;
+					DrawTexture(tex, 128 * x, 128 * (Length - z-1), Color.WHITE);
 				}
-				EndTextureMode();
+			}
+			EndTextureMode();
+		}
 
-				SetMaterialTexture(ref FloorModels[y], 0, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, ref FloorTextures[y].texture);
-				SetMaterialShader(ref FloorModels[y], 0, ref cache.TilemapShader);
+		/// <summary>
+		/// Generate a specific y level based of a given lookup table
+		/// </summary>
+		public void GenerateFloorMesh(List<Texture> TileLookupTable, ResourceCache cache, int y)
+		{
+			// Push vertices
+			FloorModels[y] = LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1));
+			Matrix4x4 scale = Raymath.MatrixScale(Width, Height, Length);
+			Matrix4x4 translate = Raymath.MatrixTranslate(Width / 2 - 0.5f, y * 2.0f, Length / 2 - 0.5f);
+			FloorModels[y].transform = Raymath.MatrixMultiply(scale, translate);
+
+			// Attach textures
+			FloorTextures[y] = LoadRenderTexture(128 * Width, 128 * Length);
+			BeginTextureMode(FloorTextures[y]);
+			ClearBackground(Color.BLANK);
+			for (int x = 0; x < Width; x++) {
+				for (int z = 0; z < Length; z++) {
+					int type = TileMap[x, y, z].type;
+					Texture2D tex = TileLookupTable[type].tex;
+					DrawTexture(tex, 128 * x, 128 * z, Color.WHITE);
+				}
+			}
+			EndTextureMode();
+			// Setting texture filters is always polite
+			SetTextureWrap(FloorTextures[y].texture, TextureWrap.TEXTURE_WRAP_CLAMP);
+			SetTextureFilter(FloorTextures[y].texture, TextureFilter.TEXTURE_FILTER_POINT);
+
+			SetMaterialTexture(ref FloorModels[y], 0, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, ref FloorTextures[y].texture);
+			SetMaterialShader(ref FloorModels[y], 0, ref cache.TilemapShader);
+		}
+
+		/// <summary>
+		/// Update floor textures if needed
+		/// </summary>
+		public void UpdateFloorTextures(List<Texture> TileLookupTable, ResourceCache cache)
+		{
+			for (int y = 0; y < Height; y++) {
+				if (IsLevelDirty[y]) {
+					UpdateFloorTexture(TileLookupTable, cache, y);
+					IsLevelDirty[y] = false;
+				}
 			}
 		}
 
@@ -83,9 +130,14 @@ namespace TAC.World
 
 		public Tile GetTile(Position pos) => IsPositionWithinTilespace(pos) ? TileMap[pos.x, pos.y, pos.z] : Tile.nullTile;
 
+		// No bounds checking because honestly if you manage to pass a negative value here it's your fault
 		public void SetTile(Tile tile, Position pos) => SetTile(tile, pos.x, pos.y, pos.z);
-		public void SetTile(Tile tile, int x, int y, int z) => TileMap[x, y, z] = tile;
-
+		public void SetTile(Tile tile, int x, int y, int z)
+		{
+			// Whole floor needs updating. Should be unnecessary when moving to GPU rendering
+			if (TileMap[x, y, z].type != tile.type) IsLevelDirty[y] = true;
+			TileMap[x, y, z] = tile;
+		}
 
 		public void SetTileUnit(Unit unit, Position pos) { if (IsPositionWithinTilespace(pos)) this[pos].unit = unit; }
 
