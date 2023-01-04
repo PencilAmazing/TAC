@@ -99,7 +99,13 @@ namespace TAC.Inner
 
 		private void UpdateEditControlTile()
 		{
-			Position position = GetMouseTilePosition();
+			Position position;
+			{
+				if (EditState.ForceYLevelEdit > 0 && EditState.ForceYLevelEdit <= scene.Size.y) // No snap
+					position = GetMouseTilePositionAtLevel(EditState.ForceYLevelEdit - 1);
+				else
+					position = GetMouseTilePosition();
+			}
 			Tile tile = scene.GetTile(position);
 			if (tile == Tile.nullTile) return;
 			DrawCubeWiresV(position.ToVector3() + Vector3.UnitY * position.y, Vector3.One, Color.ORANGE);
@@ -107,7 +113,6 @@ namespace TAC.Inner
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				tile.type = EditState.SelectedTileIndex;
 				scene.SetTile(tile, position);
-				//scene.RegenerateTileSpaceFloor(pos.y);
 			}
 		}
 
@@ -136,6 +141,26 @@ namespace TAC.Inner
 		public void StartSelectingTarget()
 		{
 			GameState.Mode = GameSelection.SelectTarget;
+		}
+
+		/// <summary>
+		/// y level zero based index
+		/// </summary>
+		public Position GetMouseTilePositionAtLevel(int y)
+		{
+			if (y < 0 || y >= scene.Size.y) return Position.Negative;
+
+			Ray ray = GetMouseRay(GetMousePosition(), camera.camera);
+			RayCollision collide;
+			unsafe {
+				// TODO replace this with GetRayCollisionQuad instead
+				collide = GetRayCollisionMesh(ray, scene.GetFloorModel(y).meshes[0], scene.GetFloorModel(y).transform);
+			}
+			if (!collide.hit) return Position.Negative;
+
+			Position outPos = new Position(collide.point);
+			if (!scene.IsTileWithinBounds(outPos)) return Position.Negative;
+			return outPos;
 		}
 
 		public Position GetMouseTilePosition()

@@ -11,6 +11,7 @@ namespace TAC.Inner
 
 			public Brush SelectedBrush;
 			public int SelectedTileIndex;
+			public int ForceYLevelEdit;
 			public bool FlipBrush;
 			public ToolType SelectedTool;
 
@@ -18,6 +19,7 @@ namespace TAC.Inner
 			{
 				SelectedBrush = null;
 				SelectedTileIndex = 0;
+				ForceYLevelEdit = 0;
 				FlipBrush = false;
 				SelectedTool = ToolType.None;
 			}

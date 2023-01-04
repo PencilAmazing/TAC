@@ -112,22 +112,32 @@ namespace TAC.UISystem
 		private void DrawTileSelectionPanel()
 		{
 			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One * 5);
-			Begin("Tile selection panel");
+
+			Begin("Tile selection panel", ImGuiWindowFlags.AlwaysAutoResize);
 			ControlEditState editState = engine.player.EditState;
 			Texture selectedTile = engine.scene.TileTypeMap[editState.SelectedTileIndex];
 
+			BeginGroup();
 			Image((IntPtr)selectedTile.tex.id, new Vector2(128, 128));
 
-			if (Button("Select tile")) OpenPopup(tilePickerLabel);
+			if (Button("Select tile", new Vector2(128, 0))) OpenPopup(tilePickerLabel);
 			if (BeginPopup(tilePickerLabel)) {
 				DrawTileSelectionPanel(ref engine.player.EditState.SelectedTileIndex);
 			}
 
-			BeginGroup();
+			//BeginGroup();
+			//PushItemWidth(128);
 			foreach (Texture tex in engine.scene.TileTypeMap) {
-				Selectable(tex.assetname);
+				Selectable(tex.assetname, false, ImGuiSelectableFlags.None, new Vector2(128, 0));
 			}
+			//PopItemWidth();
+			//EndGroup();
+
 			EndGroup();
+			SameLine();
+			string sliderFormat = engine.player.EditState.ForceYLevelEdit == 0 ? "x" : "%i";
+			VSliderInt("##Level Selection", new Vector2(20, 200), ref engine.player.EditState.ForceYLevelEdit,
+				0, engine.scene.Size.y, sliderFormat, ImGuiSliderFlags.AlwaysClamp | ImGuiSliderFlags.NoInput);
 
 			End();
 			PopStyleVar();
