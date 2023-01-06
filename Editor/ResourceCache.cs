@@ -362,11 +362,16 @@ namespace TAC.Editor
 			string modelName = node["model"].ToString();
 			Model thingModel = LoadModel(modelName);
 			{
+				// Scale rotate transform
 				JsonNode edit = node["edit"];
 				float scalex = (float)edit["scale"][0];
 				float scaley = (float)edit["scale"][1];
 				float scalez = (float)edit["scale"][2];
 				thingModel.transform *= Raymath.MatrixScale(scalex, scaley, scalez);
+				float transx = (float)edit["transform"][0];
+				float transy = (float)edit["transform"][1];
+				float transz = (float)edit["transform"][2];
+				thingModel.transform *= Raymath.MatrixTranslate(transx, transy, transz);
 			}
 			bool blockSight = (bool)node["blockSight"];
 			bool blockAim = (bool)node["blockAim"];
