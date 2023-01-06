@@ -30,8 +30,11 @@ namespace TAC
 			Texture floorTexture = engine.resourceCache.LoadTexture("tile/OBKMTB90");
 			engine.scene.AddTileToMap(transparentTexture);
 			engine.scene.AddTileToMap(floorTexture);
-
-			engine.scene.SetTileSpace(new SceneTileSpace(new Position(32, 2, 32)));
+			{
+				Thing thing = engine.resourceCache.LoadThing("thing/bookshelf");
+				engine.scene.AddThingToMap(thing);
+			}
+			engine.scene.SetTileSpace(new SceneTileSpace(new Position(16, 2, 16)));
 
 			// Load items and effects
 			Sprite impactEffect = new Sprite(engine.resourceCache.GetTexture("scene/sprite/explosion_11"), 6, 32, 32);

@@ -12,8 +12,6 @@ namespace TAC.Render
 	// Consider making static?
 	public class Renderer
 	{
-		public Renderer() { }
-
 		public void DrawUnits(Camera3D camera, List<Unit> units, ResourceCache cache)
 		{
 			if (units.Count == 0) return;
@@ -125,6 +123,11 @@ namespace TAC.Render
 			box.min = Vector3Transform(box.min, transform);
 			box.max = Vector3Transform(box.max, transform);
 			DrawBoundingBox(box, Color.RED);*/
+		}
+
+		public void DrawThing(Thing thing, Vector3 position)
+		{
+			DrawModel(thing.model, position, 1.0f, Color.WHITE);
 		}
 
 		public void DrawSkybox(Camera3D camera, ResourceCache cache)

@@ -43,6 +43,12 @@ namespace TAC.World
 			BrushTypeMap.Add(brush);
 			return BrushTypeMap.Count - 1;
 		}
+		public List<Thing> ThingTypeMap { get; private set; }
+		public int AddThingToMap(Thing thing)
+		{
+			ThingTypeMap.Add(thing);
+			return ThingTypeMap.Count - 1;
+		}
 
 		// TODO: replace with action stack?
 		private Action currentAction;
@@ -61,6 +67,7 @@ namespace TAC.World
 
 			TileTypeMap = new List<Texture>();
 			BrushTypeMap = new List<Brush>();
+			ThingTypeMap = new List<Thing>();
 		}
 
 		~Scene()
@@ -138,7 +145,7 @@ namespace TAC.World
 				renderer.DrawFloor(cache, GetFloorModel(i), TileTypeMap);
 			}
 
-			// Draw wall
+			// Draw tile accessories
 			for (int k = 0; k < TileSpace.Height; k++) {
 				for (int i = 0; i < TileSpace.Length; i++) {
 					for (int j = 0; j < TileSpace.Width; j++) {
@@ -147,6 +154,8 @@ namespace TAC.World
 							renderer.DrawWall(camera, new Vector3(i, k, j), false, tile.HasWall(Wall.FlipNorth), BrushTypeMap[tile.North - 1], cache);
 						if (tile.West > 0)
 							renderer.DrawWall(camera, new Vector3(i, k, j), true, tile.HasWall(Wall.FlipWest), BrushTypeMap[tile.West - 1], cache);
+						if (tile.HasThing())
+							renderer.DrawThing(ThingTypeMap[tile.thing - 1], new Vector3(i, k, j));
 					}
 				}
 			}
@@ -259,6 +268,15 @@ namespace TAC.World
 			}
 			return index;
 		}
+
+		public int GetThingTypeIndexOf(Thing thing)
+		{
+			int index = ThingTypeMap.IndexOf(thing);
+			return index != -1 ? index : AddThingToMap(thing);
+		}
+
+		public void ToggleThing(Position pos, Thing thing) => TileSpace[pos].thing = GetThingTypeIndexOf(thing);
+		public void ToggleThing(Position pos, int thingIndex) => TileSpace[pos].thing = thingIndex;
 
 		public void ToggleBrush(Position pos, Wall wall, Brush brush)
 		{

@@ -15,4 +15,10 @@ namespace TAC.Editor
 
 		public override string ToString() => assetname;
 	}
+
+	// This is why you don't make your own engine
+	//public class Model {
+	//	public readonly string assetname;
+	//	public readonly Material material;
+	//}
 }

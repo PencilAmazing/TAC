@@ -123,7 +123,7 @@ namespace TAC.World
 		public bool HasWall(Wall wall) => (walls & (byte)wall) != 0;
 
 		// TODO Implement things
-		public bool HasThing() => false;
+		public bool HasThing() => this.thing > 0;
 
 		public bool HasUnit() => this.unit != null;
 

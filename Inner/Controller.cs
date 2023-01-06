@@ -116,6 +116,25 @@ namespace TAC.Inner
 			}
 		}
 
+		public void UpdateEditControlObject()
+		{
+			Position position;
+			{
+				if (EditState.ForceYLevelEdit > 0 && EditState.ForceYLevelEdit <= scene.Size.y) // No snap
+					position = GetMouseTilePositionAtLevel(EditState.ForceYLevelEdit - 1);
+				else
+					position = GetMouseTilePosition();
+			}
+			Tile tile = scene.GetTile(position);
+			if (tile == Tile.nullTile) return;
+			DrawCubeWiresV(position.ToVector3() + Vector3.UnitY * position.y, Vector3.One, Color.ORANGE);
+
+			if(UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
+				scene.ToggleThing(position, 1);
+			}
+
+		}
+
 		public void UpdateEditControl()
 		{
 			switch (EditState.SelectedTool) {
@@ -126,6 +145,9 @@ namespace TAC.Inner
 					break;
 				case ControlEditState.ToolType.Tile:
 					UpdateEditControlTile();
+					break;
+				case ControlEditState.ToolType.Object:
+					UpdateEditControlObject();
 					break;
 				case ControlEditState.ToolType.Unit:
 					break;

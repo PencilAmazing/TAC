@@ -1,0 +1,11 @@
+{
+	"model": "thing/bookshelf",
+	"edit": {
+		"scale": [0.3,0.5,0.3]
+	},
+	"blockSight": true,
+	"blockAim": true,
+	"blockPath": true,
+	"defaultBounds": true,
+	"bounds": [1,1,1]
+}

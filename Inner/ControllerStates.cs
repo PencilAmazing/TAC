@@ -7,10 +7,11 @@ namespace TAC.Inner
 	{
 		public struct ControlEditState
 		{
-			public enum ToolType { None, Wall, Tile, Unit };
+			public enum ToolType { None, Wall, Tile, Object, Unit };
 
 			public Brush SelectedBrush;
 			public int SelectedTileIndex;
+			public Thing SelectedObject;
 			public int ForceYLevelEdit;
 			public bool FlipBrush;
 			public ToolType SelectedTool;
@@ -19,6 +20,7 @@ namespace TAC.Inner
 			{
 				SelectedBrush = null;
 				SelectedTileIndex = 0;
+				SelectedObject = null;
 				ForceYLevelEdit = 0;
 				FlipBrush = false;
 				SelectedTool = ToolType.None;

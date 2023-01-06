@@ -46,8 +46,7 @@ namespace TAC.Editor
 		// name, texture
 		public Dictionary<string, Texture> Textures;
 		public Dictionary<string, Brush> Brushes;
-
-		public List<Model> things { get; }
+		public Dictionary<string, Thing> Things;
 
 		// Discard transparent pixels and shift texture
 		// Assumes that texcoords are either 0 or 1 only
@@ -79,6 +78,7 @@ namespace TAC.Editor
 		{
 			Textures = new Dictionary<string, Texture>();
 			Brushes = new Dictionary<string, Brush>();
+			Things = new Dictionary<string, Thing>();
 			UnitTemplates = new Dictionary<string, UnitTemplate>();
 		}
 
@@ -95,10 +95,6 @@ namespace TAC.Editor
 			UnloadMaterial(wallMaterial);
 			UnloadMaterial(SkyboxMaterial);
 			UnloadTexture(SkyboxCubemap);
-
-			foreach (Model model in things)
-				UnloadModel(model);
-
 		}
 
 		/// <summary>
@@ -287,6 +283,19 @@ namespace TAC.Editor
 			LoadBrushes();
 		}
 
+		public bool AssetExists(string assetname)
+		{
+			if (System.IO.File.Exists(AssetRootPrefix + assetname)) return true;
+			TraceLog(TraceLogLevel.LOG_ERROR, "Asset " + assetname + " not found.");
+			return false;
+		}
+
+		/// <summary>
+		/// Make sure extension has dot
+		/// Simple concatenation as AssetRootPrefix + assetname + suffix
+		/// </summary>
+		public string GetFullAssetPath(string assetname, string suffix) => System.IO.Path.GetFullPath(AssetRootPrefix + assetname + suffix);
+
 		public UnitTemplate GetUnitTemplate(string assetname)
 		{
 			string filelocation = System.IO.Path.GetFullPath(AssetRootPrefix + assetname + ".json");
@@ -324,6 +333,47 @@ namespace TAC.Editor
 			Brushes.Add(assetname, brush);
 
 			return brush;
+		}
+
+		//public Model GetModel(string assetname)
+		//{
+		//	if (Things.ContainsKey(assetname)) {
+		//		return Things[assetname];
+		//	} else return LoadModel(assetname);
+		//}
+
+		public Model LoadModel(string assetname)
+		{
+			Model model = new Model();
+			if (!AssetExists(assetname + ".obj")) return model;
+			model = Raylib.LoadModel(GetFullAssetPath(assetname, ".obj"));
+			// If load succeeded
+			//if (model.meshCount > 0) Things.Add(assetname, model);
+			return model;
+		}
+
+		public Thing LoadThing(string assetname)
+		{
+			if (!System.IO.File.Exists(AssetRootPrefix + assetname + ".json")) return null;
+			string filelocation = System.IO.Path.GetFullPath(AssetRootPrefix + assetname + ".json");
+			string file = System.IO.File.ReadAllText(filelocation, Encoding.UTF8);
+			JsonNode node = JsonNode.Parse(file);
+
+			string modelName = node["model"].ToString();
+			Model thingModel = LoadModel(modelName);
+			{
+				JsonNode edit = node["edit"];
+				float scalex = (float)edit["scale"][0];
+				float scaley = (float)edit["scale"][1];
+				float scalez = (float)edit["scale"][2];
+				thingModel.transform *= Raymath.MatrixScale(scalex, scaley, scalez);
+			}
+			bool blockSight = (bool)node["blockSight"];
+			bool blockAim = (bool)node["blockAim"];
+			bool blockPath = (bool)node["blockPath"];
+			Thing thing = new Thing(assetname, thingModel, blockSight, blockAim, blockPath);
+
+			return thing;
 		}
 	}
 }

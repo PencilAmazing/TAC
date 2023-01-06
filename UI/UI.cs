@@ -86,6 +86,9 @@ namespace TAC.UISystem
 				case ToolType.Tile:
 					DrawTileSelectionPanel();
 					break;
+				case ToolType.Object:
+					DrawObjectSelectionPanel();
+					break;
 				case ToolType.Unit:
 					break;
 				default:
@@ -98,7 +101,7 @@ namespace TAC.UISystem
 
 		private void DrawWallInfo()
 		{
-			Begin("Wall info");
+			Begin("Wall info", ImGuiWindowFlags.AlwaysAutoResize);
 			PlayerController player = engine.player;
 
 			Position pos = player.GetMouseTilePosition();
@@ -106,6 +109,15 @@ namespace TAC.UISystem
 			Text("Tile location: " + pos.ToString());
 			Text("Wall data: " + Convert.ToString(tile.walls, 2).PadLeft(4, '0'));
 			Text("Tile type: " + tile.type.ToString());
+			Text("Tile thing: " + tile.thing.ToString());
+			End();
+		}
+
+		private void DrawObjectSelectionPanel()
+		{
+			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One * 5);
+			Begin("Object selection panel");
+
 			End();
 		}
 
@@ -114,27 +126,27 @@ namespace TAC.UISystem
 			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One * 5);
 
 			Begin("Tile selection panel", ImGuiWindowFlags.AlwaysAutoResize);
-			ControlEditState editState = engine.player.EditState;
-			Texture selectedTile = engine.scene.TileTypeMap[editState.SelectedTileIndex];
+			Texture selectedTile = engine.scene.TileTypeMap[engine.player.EditState.SelectedTileIndex];
 
 			BeginGroup();
 			Image((IntPtr)selectedTile.tex.id, new Vector2(128, 128));
 
+			// Add quick option to select new tile types
 			if (Button("Select tile", new Vector2(128, 0))) OpenPopup(tilePickerLabel);
 			if (BeginPopup(tilePickerLabel)) {
 				DrawTileSelectionPanel(ref engine.player.EditState.SelectedTileIndex);
 			}
 
-			//BeginGroup();
-			//PushItemWidth(128);
-			foreach (Texture tex in engine.scene.TileTypeMap) {
-				Selectable(tex.assetname, false, ImGuiSelectableFlags.None, new Vector2(128, 0));
+			// List all already loaded tile types
+			for (int i = 0; i < engine.scene.TileTypeMap.Count; i++) {
+				if (Selectable(engine.scene.TileTypeMap[i].assetname, false, ImGuiSelectableFlags.None, new Vector2(128, 0))) {
+					engine.player.EditState.SelectedTileIndex = i;
+				}
 			}
-			//PopItemWidth();
-			//EndGroup();
 
 			EndGroup();
 			SameLine();
+			// Snap level selection to allow editing air
 			string sliderFormat = engine.player.EditState.ForceYLevelEdit == 0 ? "x" : "%i";
 			VSliderInt("##Level Selection", new Vector2(20, 200), ref engine.player.EditState.ForceYLevelEdit,
 				0, engine.scene.Size.y, sliderFormat, ImGuiSliderFlags.AlwaysClamp | ImGuiSliderFlags.NoInput);
@@ -146,6 +158,7 @@ namespace TAC.UISystem
 		private void DrawTileSelectionPanel(ref int outTileIndex)
 		{
 			foreach (Texture tex in engine.resourceCache.Textures.Values) {
+				// Filter only tiles
 				if (!tex.assetname.StartsWith("tile/")) continue;
 				if (Selectable(tex.assetname)) {
 					outTileIndex = engine.scene.GetTileTypeIndexOf(tex);
