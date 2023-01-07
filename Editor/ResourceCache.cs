@@ -12,8 +12,11 @@ using static Raylib_cs.ShaderUniformDataType;
 
 namespace TAC.Editor
 {
-	// Maps textures loaded in memory to tile IDs
-	public class ResourceCache
+	/// <summary>
+	/// Manages and loads assets from disk.
+	/// </summary>
+	// Very spaghetti
+	public partial class ResourceCache
 	{
 		// TODO remove repetition, make them configurable maybe too
 		public readonly string AssetRootPrefix = "assets/";
@@ -22,7 +25,7 @@ namespace TAC.Editor
 		public readonly string AssetUnitPrefix = "assets/unit/";
 		public readonly string AssetShaderPrefix = "assets/shader/";
 		public readonly string AssetScenePrefix = "assets/scene/";
-		public readonly string AssetSaveDirectory = "assets/save";
+		public readonly string AssetSaveDirectory = "assets/save/";
 
 		// Texture locations in the wall shader.
 		public int toploc;
@@ -41,12 +44,11 @@ namespace TAC.Editor
 			TEX_MISC
 		}
 
-		public Dictionary<string, UnitTemplate> UnitTemplates;
-
 		// name, texture
 		public Dictionary<string, Texture> Textures;
 		public Dictionary<string, Brush> Brushes;
 		public Dictionary<string, Thing> Things;
+		public Dictionary<string, UnitTemplate> UnitTemplates;
 
 		// Discard transparent pixels and shift texture
 		// Assumes that texcoords are either 0 or 1 only

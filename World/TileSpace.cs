@@ -1,6 +1,7 @@
 ﻿using Raylib_cs;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Text.Json.Nodes;
 using TAC.Editor;
 using static Raylib_cs.Raylib;
 
@@ -69,7 +70,7 @@ namespace TAC.World
 				for (int z = 0; z < Length; z++) {
 					int type = TileMap[x, y, z].type;
 					Texture2D tex = TileLookupTable[type].tex;
-					DrawTexture(tex, 128 * x, 128 * (Length - z-1), Color.WHITE);
+					DrawTexture(tex, 128 * x, 128 * (Length - z - 1), Color.WHITE);
 				}
 			}
 			EndTextureMode();
@@ -145,5 +146,27 @@ namespace TAC.World
 		public List<Item> GetInventoryAt(Position pos) => TileItemMap.GetValueOrDefault(pos, null);
 
 		public Model GetFloorModel(int level) => FloorModels[level];
+
+		public JsonNode GetJsonNode()
+		{
+			// Create root tilespace node
+			JsonObject node = new JsonObject();
+			node["Size"] = new JsonArray { Size.x, Size.y, Size.z };
+
+			node["TileMap"] = new JsonArray();
+			for (int x = 0; x < Width; x++) {
+				node["TileMap"].AsArray().Add(new JsonArray());
+				for (int y = 0; y < Height; y++) {
+					node["TileMap"][x].AsArray().Add(new JsonArray());
+					for (int z = 0; z < Length; z++) {
+						node["TileMap"][x][y].AsArray().Add(TileMap[x, y, z].GetJsonNode());
+					}
+				}
+			}
+
+			// FIXME serialize inventory dictionary
+
+			return node;
+		}
 	}
 }

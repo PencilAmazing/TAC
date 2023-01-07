@@ -1,4 +1,5 @@
-﻿using TAC.Editor;
+﻿using System.Text.Json.Nodes;
+using TAC.Editor;
 
 namespace TAC.World
 {
@@ -95,6 +96,7 @@ namespace TAC.World
 		/// At this point it's just wall data
 		/// </summary>
 		public byte walls;
+		// Runtime only, not saved
 		public Unit unit;
 
 		public Tile(int type = 0, byte walls = 0)
@@ -148,5 +150,7 @@ namespace TAC.World
 		{
 			throw new System.NotImplementedException();
 		}
+
+		public JsonNode GetJsonNode() => new JsonArray { type, North, West, thing };
 	}
 }

@@ -84,6 +84,7 @@ namespace TAC.Inner
 		{
 			ui.Unload();
 			imguiController.Dispose();
+			resourceCache.WriteSceneToDisk(scene, "default");
 		}
 	}
 }

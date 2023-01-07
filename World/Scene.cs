@@ -1,6 +1,7 @@
 ﻿using Raylib_cs;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Text.Json.Nodes;
 using TAC.Editor;
 using TAC.Logic;
 using TAC.Render;
@@ -20,13 +21,8 @@ namespace TAC.World
 		/// </summary>
 		public int CurrentTeamInPlay;
 
-		// Ideally interact via Scene object
 		private SceneTileSpace TileSpace;
-
-		public ResourceCache cache;
-		public Renderer renderer { get; }
 		public Position Size { get => TileSpace.Size; }
-		public bool isEdit;
 
 		// Map tile types to texture names
 		// Refreshed each map load
@@ -50,8 +46,13 @@ namespace TAC.World
 			return ThingTypeMap.Count - 1;
 		}
 
+		// Runtime only data
+		public ResourceCache cache;
+		public Renderer renderer { get; }
+		public bool isEdit;
 		// TODO: replace with action stack?
 		private Action currentAction;
+		//
 
 		public Scene(Renderer renderer, ResourceCache cache, bool isEdit)
 		{
@@ -537,6 +538,29 @@ namespace TAC.World
 		public void RemoveParticleEffect(ParticleEffect effect)
 		{
 			if (effect != null) particleEffects.Remove(effect);
+		}
+
+		public JsonNode GetJsonNode()
+		{
+			JsonObject node = new JsonObject();
+			node["TileTypeMap"] = new JsonArray();
+			foreach (Texture tile in TileTypeMap) {
+				((JsonArray)node["TileTypeMap"]).Add(tile.assetname);
+			}
+			node["BrushTypeMap"] = new JsonArray();
+			foreach (Brush brush in BrushTypeMap) {
+				((JsonArray)node["BrushTypeMap"]).Add(brush.assetname);
+			}
+			node["ThingTypeMap"] = new JsonArray();
+			foreach (Thing thing in ThingTypeMap) {
+				((JsonArray)node["ThingTypeMap"]).Add(thing.assetname);
+			}
+
+			node["TileSpace"] = TileSpace.GetJsonNode();
+
+			//node["units"] = new JsonArray();
+
+			return node;
 		}
 	}
 }
