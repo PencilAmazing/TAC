@@ -1,4 +1,4 @@
-﻿using Raylib_cs;
+﻿using TAC.Editor;
 
 namespace TAC.World
 {
@@ -31,12 +31,6 @@ namespace TAC.World
 		public void Think(float deltaTime)
 		{
 			// animations? in my video game? more likely than you think!
-		}
-
-		// Absolutely horrendous.
-		~Thing()
-		{
-			Raylib.UnloadModel(model);
 		}
 	}
 }

@@ -1,24 +1,45 @@
 ﻿using Raylib_cs;
 
+// This is why you don't make your own engine
+// Wish I was doing XNA instead lmao
 namespace TAC.Editor
 {
-	public class Texture
+	// Could be an interface but idgaf
+	public class Resource
 	{
 		public readonly string assetname;
-		public readonly Texture2D tex;
-
-		public Texture(string textureName, Texture2D tex)
+		protected Resource(string assetname)
 		{
-			assetname = textureName;
-			this.tex = tex;
+			this.assetname = assetname;
 		}
 
 		public override string ToString() => assetname;
+
 	}
 
-	// This is why you don't make your own engine
-	//public class Model {
-	//	public readonly string assetname;
-	//	public readonly Material material;
-	//}
+	public class Texture : Resource
+	{
+		public Texture2D texture;
+
+		public Texture(string assetname, Texture2D texture)
+			: base(assetname)
+		{
+			this.texture = texture;
+		}
+	}
+
+	public class Model : Resource
+	{
+		// HACK model has built in materials, get rid of them
+		// use meshes instead
+		// but we need to stick to model because raylib stores skeletal
+		// animation inside these structs
+		public Raylib_cs.Model model;
+
+		public Model(string assetname, Raylib_cs.Model model)
+			: base(assetname)
+		{
+			this.model = model;
+		}
+	}
 }

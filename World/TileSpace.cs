@@ -22,7 +22,7 @@ namespace TAC.World
 		// Items stored per position
 		private Dictionary<Position, List<Item>> TileItemMap;
 
-		private Model[] FloorModels;
+		private Raylib_cs.Model[] FloorModels;
 		private RenderTexture2D[] FloorTextures;
 
 		public Position Size { get; private set; }
@@ -46,7 +46,7 @@ namespace TAC.World
 				}
 			}
 			TileItemMap = new Dictionary<Position, List<Item>>();
-			FloorModels = new Model[Height];
+			FloorModels = new Raylib_cs.Model[Height];
 			FloorTextures = new RenderTexture2D[Height];
 		}
 
@@ -69,7 +69,7 @@ namespace TAC.World
 			for (int x = 0; x < Width; x++) {
 				for (int z = 0; z < Length; z++) {
 					int type = TileMap[x, y, z].type;
-					Texture2D tex = TileLookupTable[type].tex;
+					Texture2D tex = TileLookupTable[type].texture;
 					DrawTexture(tex, 128 * x, 128 * (Length - z - 1), Color.WHITE);
 				}
 			}
@@ -94,7 +94,7 @@ namespace TAC.World
 			for (int x = 0; x < Width; x++) {
 				for (int z = 0; z < Length; z++) {
 					int type = TileMap[x, y, z].type;
-					Texture2D tex = TileLookupTable[type].tex;
+					Texture2D tex = TileLookupTable[type].texture;
 					DrawTexture(tex, 128 * x, 128 * z, Color.WHITE);
 				}
 			}
@@ -145,7 +145,7 @@ namespace TAC.World
 		// Nullable shenanigans in here, profilers beware!
 		public List<Item> GetInventoryAt(Position pos) => TileItemMap.GetValueOrDefault(pos, null);
 
-		public Model GetFloorModel(int level) => FloorModels[level];
+		public Raylib_cs.Model GetFloorModel(int level) => FloorModels[level];
 
 		public JsonNode GetJsonNode()
 		{

@@ -12,19 +12,54 @@ namespace TAC.Render
 	// Consider making static?
 	public class Renderer
 	{
-		public void DrawUnits(Camera3D camera, List<Unit> units, ResourceCache cache)
+		// Shame
+		//public void DrawUnits(Camera3D camera, List<Unit> units, ResourceCache cache)
+		//{
+		//	if (units.Count == 0) return;
+		//  // For animating billboards
+		//	SetShaderValueV(cache.BillboardShader, cache.BillboardTexCoordShiftLoc,
+		//		new float[] { 0, 1 }, // No scrolling, take whole texture
+		//		ShaderUniformDataType.SHADER_UNIFORM_VEC2, 1);
+		//	BeginShaderMode(cache.BillboardShader);
+		//	foreach (Unit unit in units) {
+		//		Texture2D tex = unit.Type.texture.texture;
+		//		Vector3 position = unit.position.ToVector3() + Vector3.UnitY;
+		//		// TODO: move this to GPU
+		//		// Vector from unit to camera
+		//		Vector3 dir = camera.position - unit.position.ToVector3();
+		//		// X coord is right, Z is forward
+		//		// Can we avoid floating point math here?
+		//		double angle = Math.Atan2(dir.X, dir.Z) / (2 * Math.PI);
+		//		// Offset tile by unit direction to get display angle
+		//		int unitForward = (int)unit.direction;
+		//		// No clue what's going on here
+		//		// FIXME added 8 since offset can become negative sometimes. Make something better ffs
+		//		int offset = ((int)(8 * angle + 8.5) - unitForward + 8) % 8;
+		//		Rectangle rec = new Rectangle(128 * offset, 0, 128, 128);
+		//		DrawBillboardPro(camera, tex, rec, position, Vector3.UnitY, Vector2.One * 2, Vector2.Zero, 0.0f, Color.WHITE);
+		//	}
+		//	EndShaderMode();
+		//}
+
+		/// <summary>
+		/// Render a unit based on it's values and template
+		/// </summary>
+		public void DrawUnit(Camera3D camera, Unit unit, ResourceCache cache)
 		{
-			if (units.Count == 0) return;
-			SetShaderValueV(cache.BillboardShader, cache.BillboardTexCoordShiftLoc,
-				new float[] { 0, 1 }, // No scrolling, take whole texture
-				ShaderUniformDataType.SHADER_UNIFORM_VEC2, 1);
-			BeginShaderMode(cache.BillboardShader);
-			foreach (Unit unit in units) {
-				Texture2D tex = unit.Type.Texture.tex;
-				Vector3 position = unit.position.ToVector3() + Vector3.UnitY;
-				// TODO: move this to GPU
+			/* Plan in here:
+			   Collect model and load material
+			   Create transformation matrix from unit data. DO NOT bother with model built in transform
+			   Any shader inside the model would choose correct billboard orientation
+			*/
+
+			UnitTemplate template = unit.Type;
+			Vector3 unitPosition = unit.position.ToVector3();
+
+			if (template.Type == UnitTemplate.TemplateType.Skeletal) {
+				DrawModelEx(template.Model.model, unitPosition, Vector3.UnitY, (int)unit.direction * 45.0f, Vector3.One, Color.WHITE);
+			} else {
 				// Vector from unit to camera
-				Vector3 dir = camera.position - unit.position.ToVector3();
+				Vector3 dir = camera.position - unitPosition;
 				// X coord is right, Z is forward
 				// Can we avoid floating point math here?
 				double angle = Math.Atan2(dir.X, dir.Z) / (2 * Math.PI);
@@ -33,15 +68,18 @@ namespace TAC.Render
 				// No clue what's going on here
 				// FIXME added 8 since offset can become negative sometimes. Make something better ffs
 				int offset = ((int)(8 * angle + 8.5) - unitForward + 8) % 8;
-				Rectangle rec = new Rectangle(128 * offset, 0, 128, 128);
-				DrawBillboardPro(camera, tex, rec, position, Vector3.UnitY, Vector2.One * 2, Vector2.Zero, 0.0f, Color.WHITE);
+				SetShaderValueV(cache.BillboardShader, cache.BillboardTexCoordShiftLoc,
+								// integer divisions were a mistake
+								new float[] { offset/8.0f, 1.0f/8.0f},
+								ShaderUniformDataType.SHADER_UNIFORM_VEC2, 1);
+				SetMaterialTexture(ref cache.BillboardMaterial, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, template.BillboardTexture.texture);
+				DrawMesh(cache.BillboardMesh, cache.BillboardMaterial, MatrixTranslate(unitPosition.X, unitPosition.Y, unitPosition.Z));
 			}
-			EndShaderMode();
 		}
 
 		public void DrawEffect(Camera3D camera, ParticleEffect effect, ResourceCache cache)
 		{
-			Texture2D misctex = effect.sprite.texture.tex;
+			Texture2D misctex = effect.sprite.texture.texture;
 			int stage = effect.GetStage();
 			Rectangle rect = effect.sprite.GetRectangle(stage);
 
@@ -76,7 +114,7 @@ namespace TAC.Render
 		/// <summary>
 		/// Draw tiles on ground
 		/// </summary>
-		public void DrawFloor(ResourceCache cache, Model FloorModel, List<Texture> TileLookupTable)
+		public void DrawFloor(ResourceCache cache, Raylib_cs.Model FloorModel, List<Texture> TileLookupTable)
 		{
 			// Offset ground in transform matrix to make other rendering easier
 			// FIXME Texture arrays do not exist in raylib bro wtf
@@ -97,7 +135,7 @@ namespace TAC.Render
 			Matrix4x4 transform = rotate ? cache.WallTransformWest : cache.WallTransformNorth;
 			if (flip) transform = transform * MatrixRotateY(MathF.PI); // rotate 180 to flip texture
 
-			transform = MatrixTranslate(center.X, center.Y*2, center.Z) * transform;
+			transform = MatrixTranslate(center.X, center.Y * 2, center.Z) * transform;
 
 			unsafe {
 				// Assign textures to locations
@@ -109,12 +147,12 @@ namespace TAC.Render
 				cache.wallMaterial.shader.locs[(int)ShaderLocationIndex.SHADER_LOC_MAP_DIFFUSE + 5] = cache.backloc;
 
 				// Assign textures to shader
-				cache.wallMaterial.maps[0].texture = tex.top.tex;
-				cache.wallMaterial.maps[1].texture = tex.left.tex;
-				cache.wallMaterial.maps[2].texture = tex.front.tex;
-				cache.wallMaterial.maps[3].texture = tex.bottom.tex;
-				cache.wallMaterial.maps[4].texture = tex.right.tex;
-				cache.wallMaterial.maps[5].texture = tex.back.tex;
+				cache.wallMaterial.maps[0].texture = tex.top.texture;
+				cache.wallMaterial.maps[1].texture = tex.left.texture;
+				cache.wallMaterial.maps[2].texture = tex.front.texture;
+				cache.wallMaterial.maps[3].texture = tex.bottom.texture;
+				cache.wallMaterial.maps[4].texture = tex.right.texture;
+				cache.wallMaterial.maps[5].texture = tex.back.texture;
 			}
 			// Draw mesh internally binds texture units
 			DrawMesh(cache.cube, cache.wallMaterial, transform); // Magic!
@@ -127,7 +165,7 @@ namespace TAC.Render
 
 		public void DrawThing(Thing thing, Vector3 position)
 		{
-			DrawModel(thing.model, position, 1.0f, Color.WHITE);
+			DrawModel(thing.model.model, position, 1.0f, Color.WHITE);
 		}
 
 		public void DrawSkybox(Camera3D camera, ResourceCache cache)

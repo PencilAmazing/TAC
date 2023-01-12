@@ -45,6 +45,7 @@ namespace TAC.Editor
 		}
 
 		// name, texture
+		public Dictionary<string, Model> Models;
 		public Dictionary<string, Texture> Textures;
 		public Dictionary<string, Brush> Brushes;
 		public Dictionary<string, Thing> Things;
@@ -52,6 +53,8 @@ namespace TAC.Editor
 
 		// Discard transparent pixels and shift texture
 		// Assumes that texcoords are either 0 or 1 only
+		public Mesh BillboardMesh;
+		public Material BillboardMaterial;
 		public Shader BillboardShader;
 		public int BillboardTexCoordShiftLoc;
 
@@ -78,6 +81,7 @@ namespace TAC.Editor
 
 		public ResourceCache()
 		{
+			Models = new Dictionary<string, Model>();
 			Textures = new Dictionary<string, Texture>();
 			Brushes = new Dictionary<string, Brush>();
 			Things = new Dictionary<string, Thing>();
@@ -87,7 +91,7 @@ namespace TAC.Editor
 		~ResourceCache()
 		{
 			foreach (Texture tex in Textures.Values)
-				UnloadTexture(tex.tex);
+				UnloadTexture(tex.texture);
 
 			UnloadShader(BillboardShader);
 			UnloadShader(SkyboxShader);
@@ -129,22 +133,6 @@ namespace TAC.Editor
 			return loadedTexture;
 		}
 
-		private void LoadTiles()
-		{
-			//LoadTexture(AssetTilePrefix + "OBKMTB90.png");
-			//LoadTexture(AssetTilePrefix + "OBASEM37.png");
-			//LoadTexture(AssetTilePrefix + "OBOOKA03.png");
-			//LoadTexture(AssetTilePrefix + "OBRCKL02.png");
-			//LoadTexture(AssetTilePrefix + "OBRCKQ12.png");
-			//LoadTexture(AssetTilePrefix + "OBRCKQ44.png");
-			//LoadTexture(AssetTilePrefix + "OCHRMA14.png");
-		}
-
-		private void LoadUnits()
-		{
-			//LoadTexture(AssetUnitPrefix + "mech.png");
-		}
-
 		private void LoadSprites()
 		{
 			LoadTexture("scene/sprite/explosion_11");
@@ -153,7 +141,7 @@ namespace TAC.Editor
 
 		private void LoadShaders()
 		{
-			BillboardShader = LoadShader(null, AssetShaderPrefix + "billboard.frag");
+			BillboardShader = LoadShader(AssetShaderPrefix + "billboard.vert", AssetShaderPrefix + "billboard.frag");
 			BillboardTexCoordShiftLoc = GetShaderLocation(BillboardShader, "texCoordShift");
 
 			SkyboxShader = LoadShader(AssetShaderPrefix + "skybox.vs", AssetShaderPrefix + "skybox.fs");
@@ -189,11 +177,22 @@ namespace TAC.Editor
 		{
 			// GenMesh uploads data to GPU
 			cube = GenMeshCube(1, 1, 1);
-			SkyboxMaterial = LoadMaterialDefault();
-			SkyboxMaterial.shader = SkyboxShader;
 
-			// Front faces are CCW although disable culling when drawing either way
-			float[] vertices = new float[] {
+			// Skybox
+			{
+				SkyboxMaterial = LoadMaterialDefault();
+				SkyboxMaterial.shader = SkyboxShader;
+				Image SkyboxImage = LoadImage(AssetScenePrefix + "skybox/skybox.png");
+				SkyboxCubemap = LoadTextureCubemap(SkyboxImage, CubemapLayout.CUBEMAP_LAYOUT_AUTO_DETECT);
+				UnloadImage(SkyboxImage);
+				SetMaterialTexture(ref SkyboxMaterial, MATERIAL_MAP_CUBEMAP, SkyboxCubemap);
+			}
+			// Crosshair particle mesh
+			{
+				// Front faces are CCW although disable culling when drawing either way
+				// TODO add a YZ plane too
+				// TODO make scale of particles a gpu uniform
+				float[] vertices = new float[] {
 					// XZ plane
 					-0.5f, 0, -0.5f,
 					-0.5f, 0, 0.5f,
@@ -206,7 +205,7 @@ namespace TAC.Editor
 					0.5f, 0.5f, 0
 				};
 
-			float[] normals = new float[] {
+				float[] normals = new float[] {
 					// Up
 					0, 1.0f, 0,
 					0, 1.0f, 0,
@@ -219,70 +218,100 @@ namespace TAC.Editor
 					1.0f, 0, 0
 				};
 
-			float[] texcoords = new float[8 * 2];
-			for (int x = 0; x <= 1; x++)
-				for (int z = 0; z <= 1; z++) {
-					texcoords[z * 2 + x * 4] = x;
-					texcoords[z * 2 + x * 4 + 1] = z;
-				}
+				float[] texcoords = new float[8 * 2];
+				for (int x = 0; x <= 1; x++)
+					for (int z = 0; z <= 1; z++) {
+						texcoords[z * 2 + x * 4] = x;
+						texcoords[z * 2 + x * 4 + 1] = z;
+					}
 
-			for (int x = 0; x <= 1; x++)
-				for (int y = 0; y <= 1; y++) {
-					texcoords[8 + y * 2 + x * 4] = x;
-					texcoords[8 + y * 2 + x * 4 + 1] = y;
-				}
+				for (int x = 0; x <= 1; x++)
+					for (int y = 0; y <= 1; y++) {
+						texcoords[8 + y * 2 + x * 4] = x;
+						texcoords[8 + y * 2 + x * 4 + 1] = y;
+					}
 
-			// Two faces, two triangles each, three vertices each
-			ushort[] indices = new ushort[] {0, 2, 1, 1, 2, 3,
+				// Two faces, two triangles each, three vertices each
+				ushort[] indices = new ushort[] {0, 2, 1, 1, 2, 3,
 											 4, 6, 5, 5, 6, 7};
 
-			cross = new Mesh();
-			unsafe {
-				fixed (Mesh* mesh = &cross) {
-					AllocateMeshData(mesh, vertices.Length / 3, 2 * 2);
+				cross = new Mesh();
+				unsafe {
+					fixed (Mesh* mesh = &cross) {
+						AllocateMeshData(mesh, vertices.Length / 3, 2 * 2);
+					}
+					vertices.CopyTo(new Span<float>(cross.vertices, vertices.Length));
+
+					normals.CopyTo(new Span<float>(cross.normals, normals.Length));
+					texcoords.CopyTo(new Span<float>(cross.texcoords, texcoords.Length));
+					indices.CopyTo(new Span<ushort>(cross.indices, indices.Length));
 				}
-				vertices.CopyTo(new Span<float>(cross.vertices, vertices.Length));
+				UploadMesh(ref cross, false);
 
-				normals.CopyTo(new Span<float>(cross.normals, normals.Length));
-				texcoords.CopyTo(new Span<float>(cross.texcoords, texcoords.Length));
-				indices.CopyTo(new Span<ushort>(cross.indices, indices.Length));
+				crossMaterial = LoadMaterialDefault();
+				crossMaterial.shader = BillboardShader;
 			}
-			UploadMesh(ref cross, false);
+			// Billboard model
+			{
+				BillboardMaterial = LoadMaterialDefault();
+				BillboardMaterial.shader = BillboardShader;
 
-			crossMaterial = LoadMaterialDefault();
-			crossMaterial.shader = BillboardShader;
+				float[] vertices =
+				{
+					// XY plane
+					-0.5f, 0.0f, 0,
+					-0.5f, 1.0f, 0,
+					0.5f, 0.0f, 0,
+					0.5f, 1.0f, 0
+				};
+				float[] normals =
+				{
+					0, 0, 1,
+					0, 0, 1,
+					0, 0, 1,
+					0, 0, 1
+				};
+				float[] texcoords =
+				{
+					0, 0,
+					0, 1,
+					1, 0,
+					1, 1,
+				};
+				ushort[] indices = { 0, 2, 1, 1, 2, 3 };
 
-			Image SkyboxImage = LoadImage(AssetScenePrefix + "skybox/skybox.png");
-			SkyboxCubemap = LoadTextureCubemap(SkyboxImage, CubemapLayout.CUBEMAP_LAYOUT_AUTO_DETECT);
-			UnloadImage(SkyboxImage);
-			SetMaterialTexture(ref SkyboxMaterial, MATERIAL_MAP_CUBEMAP, SkyboxCubemap);
+				unsafe {
+					fixed (Mesh* mesh = &BillboardMesh) {
+						// Plane. 4 vertices two triangles
+						AllocateMeshData(mesh, 4, 2);
+					}
+					vertices.CopyTo(new Span<float>(BillboardMesh.vertices, vertices.Length));
+					normals.CopyTo(new Span<float>(BillboardMesh.normals, normals.Length));
+					texcoords.CopyTo(new Span<float>(BillboardMesh.texcoords, texcoords.Length));
+					indices.CopyTo(new Span<ushort>(BillboardMesh.indices, indices.Length));
+				}
 
-			wallMaterial = LoadMaterialDefault();
-			wallMaterial.shader = WallShader;
-			//SetMaterialTexture(ref wallMaterial, MATERIAL_MAP_DIFFUSE, tiles[1]);
+				UploadMesh(ref BillboardMesh, false);
 
-			// NOTE transform would be easier if mesh origin was at center bottom probably?
-			Matrix4x4 transform = MatrixScale(1.0f, 2.0f, 0.1f); // Scale box to wall shape
-			WallTransformNorth = MatrixTranslate(0.0f, 1.0f, -0.5f) * transform; // Offset to edge of tile
-			WallTransformWest = MatrixRotateY(MathF.PI / 2) * WallTransformNorth; // Rotate if west wall
+			}
+			// Wall
+			{
+				wallMaterial = LoadMaterialDefault();
+				wallMaterial.shader = WallShader;
 
-		}
-
-		private void LoadBrushes()
-		{
-			//LoadBrush("brush/copper");
-			//CreateBrush("rainbow", new Brush(1, 2, 3, 4, 5, 6));
+				// NOTE transform would be easier if mesh origin was at center bottom probably?
+				Matrix4x4 transform = MatrixScale(1.0f, 2.0f, 0.1f); // Scale box to wall shape
+				WallTransformNorth = MatrixTranslate(0.0f, 1.0f, -0.5f) * transform; // Offset to edge of tile
+				WallTransformWest = MatrixRotateY(MathF.PI / 2) * WallTransformNorth; // Rotate if west wall
+			}
 		}
 
 		public void LoadAssets()
 		{
 			// DONT CHANGE ORDER!
-			LoadTiles();
-			LoadUnits();
 			LoadSprites();
 			LoadShaders();
 			GenerateUploadMeshes();
-			LoadBrushes();
 		}
 
 		public bool AssetExists(string assetname)
@@ -304,8 +333,20 @@ namespace TAC.Editor
 			string unitFile = System.IO.File.ReadAllText(filelocation, Encoding.UTF8);
 			JsonNode templateNode = JsonNode.Parse(unitFile);
 
-			Texture tex = GetTexture(templateNode["texture"].GetValue<string>());
-			UnitTemplate template = new UnitTemplate((int)templateNode["health"], (int)templateNode["time"], tex);
+			UnitTemplate template;
+			Model templateModel = null;
+			if (templateNode["texture"] != null) {
+				Texture tex = GetTexture(templateNode["texture"].GetValue<string>());
+				template = new UnitTemplate(assetname, (int)templateNode["health"], (int)templateNode["time"], tex);
+			} else if (templateNode["model"] != null) {
+				templateModel = GetModel((string)templateNode["model"]);
+				templateModel.model.transform = MatrixScale(0.02f, 0.02f, 0.02f) * templateModel.model.transform;
+				template = new UnitTemplate(assetname, (int)templateNode["health"], (int)templateNode["time"], templateModel);
+			} else {
+				TraceLog(TraceLogLevel.LOG_INFO, "Unit template " + assetname + " does not specify template type.");
+				return null; // Early out since definition is already broken
+			}
+
 			UnitTemplates.Add(assetname, template);
 
 			return template;
@@ -337,23 +378,6 @@ namespace TAC.Editor
 			return brush;
 		}
 
-		//public Model GetModel(string assetname)
-		//{
-		//	if (Things.ContainsKey(assetname)) {
-		//		return Things[assetname];
-		//	} else return LoadModel(assetname);
-		//}
-
-		public Model LoadModel(string assetname)
-		{
-			Model model = new Model();
-			if (!AssetExists(assetname + ".obj")) return model;
-			model = Raylib.LoadModel(GetFullAssetPath(assetname, ".obj"));
-			// If load succeeded
-			//if (model.meshCount > 0) Things.Add(assetname, model);
-			return model;
-		}
-
 		public Thing LoadThing(string assetname)
 		{
 			if (!System.IO.File.Exists(AssetRootPrefix + assetname + ".json")) return null;
@@ -362,19 +386,21 @@ namespace TAC.Editor
 			JsonNode node = JsonNode.Parse(file);
 
 			string modelName = node["model"].ToString();
-			Model thingModel = LoadModel(modelName);
-			{
+			Model thingModel = GetModel(modelName);
+
+			JsonNode edit = node["edit"];
+			if (edit != null) {
 				// Scale rotate transform
-				JsonNode edit = node["edit"];
 				float scalex = (float)edit["scale"][0];
 				float scaley = (float)edit["scale"][1];
 				float scalez = (float)edit["scale"][2];
-				thingModel.transform *= Raymath.MatrixScale(scalex, scaley, scalez);
+				thingModel.model.transform *= Raymath.MatrixScale(scalex, scaley, scalez);
 				float transx = (float)edit["transform"][0];
 				float transy = (float)edit["transform"][1];
 				float transz = (float)edit["transform"][2];
-				thingModel.transform *= Raymath.MatrixTranslate(transx, transy, transz);
+				thingModel.model.transform *= Raymath.MatrixTranslate(transx, transy, transz);
 			}
+
 			bool blockSight = (bool)node["blockSight"];
 			bool blockAim = (bool)node["blockAim"];
 			bool blockPath = (bool)node["blockPath"];

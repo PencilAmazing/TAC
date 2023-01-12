@@ -19,7 +19,7 @@ void main()
 {
 	finalColor = vec4(1,0,0,1);
     //vec4 texelColor = texture(texture0, fragTexCoord);
-    vec4 texelColor = texture(texture0, vec2(texCoordShift.x + texCoordShift.y*fragTexCoord.x, fragTexCoord.y));
+    vec4 texelColor = texture(texture0, vec2(texCoordShift.x + texCoordShift.y*fragTexCoord.x, 1-fragTexCoord.y));
     if (texelColor.a <= 0.1) discard;
     finalColor = texelColor * fragColor * colDiffuse;
 }

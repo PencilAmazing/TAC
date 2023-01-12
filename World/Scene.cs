@@ -161,11 +161,15 @@ namespace TAC.World
 				}
 			}
 
-			renderer.DrawUnits(camera, units, cache);
+			// Unit render loop
+			foreach(Unit unit in units) renderer.DrawUnit(camera, unit, cache);
+
+			// Particle render loop
 			foreach (ParticleEffect effect in particleEffects) {
 				effect.phase += 1;
 				renderer.DrawEffect(camera, effect, cache);
 			}
+
 			renderer.DrawUnitDebug(camera, units, cache);
 		}
 
@@ -192,7 +196,7 @@ namespace TAC.World
 				Raylib.DrawBoundingBox(unit.GetUnitBoundingBox(), Color.ORANGE);
 		}
 
-		public Model GetFloorModel(int level) => TileSpace.GetFloorModel(level);
+		public Raylib_cs.Model GetFloorModel(int level) => TileSpace.GetFloorModel(level);
 
 		public Tile GetTile(Position pos) => TileSpace.GetTile(pos);
 		public void SetTile(Tile tile, Position pos) => TileSpace.SetTile(tile, pos);

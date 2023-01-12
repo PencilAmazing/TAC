@@ -30,6 +30,7 @@ namespace TAC
 			Texture floorTexture = engine.resourceCache.LoadTexture("tile/OBKMTB90");
 			engine.scene.AddTileToMap(transparentTexture);
 			engine.scene.AddTileToMap(floorTexture);
+
 			{
 				Thing thing = engine.resourceCache.LoadThing("thing/bookshelf");
 				engine.scene.AddThingToMap(thing);
@@ -43,6 +44,7 @@ namespace TAC
 
 			// Load unit templates and teams
 			UnitTemplate template = engine.resourceCache.GetUnitTemplate("unit/mech");
+			UnitTemplate doomguy = engine.resourceCache.GetUnitTemplate("unit/doom");
 			// These would be stored in a file somewhere
 			Team playerTeam = new Team("Embuscade", false);
 			Team enemyTeam = new Team("Welcome Party", true);
@@ -61,7 +63,7 @@ namespace TAC
 			engine.scene.AddUnit(PoorFella, enemyTeam);
 			PoorFella.UnitAI = new UnitAIModule(engine.scene, PoorFella);
 
-			Unit AnotherFella = new Unit(template, new Position(6, 0, 1), "Another fool");
+			Unit AnotherFella = new Unit(doomguy, new Position(6, 0, 1), "Another fool");
 			engine.scene.AddUnit(AnotherFella, enemyTeam);
 			AnotherFella.UnitAI = new UnitAIModule(engine.scene, AnotherFella);
 		}

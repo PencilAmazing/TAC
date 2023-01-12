@@ -129,7 +129,7 @@ namespace TAC.UISystem
 			Texture selectedTile = engine.scene.TileTypeMap[engine.player.EditState.SelectedTileIndex];
 
 			BeginGroup();
-			Image((IntPtr)selectedTile.tex.id, new Vector2(128, 128));
+			Image((IntPtr)selectedTile.texture.id, new Vector2(128, 128));
 
 			// Add quick option to select new tile types
 			if (Button("Select tile", new Vector2(128, 0))) OpenPopup(tilePickerLabel);
@@ -233,7 +233,7 @@ namespace TAC.UISystem
 						TableNextColumn();
 						// Draw preview of selected texture
 						if (current.faces[currentItemIndex] != null)
-							Image((IntPtr)current.faces[currentItemIndex].tex.id, Vector2.One * 128);
+							Image((IntPtr)current.faces[currentItemIndex].texture.id, Vector2.One * 128);
 					}
 					EndTable();
 
