@@ -57,7 +57,7 @@ namespace TAC.World
 		public Vector3 equipOffset = new Vector3(0, 0.6f, 0);
 
 		// General purpose counter
-		public int phase;
+		public int animationPhase;
 
 		public UnitAIModule UnitAI;
 		public bool isDone;
@@ -68,7 +68,7 @@ namespace TAC.World
 			this.position = position;
 			this.direction = direction;
 			this.Name = name;
-			this.phase = 0;
+			this.animationPhase = 0;
 			this.TimeUnits = type.TimeUnits;
 			this.Health = type.Health;
 			this.inventory = inventory == null ? new List<Item>() : inventory;

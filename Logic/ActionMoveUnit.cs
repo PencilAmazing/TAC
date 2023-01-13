@@ -18,9 +18,9 @@ namespace TAC.Logic
 		{
 			base.Think(deltaTime);
 
-			path.unit.phase += 1;
-			if (path.unit.phase > 8) {
-				path.unit.phase = 0;
+			phase += 1;
+			if (phase > 8) {
+				phase = 0;
 
 				// Turning takes a whole phase loop
 				// Handle turning by yourself here since switching to a whole
