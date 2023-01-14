@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json.Nodes;
 using TAC.World;
 
 namespace TAC.Logic
@@ -19,8 +21,31 @@ namespace TAC.Logic
 		public Team(string TeamName, bool IsControlledByAI)
 		{
 			Name = TeamName;
-			Members = new List<Unit>();
 			this.IsControlledByAI = IsControlledByAI;
+			Members = new List<Unit>();
+		}
+
+		public Team(JsonObject teamjson)
+			: this((string)teamjson["Name"], (bool)teamjson["IsControlledByAI"])
+		{
+			//JsonArray membersarray = teamjson["Members"].AsArray();
+			//Members = new List<Unit>(membersarray.Count);
+			//foreach (JsonObject member in membersarray) {
+			//	Members.Add(new Unit(member));
+			//}
+		}
+
+		public JsonNode GetJsonNode()
+		{
+			JsonObject node = new JsonObject();
+			node["Name"] = Name;
+			node["IsControlledByAI"] = IsControlledByAI;
+			//node["Members"] = new JsonArray();
+			//foreach (Unit unit in Members) {
+				//node["Members"].AsArray().Add(unit.GetJsonNode());
+			//}
+
+			return node;
 		}
 
 		public void AddUnit(Unit newMember)

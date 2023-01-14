@@ -1,4 +1,5 @@
 ﻿using Raylib_cs;
+using System.Collections.Generic;
 
 namespace TAC.Editor
 {
@@ -20,11 +21,12 @@ namespace TAC.Editor
 		 * for now
 		 */
 
-		public TemplateType Type { get; private set; }
+		public TemplateType Type { get; init; }
 		public int Health;
 		public int TimeUnits;
 		public Model Model;
 		public Texture BillboardTexture;
+		public List<ModelAnimation> Animations;
 
 		/// <summary>
 		/// Create a skeletal Unit Template
@@ -36,6 +38,7 @@ namespace TAC.Editor
 			TimeUnits = timeUnits;
 			Model = model;
 			BillboardTexture = null;
+			Animations = new List<ModelAnimation>();
 
 			Type = TemplateType.Skeletal;
 		}
@@ -46,6 +49,7 @@ namespace TAC.Editor
 			Health = health;
 			TimeUnits = timeUnits;
 			Model = null;
+			Animations = null;
 			BillboardTexture = texture;
 
 			Type = TemplateType.Billboard;

@@ -45,6 +45,31 @@ namespace TAC.World
 					TileMap[x, 0, z] = new Tile(1, 0);
 				}
 			}
+
+			TileItemMap = new Dictionary<Position, List<Item>>();
+			FloorModels = new Raylib_cs.Model[Height];
+			FloorTextures = new RenderTexture2D[Height];
+		}
+
+		public SceneTileSpace(JsonObject jsonObject)
+		{
+			JsonArray size = jsonObject["Size"].AsArray();
+			this.Size = new Position((int)size[0], (int)size[1], (int)size[2]);
+
+			TileMap = new Tile[Width, Height, Length];
+			IsLevelDirty = new bool[Height];
+
+			// Populate tile matrix
+			for (int x = 0; x < Width; x++) {
+				for (int y = 0; y < Height; y++) {
+					for (int z = 0; z < Length; z++) {
+						JsonArray tile = jsonObject["TileMap"][x][y][z].AsArray();
+						TileMap[x, y, z] = Tile.FillFromJson(tile);
+					}
+				}
+			}
+
+			// Empty for now
 			TileItemMap = new Dictionary<Position, List<Item>>();
 			FloorModels = new Raylib_cs.Model[Height];
 			FloorTextures = new RenderTexture2D[Height];
@@ -89,7 +114,7 @@ namespace TAC.World
 
 			// Attach textures
 			FloorTextures[y] = LoadRenderTexture(128 * Width, 128 * Length);
-			BeginTextureMode(FloorTextures[y]);
+			/*BeginTextureMode(FloorTextures[y]);
 			ClearBackground(Color.BLANK);
 			for (int x = 0; x < Width; x++) {
 				for (int z = 0; z < Length; z++) {
@@ -98,7 +123,8 @@ namespace TAC.World
 					DrawTexture(tex, 128 * x, 128 * z, Color.WHITE);
 				}
 			}
-			EndTextureMode();
+			EndTextureMode();*/
+			UpdateFloorTexture(TileLookupTable, cache, y);
 			// Setting texture filters is always polite
 			SetTextureWrap(FloorTextures[y].texture, TextureWrap.TEXTURE_WRAP_CLAMP);
 			SetTextureFilter(FloorTextures[y].texture, TextureFilter.TEXTURE_FILTER_POINT);

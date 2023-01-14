@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Text.Json.Nodes;
 
 namespace TAC.World
 {
@@ -33,34 +34,22 @@ namespace TAC.World
 			z = (int)(world.Z + 0.5f);
 		}
 
-		public Vector3 ToVector3()
-		{
-			return new Vector3(x, y, z);
-		}
+		public Position(JsonArray jsonposition) : this((int)jsonposition[0], (int)jsonposition[1], (int)jsonposition[2]) { }
 
-		public static Position Abs(Position value)
-		{
-			return new Position(Math.Abs(value.x), Math.Abs(value.y), Math.Abs(value.z));
-		}
+		public Vector3 ToVector3() => new Vector3(x, y, z);
 
-		public override string ToString()
-		{
-			return x.ToString() + ',' + y.ToString() + ',' + z.ToString();
-		}
+		public static Position Abs(Position value) => new Position(Math.Abs(value.x), Math.Abs(value.y), Math.Abs(value.z));
 
-		public override bool Equals(object obj)
-		{
-			return obj is Position position &&
-				   x == position.x &&
-				   y == position.y &&
-				   z == position.z;
-		}
+		public override string ToString() => x.ToString() + ',' + y.ToString() + ',' + z.ToString();
+
+		public override bool Equals(object obj) => obj is Position position &&
+															x == position.x &&
+															y == position.y &&
+															z == position.z;
 
 		// Easy enough...
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(x, y, z);
-		}
+		public override int GetHashCode() => HashCode.Combine(x, y, z);
+		public JsonNode GetJsonNode() => new JsonArray() { x, y, z };
 
 		public static Position operator +(Position pos) => pos;
 		public static Position operator -(Position pos) => new(-pos.x, -pos.y, -pos.z);
@@ -70,5 +59,4 @@ namespace TAC.World
 		public static bool operator ==(Position l, Position r) => l.x == r.x && l.y == r.y && l.z == r.z;
 		public static bool operator !=(Position l, Position r) => !(l == r);
 	}
-
 }

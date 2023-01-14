@@ -15,9 +15,9 @@ namespace TAC
 		private static void LoadScene()
 		{
 			// Load scene geometry and textures
-			Brush coppperBrush = engine.resourceCache.LoadBrush("brush/copper");
+			Brush coppperBrush = engine.resourceCache.GetBrush("brush/copper");
 			// No need to add this, gets added automatically
-			Brush yellowBrush = engine.resourceCache.LoadBrush("brush/yellow");
+			Brush yellowBrush = engine.resourceCache.GetBrush("brush/yellow");
 			engine.scene.AddBrushToMap(coppperBrush); // Should be done during scene load
 
 			Texture transparentTexture;
@@ -32,7 +32,7 @@ namespace TAC
 			engine.scene.AddTileToMap(floorTexture);
 
 			{
-				Thing thing = engine.resourceCache.LoadThing("thing/bookshelf");
+				Thing thing = engine.resourceCache.GetThing("thing/bookshelf");
 				engine.scene.AddThingToMap(thing);
 			}
 			engine.scene.SetTileSpace(new SceneTileSpace(new Position(16, 2, 16)));
@@ -72,10 +72,18 @@ namespace TAC
 		{
 			// Init opengl to make things easier
 			InitWindow(Engine.screenWidth, Engine.screenHeight, "bideo game");
-
 			engine = new Engine();
 
-			LoadScene();
+			try {
+				Scene loadscene = engine.resourceCache.GetScene("default");
+				engine.SetScene(loadscene);
+				//engine.scene = loadscene;
+				//loadscene.renderer = engine.renderer;
+				engine.player.GameState.SelectedTeam = loadscene.Teams[0]; // I guess
+			}
+			catch (System.Exception) {
+				LoadScene();
+			}
 
 			SetTargetFPS(60);
 			while (!WindowShouldClose()) // Detect window close button or ESC key

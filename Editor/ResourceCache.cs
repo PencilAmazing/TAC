@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using System.Text.Json.Nodes;
+using TAC.Inner;
 using TAC.World;
 using static Raylib_cs.MaterialMapIndex;
 using static Raylib_cs.Raylib;
@@ -50,6 +51,9 @@ namespace TAC.Editor
 		public Dictionary<string, Brush> Brushes;
 		public Dictionary<string, Thing> Things;
 		public Dictionary<string, UnitTemplate> UnitTemplates;
+
+		// anim/file/name maybe?
+		public Dictionary<string, ModelAnimation> ModelAnimations;
 
 		// Discard transparent pixels and shift texture
 		// Assumes that texcoords are either 0 or 1 only
@@ -133,6 +137,15 @@ namespace TAC.Editor
 			return loadedTexture;
 		}
 
+		private void LoadDefaultAssets()
+		{
+			Texture transparentTexture;
+			Image i = GenImageColor(128, 128, Color.BLANK);
+			Texture2D tex = LoadTextureFromImage(i);
+			UnloadImage(i);
+			transparentTexture = LoadTexture(tex, "tile/null");
+		}
+
 		private void LoadSprites()
 		{
 			LoadTexture("scene/sprite/explosion_11");
@@ -141,7 +154,7 @@ namespace TAC.Editor
 
 		private void LoadShaders()
 		{
-			BillboardShader = LoadShader(AssetShaderPrefix + "billboard.vert", AssetShaderPrefix + "billboard.frag");
+			BillboardShader = LoadShader(null, AssetShaderPrefix + "billboard.frag");
 			BillboardTexCoordShiftLoc = GetShaderLocation(BillboardShader, "texCoordShift");
 
 			SkyboxShader = LoadShader(AssetShaderPrefix + "skybox.vs", AssetShaderPrefix + "skybox.fs");
@@ -309,6 +322,7 @@ namespace TAC.Editor
 		public void LoadAssets()
 		{
 			// DONT CHANGE ORDER!
+			LoadDefaultAssets();
 			LoadSprites();
 			LoadShaders();
 			GenerateUploadMeshes();
@@ -327,34 +341,9 @@ namespace TAC.Editor
 		/// </summary>
 		public string GetFullAssetPath(string assetname, string suffix) => System.IO.Path.GetFullPath(AssetRootPrefix + assetname + suffix);
 
-		public UnitTemplate GetUnitTemplate(string assetname)
-		{
-			string filelocation = System.IO.Path.GetFullPath(AssetRootPrefix + assetname + ".json");
-			string unitFile = System.IO.File.ReadAllText(filelocation, Encoding.UTF8);
-			JsonNode templateNode = JsonNode.Parse(unitFile);
-
-			UnitTemplate template;
-			Model templateModel = null;
-			if (templateNode["texture"] != null) {
-				Texture tex = GetTexture(templateNode["texture"].GetValue<string>());
-				template = new UnitTemplate(assetname, (int)templateNode["health"], (int)templateNode["time"], tex);
-			} else if (templateNode["model"] != null) {
-				templateModel = GetModel((string)templateNode["model"]);
-				templateModel.model.transform = MatrixScale(0.02f, 0.02f, 0.02f) * templateModel.model.transform;
-				template = new UnitTemplate(assetname, (int)templateNode["health"], (int)templateNode["time"], templateModel);
-			} else {
-				TraceLog(TraceLogLevel.LOG_INFO, "Unit template " + assetname + " does not specify template type.");
-				return null; // Early out since definition is already broken
-			}
-
-			UnitTemplates.Add(assetname, template);
-
-			return template;
-		}
-
 		public Brush GetBrush(string assetname)
 		{
-			if (Textures.ContainsKey(assetname)) {
+			if (Brushes.ContainsKey(assetname)) {
 				return Brushes[assetname];
 			} else return LoadBrush(assetname);
 		}
@@ -378,8 +367,11 @@ namespace TAC.Editor
 			return brush;
 		}
 
-		public Thing LoadThing(string assetname)
+		public Thing GetThing(string assetname)
 		{
+
+			if (Things.ContainsKey(assetname)) return Things[assetname];
+
 			if (!System.IO.File.Exists(AssetRootPrefix + assetname + ".json")) return null;
 			string filelocation = System.IO.Path.GetFullPath(AssetRootPrefix + assetname + ".json");
 			string file = System.IO.File.ReadAllText(filelocation, Encoding.UTF8);
@@ -407,6 +399,30 @@ namespace TAC.Editor
 			Thing thing = new Thing(assetname, thingModel, blockSight, blockAim, blockPath);
 
 			return thing;
+		}
+
+		public Model GetModel(string assetname)
+		{
+			if (Models.ContainsKey(assetname)) return Models[assetname];
+
+			string extension;
+			if (AssetExists(assetname + ".iqm")) {
+				extension = ".iqm";
+			} else if (AssetExists(assetname + ".obj")) {
+				extension = ".obj";
+			} else return null;
+
+			Raylib_cs.Model obj = Raylib.LoadModel(GetFullAssetPath(assetname, extension));
+			// Error check
+			if (obj.meshCount <= 0) {
+				Raylib.UnloadModel(obj);
+				return null;
+			}
+
+			// Load and register model
+			Model model = new Model(assetname, obj);
+			Models.Add(assetname, model);
+			return model;
 		}
 	}
 }

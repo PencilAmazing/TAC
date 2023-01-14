@@ -12,6 +12,7 @@ namespace TAC.Inner
 {
 	public class PlayerController
 	{
+		// Replace with engine reference
 		private Scene scene;
 		public CameraControl camera;
 

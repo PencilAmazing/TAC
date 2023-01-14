@@ -1,5 +1,6 @@
 ﻿using Raylib_cs;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Numerics;
 using System.Text.Json.Nodes;
 using TAC.Editor;
@@ -12,7 +13,7 @@ namespace TAC.World
 {
 	public class Scene
 	{
-		public List<Team> teams;
+		public List<Team> Teams;
 		public List<Unit> units;
 		public List<ParticleEffect> particleEffects;
 
@@ -48,7 +49,7 @@ namespace TAC.World
 
 		// Runtime only data
 		public ResourceCache cache;
-		public Renderer renderer { get; }
+		public Renderer renderer;
 		public bool isEdit;
 		// TODO: replace with action stack?
 		private Action currentAction;
@@ -64,7 +65,7 @@ namespace TAC.World
 
 			particleEffects = new List<ParticleEffect>();
 			units = new List<Unit>();
-			teams = new List<Team>();
+			Teams = new List<Team>();
 
 			TileTypeMap = new List<Texture>();
 			BrushTypeMap = new List<Brush>();
@@ -96,7 +97,7 @@ namespace TAC.World
 			// No effect if unit is still moving
 			if (GetCurrentAction() != null) return;
 
-			Team currentTeam = teams[CurrentTeamInPlay];
+			Team currentTeam = Teams[CurrentTeamInPlay];
 			for (int i = 0; i < currentTeam.Members.Count; i++) {
 				// Reset each unit and unitAI in team
 				currentTeam.Members[i].Reset();
@@ -104,12 +105,12 @@ namespace TAC.World
 
 			// Switch to next team
 			CurrentTeamInPlay += 1;
-			CurrentTeamInPlay %= teams.Count;
+			CurrentTeamInPlay %= Teams.Count;
 		}
 
 		public virtual void Think(float deltaTime)
 		{
-			Team currentTeam = teams[CurrentTeamInPlay];
+			Team currentTeam = Teams[CurrentTeamInPlay];
 
 			// If AI in play and no action in progress, get new action to perform
 			if (currentTeam.IsControlledByAI && !CurrentActionInProgress()) {
@@ -129,6 +130,11 @@ namespace TAC.World
 					ClearCurrentAction();
 				else
 					currentAction.Think(deltaTime);
+			}
+
+			// Tick animations
+			foreach(Unit unit in units) {
+				unit.Think(deltaTime); // Here we go
 			}
 
 			if (currentTeam.IsControlledByAI && currentTeam.AllUnitsDone()) EndTurn();
@@ -445,10 +451,10 @@ namespace TAC.World
 		{
 			// Check arguments validity
 			if (unit == null || IsTileOccupied(unit.position) ||
-				factionID < 0 || factionID > teams.Count) return false;
+				factionID < 0 || factionID > Teams.Count) return false;
 
 			// Bind to team
-			teams[factionID].AddUnit(unit);
+			Teams[factionID].AddUnit(unit);
 			unit.TeamID = factionID;
 
 			// Add unit to game scene
@@ -462,7 +468,7 @@ namespace TAC.World
 
 		public bool AddUnit(Unit unit, Team team)
 		{
-			int factionID = teams.IndexOf(team);
+			int factionID = Teams.IndexOf(team);
 			return AddUnit(unit, factionID);
 		}
 
@@ -481,10 +487,10 @@ namespace TAC.World
 
 		public void AddTeam(Team team)
 		{
-			if (!teams.Contains(team)) teams.Add(team);
+			if (!Teams.Contains(team)) Teams.Add(team);
 		}
 
-		public Team GetCurrentTeamInPlay() => teams[CurrentTeamInPlay];
+		public Team GetCurrentTeamInPlay() => Teams[CurrentTeamInPlay];
 		public bool IsTeamInPlay(Team team) => team == GetCurrentTeamInPlay();
 
 		public void PushActionMoveUnit(Unit unit, Position goal)
@@ -560,11 +566,62 @@ namespace TAC.World
 				((JsonArray)node["ThingTypeMap"]).Add(thing.assetname);
 			}
 
+			node["Teams"] = new JsonArray();
+			foreach(Team team in Teams) {
+				node["Teams"].AsArray().Add(team.GetJsonNode());
+			}
+
+			node["Units"] = new JsonArray();
+			foreach(Unit unit in units) {
+				node["Units"].AsArray().Add(unit.GetJsonNode());
+			}
+
 			node["TileSpace"] = TileSpace.GetJsonNode();
 
-			//node["units"] = new JsonArray();
-
 			return node;
+		}
+
+		public bool FillFromJson(JsonObject sceneNode)
+		{
+			JsonArray tilearray = sceneNode["TileTypeMap"].AsArray();
+			// Rebuild tile texture map
+			foreach(string assetname in tilearray) {
+				Texture tex = cache.GetTexture(assetname);
+				TileTypeMap.Add(tex);
+			}
+			JsonArray brusharray = sceneNode["BrushTypeMap"].AsArray();
+			foreach(string assetname in brusharray) {
+				Brush brush = cache.GetBrush(assetname);
+				BrushTypeMap.Add(brush);
+			}
+			JsonArray thingarray = sceneNode["ThingTypeMap"].AsArray();
+			foreach(string assetname in thingarray) {
+				Thing thing = cache.GetThing(assetname);
+				ThingTypeMap.Add(thing);
+			}
+
+			JsonArray teamarray = sceneNode["Teams"].AsArray();
+			foreach(JsonObject teamnode in teamarray) {
+				//Team team = cache.GetTeam((string)teamnode["assetname"]);
+				Team team = new Team(teamnode);
+				Teams.Add(team);
+			}
+			JsonArray unitarray = sceneNode["Units"].AsArray();
+			foreach(JsonObject unitjson in unitarray) {
+				Unit unit = new Unit(unitjson);
+				Team unitTeam = Teams[unit.TeamID];
+				unit.Template = cache.GetUnitTemplate((string)unitjson["Template"]);
+				unitTeam.AddUnit(unit);
+				units.Add(unit);
+			}
+
+
+			JsonObject tilespace = sceneNode["TileSpace"].AsObject();
+
+			SetTileSpace(new SceneTileSpace(tilespace));
+			//TileSpace = new SceneTileSpace(tilespace);
+
+			return true;
 		}
 	}
 }

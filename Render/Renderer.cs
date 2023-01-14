@@ -52,7 +52,7 @@ namespace TAC.Render
 			   Any shader inside the model would choose correct billboard orientation
 			*/
 
-			UnitTemplate template = unit.Type;
+			UnitTemplate template = unit.Template;
 			Vector3 unitPosition = unit.position.ToVector3();
 
 			if (template.Type == UnitTemplate.TemplateType.Skeletal) {

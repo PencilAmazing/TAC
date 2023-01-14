@@ -31,7 +31,6 @@ namespace TAC.Editor
 	public class Model : Resource
 	{
 		// HACK model has built in materials, get rid of them
-		// use meshes instead
 		// but we need to stick to model because raylib stores skeletal
 		// animation inside these structs
 		public Raylib_cs.Model model;
@@ -40,6 +39,17 @@ namespace TAC.Editor
 			: base(assetname)
 		{
 			this.model = model;
+		}
+	}
+
+	public class ModelAnimation : Resource
+	{
+		public Raylib_cs.ModelAnimation animation;
+
+		public ModelAnimation(string assetname, Raylib_cs.ModelAnimation animation) 
+			: base(assetname)
+		{
+			this.animation = animation;
 		}
 	}
 }

@@ -307,7 +307,7 @@ namespace TAC.UISystem
 		{
 			PlayerController player = engine.player;
 			Unit selectedUnit = player.SelectedUnit;
-			UnitTemplate template = selectedUnit.Type;
+			UnitTemplate template = selectedUnit.Template;
 
 			SetNextWindowPos(Vector2.UnitY * Engine.screenHeight, ImGuiCond.None, Vector2.UnitY);
 			Begin("info", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize);

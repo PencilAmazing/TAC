@@ -11,7 +11,7 @@ namespace TAC.Inner
 		public static int screenWidth = 1000;
 		public static int screenHeight = 750;
 
-		public Scene scene;
+		public Scene scene { get; private set; }
 		public ResourceCache resourceCache;
 		public Renderer renderer;
 		public UI ui;
@@ -31,10 +31,17 @@ namespace TAC.Inner
 			resourceCache.LoadAssets();
 			renderer = new Renderer();
 
-			scene = new Scene(renderer, resourceCache, false);
-			player = new PlayerController(scene);
+			//SetScene(new Scene(renderer, resourceCache, false));
+			//scene = new Scene(renderer, resourceCache, false);
+			//player = new PlayerController(scene);
 		}
 
+		public void SetScene(Scene scene)
+		{
+			this.scene = scene;
+			this.scene.renderer = this.renderer;
+			player = new PlayerController(scene);
+		}
 		public void ToggleGameMode() => SetGameMode(!scene.isEdit);
 
 		public void SetGameMode(bool isEdit)

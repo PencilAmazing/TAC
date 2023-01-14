@@ -152,5 +152,6 @@ namespace TAC.World
 		}
 
 		public JsonNode GetJsonNode() => new JsonArray { type, North, West, thing };
+		public static Tile FillFromJson(JsonArray json) => new Tile((int)json[0], (int)json[1], (int)json[2], (int)json[3]);
 	}
 }
