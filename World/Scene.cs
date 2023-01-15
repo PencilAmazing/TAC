@@ -613,6 +613,7 @@ namespace TAC.World
 				unit.Template = cache.GetUnitTemplate((string)unitjson["Template"]);
 				unitTeam.AddUnit(unit);
 				units.Add(unit);
+				unit.UnitAI = new UnitAIModule(this, unit);
 			}
 
 

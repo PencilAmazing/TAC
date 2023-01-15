@@ -7,6 +7,14 @@ namespace TAC.Editor
 {
 	public partial class ResourceCache
 	{
+		private void ParseUnitTemplateMaterials(JsonArray texarray, ref Raylib_cs.Model model)
+		{
+			for (int i = 0; i < texarray.Count; i++) {
+				Texture2D tex = Raylib.LoadTexture(AssetUnitPrefix + (string)texarray[i]);
+				Raylib.SetMaterialTexture(ref model, i, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, ref tex);
+			}
+		}
+
 		public UnitTemplate GetUnitTemplate(string assetname)
 		{
 			if (UnitTemplates.ContainsKey(assetname)) return UnitTemplates[assetname];
@@ -21,7 +29,9 @@ namespace TAC.Editor
 				template = new UnitTemplate(assetname, (int)templateNode["health"], (int)templateNode["time"], tex);
 			} else if (templateNode["model"] != null) {
 				Model templateModel = GetModel((string)templateNode["model"]);
-				templateModel.model.transform = Raymath.MatrixScale(1.0f, 1.0f, 1.0f) * templateModel.model.transform;
+				JsonArray texarray = templateNode["textures"].AsArray();
+				ParseUnitTemplateMaterials(texarray, ref templateModel.model);
+				//templateModel.model.material
 				template = new UnitTemplate(assetname, (int)templateNode["health"], (int)templateNode["time"], templateModel);
 			} else {
 				Raylib.TraceLog(TraceLogLevel.LOG_INFO, "Unit template " + assetname + " does not specify template type.");

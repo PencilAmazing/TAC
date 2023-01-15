@@ -336,7 +336,7 @@ namespace TAC.Editor
 		}
 
 		/// <summary>
-		/// Make sure extension has dot
+		/// Make sure extension has dot. <br></br>
 		/// Simple concatenation as AssetRootPrefix + assetname + suffix
 		/// </summary>
 		public string GetFullAssetPath(string assetname, string suffix) => System.IO.Path.GetFullPath(AssetRootPrefix + assetname + suffix);
@@ -419,6 +419,21 @@ namespace TAC.Editor
 				return null;
 			}
 
+			// The fuck is going on here
+			// Hey guess fucking what LoadMaterials doesn't even do shit
+			// I hate this so much man
+			/*if (extension == ".iqm") {
+				unsafe {
+					int count = 0;
+					using var path = GetFullAssetPath(assetname, ".mtl").ToUTF8Buffer();
+					Material* mats;
+					//Material* mat = LoadMaterials((sbyte*)p, &count);
+					mats = LoadMaterials(path.AsPointer(), &count);
+					if (count > 0) {
+						obj.materials = mats;
+					}
+				}
+			}*/
 			// Load and register model
 			Model model = new Model(assetname, obj);
 			Models.Add(assetname, model);

@@ -1,5 +1,10 @@
 {
   "model": "unit/doom",
+  "textures": ["doom_color.png", "doom_f.png"],
+  "animations": [
+	"anim/biped/runN",
+	"anim/biped/run_center"
+  ],
   "health": 100,
   "time": 80
 }
