@@ -82,6 +82,7 @@ namespace TAC
 				engine.player.GameState.SelectedTeam = loadscene.Teams[0]; // I guess
 			}
 			catch (System.Exception) {
+				throw;
 				LoadScene();
 			}
 

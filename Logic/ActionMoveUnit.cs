@@ -18,6 +18,7 @@ namespace TAC.Logic
 		{
 			base.Think(deltaTime);
 
+			path.unit.animationState = UnitAnimation.RunN;
 			phase += 1;
 			if (phase > 8) {
 				phase = 0;
@@ -57,5 +58,10 @@ namespace TAC.Logic
 			}
 		}
 
+		public override void Done()
+		{
+			base.Done();
+			path.unit.animationState = UnitAnimation.Idle;
+		}
 	}
 }

@@ -90,6 +90,7 @@ namespace TAC.Editor
 			Brushes = new Dictionary<string, Brush>();
 			Things = new Dictionary<string, Thing>();
 			UnitTemplates = new Dictionary<string, UnitTemplate>();
+			ModelAnimations = new Dictionary<string, ModelAnimation>();
 		}
 
 		~ResourceCache()
@@ -328,6 +329,9 @@ namespace TAC.Editor
 			GenerateUploadMeshes();
 		}
 
+		/// <summary>
+		/// Dont forget the extension i guess
+		/// </summary>
 		public bool AssetExists(string assetname)
 		{
 			if (System.IO.File.Exists(AssetRootPrefix + assetname)) return true;
@@ -438,6 +442,45 @@ namespace TAC.Editor
 			Model model = new Model(assetname, obj);
 			Models.Add(assetname, model);
 			return model;
+		}
+
+		/// <summary>
+		/// IQM file could contain multiple animations
+		/// </summary>
+		public ModelAnimation GetModelAnimation(string assetname)
+		{
+			// anim/biped/runN
+			if (ModelAnimations.ContainsKey(assetname)) return ModelAnimations[assetname];
+			// Remove animation name to get file assetname
+			// anim/biped
+			string animFileName = assetname.Remove(assetname.LastIndexOf('/'));
+			if (!AssetExists(animFileName + ".json")) return null;
+
+			string filelocation = System.IO.Path.GetFullPath(AssetRootPrefix + animFileName + ".json");
+			string file = System.IO.File.ReadAllText(filelocation, Encoding.UTF8);
+			JsonNode node = JsonNode.Parse(file);
+
+			// runN
+			JsonArray animationorder = node["animation_order"].AsArray();
+			uint animCount = 0;
+			ReadOnlySpan<Raylib_cs.ModelAnimation> anims = Raylib.LoadModelAnimations(GetFullAssetPath(animFileName, ".iqm"), ref animCount);
+			// Early out since some animations are loaded without assetnames
+			if (animationorder.Count < animCount) {
+				UnloadModelAnimations(anims.ToArray(), animCount);
+				return null;
+			}
+
+			// Construct assetname and load into registry
+			for (int i = 0; i < animationorder.Count; i++) {
+				// new assetname
+				string asset = animFileName + '/' + (string)animationorder[i];
+				ModelAnimations.Add(asset, new ModelAnimation(assetname, anims[i]));
+			}
+			
+			if (ModelAnimations.ContainsKey(assetname)) // anim should be loaded by now
+				return ModelAnimations[assetname];
+			else // nothing found
+				return null;
 		}
 	}
 }

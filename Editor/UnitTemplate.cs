@@ -26,7 +26,7 @@ namespace TAC.Editor
 		public int TimeUnits;
 		public Model Model;
 		public Texture BillboardTexture;
-		public List<ModelAnimation> Animations;
+		public ModelAnimation[] Animations;
 
 		/// <summary>
 		/// Create a skeletal Unit Template
@@ -38,7 +38,7 @@ namespace TAC.Editor
 			TimeUnits = timeUnits;
 			Model = model;
 			BillboardTexture = null;
-			Animations = new List<ModelAnimation>();
+			Animations = new ModelAnimation[0];
 
 			Type = TemplateType.Skeletal;
 		}

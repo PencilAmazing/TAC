@@ -18,6 +18,12 @@ namespace TAC.World
 		NorthWest,
 	};
 
+	public enum UnitAnimation
+	{
+		Idle = 0,
+		RunN
+	}
+
 	/// <summary>
 	/// Gameplay represenation of a unit that moves and interacts with a scene.<br></br>
 	/// Not for database representation, use something else.
@@ -57,6 +63,7 @@ namespace TAC.World
 
 		// General purpose counter
 		public int animationPhase;
+		public UnitAnimation animationState;
 
 		public UnitAIModule UnitAI;
 		public bool isDone;
@@ -68,6 +75,7 @@ namespace TAC.World
 			this.direction = direction;
 			this.Name = name;
 			this.animationPhase = 0;
+			this.animationState = UnitAnimation.Idle;
 			// We want our own copy
 			this.TimeUnits = template.TimeUnits;
 			this.Health = template.Health;
@@ -112,12 +120,20 @@ namespace TAC.World
 		public void Think(float deltaTime)
 		{
 			if (Template.Type != UnitTemplate.TemplateType.Skeletal
-				|| Template.Animations.Count <= 0) return;
+				|| Template.Animations.Length <= 0) return;
 
-			ModelAnimation runN = Template.Animations[0];
-			int framecount = runN.animation.frameCount;
+			ModelAnimation anim;
+			if (animationState == UnitAnimation.RunN) {
+				// runN
+				anim = Template.Animations[1];
+			} else {
+				// idle
+				anim = Template.Animations[0];
+			}
+
+			int framecount = anim.animation.frameCount;
 			animationPhase = (animationPhase + 1) % framecount;
-			Raylib_cs.Raylib.UpdateModelAnimation(Template.Model.model, runN.animation, animationPhase);
+			Raylib_cs.Raylib.UpdateModelAnimation(Template.Model.model, anim.animation, animationPhase);
 		}
 
 		/// <summary>

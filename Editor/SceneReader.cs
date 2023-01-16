@@ -2,6 +2,8 @@
 using System.Text.Json.Nodes;
 using System.Text;
 using TAC.World;
+using System.Numerics;
+using System;
 
 namespace TAC.Editor
 {
@@ -12,6 +14,7 @@ namespace TAC.Editor
 			for (int i = 0; i < texarray.Count; i++) {
 				Texture2D tex = Raylib.LoadTexture(AssetUnitPrefix + (string)texarray[i]);
 				Raylib.SetMaterialTexture(ref model, i, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, ref tex);
+				Raylib.SetModelMeshMaterial(ref model, i*2, i);
 			}
 		}
 
@@ -31,15 +34,25 @@ namespace TAC.Editor
 				Model templateModel = GetModel((string)templateNode["model"]);
 				JsonArray texarray = templateNode["textures"].AsArray();
 				ParseUnitTemplateMaterials(texarray, ref templateModel.model);
-				//templateModel.model.material
+				// scale rotate translate
+				templateModel.model.transform = Raymath.MatrixScale(0.02f, 0.02f, 0.02f) *
+												Raymath.MatrixRotate(Vector3.UnitX, -MathF.PI/2.0f) *
+												templateModel.model.transform;
 				template = new UnitTemplate(assetname, (int)templateNode["health"], (int)templateNode["time"], templateModel);
 			} else {
 				Raylib.TraceLog(TraceLogLevel.LOG_INFO, "Unit template " + assetname + " does not specify template type.");
 				return null; // Early out since definition is already broken
 			}
 
-			UnitTemplates.Add(assetname, template);
+			JsonNode animarray = templateNode["animations"];
+			if (animarray != null) {
+				template.Animations = new ModelAnimation[animarray.AsArray().Count];
+				for (int i = 0; i < animarray.AsArray().Count; i++) {
+					template.Animations[i] = GetModelAnimation((string)animarray[i]);
+				}
+			}
 
+			UnitTemplates.Add(assetname, template);
 			return template;
 		}
 
