@@ -134,6 +134,9 @@ namespace TAC.World
 			int framecount = anim.animation.frameCount;
 			animationPhase = (animationPhase + 1) % framecount;
 			Raylib_cs.Raylib.UpdateModelAnimation(Template.Model.model, anim.animation, animationPhase);
+			// Draw sphere on forearm or something
+			Vector3 bonepos = Template.Model.GetAnimationBoneLocation(anim.animation, animationPhase, "ValveBiped.Bip01_L_Forearm");
+			Raylib_cs.Raylib.DrawSphere(bonepos + position.ToVector3(), 0.05f, Raylib_cs.Color.DARKGREEN);
 		}
 
 		/// <summary>
