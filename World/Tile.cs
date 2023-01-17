@@ -44,6 +44,16 @@ namespace TAC.World
 			this.left = left;
 		}
 
+		public JsonObject GetJsonObject()
+		{
+			JsonObject obj = new JsonObject();
+			obj["faces"] = new JsonArray();
+			foreach(Texture face in faces) {
+				obj["faces"].AsArray().Add(face.assetname);
+			}
+			return obj;
+		}
+
 		public Brush(string assetname, Texture[] faces)
 		{
 			this.assetname = assetname;

@@ -83,7 +83,7 @@ namespace TAC
 			}
 			catch (System.Exception) {
 				throw;
-				LoadScene();
+				//LoadScene();
 			}
 
 			SetTargetFPS(60);

@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text.Json;
 using TAC.World;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace TAC.Editor
 {
@@ -19,6 +20,19 @@ namespace TAC.Editor
 			string jsonData = scene.GetJsonNode().ToJsonString(new JsonSerializerOptions { WriteIndented = true });
 			File.WriteAllText(AssetSaveDirectory + assetname + ".json", jsonData);
 			Raylib_cs.Raylib.TraceLog(Raylib_cs.TraceLogLevel.LOG_INFO, "Wrote to disk scene: " + assetname);
+			return true;
+		}
+
+		public bool WriteBrushToDisk(Brush brush)
+		{
+			var writerOptions = new JsonWriterOptions
+			{
+				Indented = true // Maybe not?
+			};
+			string jsonData = brush.GetJsonObject().ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+			File.WriteAllText(AssetRootPrefix + brush.assetname + ".json", jsonData);
+			Raylib_cs.Raylib.TraceLog(Raylib_cs.TraceLogLevel.LOG_INFO, "Wrote to disk scene: " + brush.assetname);
+
 			return true;
 		}
 	}
