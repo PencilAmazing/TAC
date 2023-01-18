@@ -26,6 +26,8 @@ namespace TAC.World
 		public Texture right { get => faces[4]; set => faces[4] = value; }
 		public Texture left { get => faces[5]; set => faces[5] = value; }
 
+		public static readonly string[] FaceLabels = { "Top", "Front", "Bottom", "Back", "Right", "Left" };
+
 		public Brush() => faces = new Texture[6];
 
 		public Brush(string assetname,

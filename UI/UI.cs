@@ -131,6 +131,15 @@ namespace TAC.UISystem
 			BeginGroup();
 			Image((IntPtr)selectedTile.texture.id, new Vector2(128, 128));
 
+			if (InputText("", ref editTextureName, (uint)256) || IsItemClicked()) {
+				// New texture inputted
+				Texture newTex = engine.scene.cache.GetTexture(editTextureName);
+				if (newTex != null) {
+					// Bind new texture to selection
+					engine.player.EditState.SelectedTileIndex = engine.scene.GetTileTypeIndexOf(newTex);
+				}
+			}
+			Separator();
 			// Add quick option to select new tile types
 			if (Button("Select tile", new Vector2(128, 0))) OpenPopup(tilePickerLabel);
 			if (BeginPopup(tilePickerLabel)) {
@@ -183,8 +192,8 @@ namespace TAC.UISystem
 		private void DrawMaterialSelectionPanel()
 		{
 			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One * 5);
-			SetNextWindowSize(-Vector2.One);
-			if (Begin("Material Panel", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
+			//SetNextWindowSize(-Vector2.One);
+			if (Begin("Material Panel", ImGuiWindowFlags.NoCollapse|ImGuiWindowFlags.AlwaysAutoResize)) {
 				if (BeginTable("Material Panel Content", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingFixedFit)) {
 					TableNextColumn();
 					foreach (string key in engine.resourceCache.Brushes.Keys) {
@@ -198,21 +207,23 @@ namespace TAC.UISystem
 					TableNextColumn();
 					Brush current = engine.player.EditState.SelectedBrush;
 					if (current != null) {
-						//int currentItemIndex = 0;
 						BeginGroup();
-						Text("Brush: " + current.assetname);
-						SameLine();
-						Checkbox("Flip", ref engine.player.EditState.FlipBrush);
+						{
+							Text("Brush: " + current.assetname);
+							SameLine();
+							Checkbox("Flip", ref engine.player.EditState.FlipBrush);
+						}
 						EndGroup();
 
-						BeginGroup();
-						if (BeginListBox("##TexturesListBox", -Vector2.UnitX)) {
+						SetNextItemWidth(280);
+						if (BeginListBox("##TexturesListBox")) {
 							for (int i = 0; i < current.faces.Length; i++) {
 								PushID(i);
-								//PushItemWidth(-1);
+								BeginGroup();
 								editTextureName = current.faces[i] != null ? current.faces[i].assetname : "";
 								// FIXME Magic number lol
-								if (InputText("", ref editTextureName, (uint)256) || IsItemClicked()) {
+								SetNextItemWidth(150);
+								if (InputText(Brush.FaceLabels[i], ref editTextureName, (uint)256) || IsItemClicked()) {
 									currentItemIndex = i;
 									// New texture inputted
 									Texture newTex = engine.scene.cache.GetTexture(editTextureName);
@@ -223,11 +234,10 @@ namespace TAC.UISystem
 								SameLine();
 								if (Button("pick", Vector2.UnitX * 50)) OpenPopup(texturePickerLabel);
 								if (BeginPopup(texturePickerLabel)) DrawTextureSelectionPanel(current, i);
-								//PopItemWidth();
+								EndGroup();
 								PopID();
 							}
 						}
-						EndGroup();
 						EndListBox();
 
 						TableNextColumn();
