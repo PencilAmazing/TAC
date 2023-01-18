@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using System.Text.Json.Nodes;
-using TAC.Inner;
 using TAC.World;
 using static Raylib_cs.MaterialMapIndex;
 using static Raylib_cs.Raylib;
@@ -121,9 +120,12 @@ namespace TAC.Editor
 		public Texture LoadTexture(string TextureKey)
 		{
 			if (!System.IO.File.Exists(AssetRootPrefix + TextureKey + ".png")) return null;
+
 			Texture2D tex = Raylib.LoadTexture(AssetRootPrefix + TextureKey + ".png");
-			SetTextureFilter(tex, TextureFilter.TEXTURE_FILTER_POINT);
+			Raylib.GenTextureMipmaps(ref tex);
+			SetTextureFilter(tex, TextureFilter.TEXTURE_FILTER_TRILINEAR);
 			SetTextureWrap(tex, TextureWrap.TEXTURE_WRAP_CLAMP);
+			
 
 			return tex.id == 0 ? null : LoadTexture(tex, TextureKey);
 		}
