@@ -95,7 +95,9 @@ namespace TAC.World
 				for (int z = 0; z < Length; z++) {
 					int type = TileMap[x, y, z].type;
 					Texture2D tex = TileLookupTable[type].texture;
-					DrawTexture(tex, 128 * x, 128 * (Length - z - 1), Color.WHITE);
+					//DrawTexture(tex, 128 * x, 128 * (Length - z - 1), Color.WHITE);
+					DrawTexturePro(tex, new Rectangle(0, 0, tex.width, tex.height),
+										new Rectangle(128 * x, 128 * (Length - z - 1), 128, 128), Vector2.Zero, 0, Color.WHITE);
 				}
 			}
 			EndTextureMode();
@@ -193,6 +195,18 @@ namespace TAC.World
 			// FIXME serialize inventory dictionary
 
 			return node;
+		}
+
+		// http://www.adammil.net/blog/v125_roguelike_vision_algorithms.html
+		// Diamond walls
+		public Position[] GetUnitVisibleTiles(Position start, UnitDirection dir)
+		{
+			List<Position> visible = new();
+
+			void SetVisible(Position pos) => visible.Add(pos);
+
+
+			return visible.ToArray();
 		}
 	}
 }
