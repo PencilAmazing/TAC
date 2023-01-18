@@ -256,16 +256,8 @@ namespace TAC.World
 			select = flips | visible;
 			TileSpace[pos].walls = (byte)select;
 		}
-
-		public void SetWall(Position pos, Wall wall)
-		{
-			TileSpace[pos].walls = (byte)wall;
-		}
-
-		public void ClearWall(Position pos, Wall wall)
-		{
-			TileSpace[pos].walls &= (byte)~wall;
-		}
+		public void SetWall(Position pos, Wall wall) => TileSpace[pos].walls = (byte)wall;
+		public void ClearWall(Position pos, Wall wall) => TileSpace[pos].walls &= (byte)~wall;
 
 		/// <summary>
 		/// Return index of texture in <see cref="TileTypeMap"/>. Adds to map if not found.
@@ -331,6 +323,7 @@ namespace TAC.World
 			}
 		}
 
+		// TODO move this to TileSpace.cs
 		public Position[] GetSupercoverLine(Position origin, Position end) => GetSupercoverLine(origin.ToVector3(), end.ToVector3());
 
 		// https://www.redblobgames.com/grids/line-drawing.html#supercover

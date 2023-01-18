@@ -48,7 +48,7 @@ namespace TAC.World
 		{
 			JsonObject obj = new JsonObject();
 			obj["faces"] = new JsonArray();
-			foreach(Texture face in faces) {
+			foreach (Texture face in faces) {
 				obj["faces"].AsArray().Add(face.assetname);
 			}
 			return obj;
@@ -118,13 +118,17 @@ namespace TAC.World
 			this.thing = 0;
 		}
 
-		public Tile(int type, int north, int west, int thing)
+		/// <summary>
+		/// Only flip bits are copied from <paramref name="walls"/>
+		/// </summary>
+		public Tile(int type, int north, int west, int thing, byte walls = 0)
 		{
 			this.type = type;
 			this.North = north;
 			this.West = west;
 			this.thing = thing;
-			this.walls = 0;
+			// Stupid thing
+			this.walls = (byte)((Wall)walls & (Wall.FlipNorth | Wall.FlipWest));
 			if (north > 0)
 				this.walls |= (byte)Wall.North;
 			if (west > 0)
@@ -161,7 +165,13 @@ namespace TAC.World
 			throw new System.NotImplementedException();
 		}
 
-		public JsonNode GetJsonNode() => new JsonArray { type, North, West, thing };
-		public static Tile FillFromJson(JsonArray json) => new Tile((int)json[0], (int)json[1], (int)json[2], (int)json[3]);
+		public JsonNode GetJsonNode() => new JsonArray { type, North, West, thing, walls };
+		public static Tile FillFromJson(JsonArray json)
+		{
+			if(json.Count > 4)
+				return new Tile((int)json[0], (int)json[1], (int)json[2], (int)json[3], (byte)json[4]);
+			else
+				return new Tile((int)json[0], (int)json[1], (int)json[2], (int)json[3]);
+		}
 	}
 }

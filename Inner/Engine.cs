@@ -93,6 +93,7 @@ namespace TAC.Inner
 			imguiController.Dispose();
 			resourceCache.WriteSceneToDisk(scene, "default");
 			foreach(Brush brush in resourceCache.Brushes.Values) {
+				if (!Brush.IsBrushValid(brush)) continue;
 				if (!resourceCache.AssetExists(brush.assetname + ".json")) {
 					resourceCache.WriteBrushToDisk(brush);
 				}
