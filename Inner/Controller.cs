@@ -130,7 +130,7 @@ namespace TAC.Inner
 			if (tile == Tile.nullTile) return;
 			DrawCubeWiresV(position.ToVector3() + Vector3.UnitY * position.y, Vector3.One, Color.ORANGE);
 
-			if(UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
+			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				scene.ToggleThing(position, 1);
 			}
 

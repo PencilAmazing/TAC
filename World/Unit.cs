@@ -84,21 +84,37 @@ namespace TAC.World
 			UnitAI = null;
 		}
 
-		/// <summary>
-		/// Cannot fetch template by itself
-		/// </summary>
-		public Unit(JsonObject unitjson)
+		public Unit(UnitTemplate template, Position position, string name, UnitDirection direction,
+					int TeamID, int TimeUnits, int Health,
+					List<Item> inventory)
 		{
-			Name = (string)unitjson["Name"];
-			Template = null; // MAKE SURE YOU FILL IT IN
+			this.Template = template;
+			this.position = position;
+			this.direction = direction;
+			this.Name = name;
+			this.animationPhase = 0;
+			this.animationState = UnitAnimation.Idle;
+			// We want our own copy
+			this.TeamID = TeamID;
+			this.TimeUnits = TimeUnits;
+			this.Health = Health;
+			this.inventory = inventory;
 
-			TeamID = (int)unitjson["TeamID"];
-			TimeUnits = (int)unitjson["TimeUnits"];
-			Health = (int)unitjson["Health"];
-
-			position = new Position(unitjson["Position"].AsArray());
-			direction = (UnitDirection)(int)unitjson["Direction"];
+			UnitAI = null;
 		}
+
+		/// <summary>
+		/// Instantiate from json object
+		/// </summary>
+		public Unit(JsonObject unitjson, UnitTemplate template, List<Item> inventory)
+			: this(template,
+				   new Position(unitjson["Position"].AsArray()),
+				   (string)unitjson["Name"],
+				   (UnitDirection)(int)unitjson["Direction"],
+				   (int)unitjson["TeamID"],
+				   (int)unitjson["TimeUnits"],
+				   (int)unitjson["Health"],
+				   inventory: inventory) {}
 
 		// TODO complete json representation
 		public JsonObject GetJsonNode()

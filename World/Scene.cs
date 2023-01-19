@@ -440,7 +440,7 @@ namespace TAC.World
 		/// <summary>
 		/// Add unit to scene.
 		/// </summary>
-		public bool AddUnit(Unit unit, int factionID)
+		public bool AddUnit(Unit unit, int factionID, UnitAIModule aiModule = null)
 		{
 			// Check arguments validity
 			if (unit == null || IsTileOccupied(unit.position) ||
@@ -455,6 +455,9 @@ namespace TAC.World
 			Tile tile = TileSpace.GetTile(unit.position);
 			tile.unit = unit;
 			TileSpace.SetTile(tile, unit.position);
+
+			// Set unit AI
+			unit.UnitAI = aiModule;
 
 			return true;
 		}
@@ -599,21 +602,18 @@ namespace TAC.World
 				Team team = new Team(teamnode);
 				Teams.Add(team);
 			}
-			JsonArray unitarray = sceneNode["Units"].AsArray();
-			foreach(JsonObject unitjson in unitarray) {
-				Unit unit = new Unit(unitjson);
-				Team unitTeam = Teams[unit.TeamID];
-				unit.Template = cache.GetUnitTemplate((string)unitjson["Template"]);
-				unitTeam.AddUnit(unit);
-				units.Add(unit);
-				unit.UnitAI = new UnitAIModule(this, unit);
-			}
-
 
 			JsonObject tilespace = sceneNode["TileSpace"].AsObject();
-
 			SetTileSpace(new SceneTileSpace(tilespace));
-			//TileSpace = new SceneTileSpace(tilespace);
+
+			JsonArray unitarray = sceneNode["Units"].AsArray();
+			foreach(JsonObject unitjson in unitarray) {
+				UnitTemplate template = cache.GetUnitTemplate((string)unitjson["Template"]);
+				Unit unit = new Unit(unitjson, template, new List<Item>());
+
+				AddUnit(unit, unit.TeamID);
+				unit.UnitAI = new UnitAIModule(this, unit);
+			}
 
 			return true;
 		}
