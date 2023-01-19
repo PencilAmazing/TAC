@@ -118,7 +118,10 @@ namespace TAC.Render
 		{
 			// Offset ground in transform matrix to make other rendering easier
 			// FIXME Texture arrays do not exist in raylib bro wtf
-			DrawModel(FloorModel, Vector3.Zero, 1, Color.WHITE);
+			// Offset rendering by epsilion
+			Rlgl.rlDisableBackfaceCulling();
+			DrawModel(FloorModel, Vector3.UnitY*0.001f, 1, Color.WHITE);
+			Rlgl.rlEnableBackfaceCulling();
 		}
 
 		/// <summary>
