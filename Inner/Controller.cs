@@ -87,7 +87,7 @@ namespace TAC.Inner
 
 			if (UI.GetMouseButtonPress(MouseButton.MOUSE_BUTTON_LEFT)) {
 				// Also toggles wall, BTW
-				if (EditState.SelectedBrush != null) {
+				if (scene.IsTileWithinBounds(position) && EditState.SelectedBrush != null) {
 					if (EditState.FlipBrush)
 						scene.ToggleBrush(position, wall | (Wall)((byte)wall << 2), EditState.SelectedBrush);
 					else
