@@ -196,17 +196,5 @@ namespace TAC.World
 
 			return node;
 		}
-
-		// http://www.adammil.net/blog/v125_roguelike_vision_algorithms.html
-		// Diamond walls
-		public Position[] GetUnitVisibleTiles(Position start, UnitDirection dir)
-		{
-			List<Position> visible = new();
-
-			void SetVisible(Position pos) => visible.Add(pos);
-
-
-			return visible.ToArray();
-		}
 	}
 }

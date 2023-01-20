@@ -10,7 +10,7 @@ using static TAC.World.Position;
 
 namespace TAC.World
 {
-	public class Scene
+	public partial class Scene
 	{
 		public List<Team> Teams;
 		public List<Unit> units;
@@ -50,6 +50,7 @@ namespace TAC.World
 		public ResourceCache cache;
 		public Renderer renderer;
 		public bool isEdit;
+		public List<Position> viewCache;
 		// TODO: replace with action stack?
 		private Action currentAction;
 		//
@@ -199,6 +200,10 @@ namespace TAC.World
 
 			foreach (Unit unit in units)
 				Raylib.DrawBoundingBox(unit.GetUnitBoundingBox(), Color.ORANGE);
+
+			if (viewCache != null) {
+				renderer.DrawDebugPath(viewCache.ToArray());
+			}
 		}
 
 		public Raylib_cs.Model GetFloorModel(int level) => TileSpace.GetFloorModel(level);
@@ -209,16 +214,24 @@ namespace TAC.World
 		/// <summary>
 		/// Is position within size of scene?
 		/// </summary>
-		public bool IsTileWithinBounds(Position pos) => pos.x >= 0 && pos.y >= 0 && pos.z >= 0 &&
-				   pos.x < Size.x && pos.y < Size.y && pos.z < Size.z;
+		public bool IsTileWithinBounds(Position pos) => IsTileWithinBounds(pos, Size);
+		public static bool IsTileWithinBounds(Position pos, Position bounds)
+		{
+			return pos.x >= 0 && pos.y >= 0 && pos.z >= 0 &&
+			pos.x < bounds.x && pos.y < bounds.y && pos.z < bounds.z;
+		}
 
+		/// <summary>
+		/// Is tile a null tile?
+		/// </summary>
+		public bool IsTileInvalid(Position pos) => TileSpace.GetTile(pos).IsTileInvalid();
 		/// <summary>
 		/// Does tile contain a unit?
 		/// </summary>
 		public bool IsTileOccupied(Position pos)
 		{
 			Tile tile = TileSpace.GetTile(pos);
-			return tile != Tile.nullTile && (tile.unit != null); // Or tile has object
+			return tile.IsTileInvalid() || tile.HasUnit(); // Or tile has object
 		}
 
 		/// <summary>
@@ -227,7 +240,7 @@ namespace TAC.World
 		public bool IsTileImpassable(Position pos)
 		{
 			Tile tile = TileSpace.GetTile(pos);
-			return tile != Tile.nullTile && (tile.HasThing() || tile.HasUnit());
+			return tile.IsTileInvalid() || tile.IsTileImpassable();
 		}
 
 		/// <summary>
@@ -236,7 +249,7 @@ namespace TAC.World
 		public bool IsTileBlocking(Position pos)
 		{
 			Tile tile = TileSpace.GetTile(pos);
-			return tile != Tile.nullTile && (tile.HasWall(Wall.North | Wall.West) || tile.HasThing());
+			return tile.IsTileInvalid() || tile.IsTileBlocking();
 		}
 
 		public void ToggleWall(Position pos, Wall wall)
@@ -380,6 +393,11 @@ namespace TAC.World
 				points.Add(i);
 			}
 			return points.ToArray();
+		}
+
+		public List<Position> GetUnitFOV(Unit unit)
+		{
+			return GetUnitVisibleTiles(unit.position, unit.direction);
 		}
 
 		/// <summary>

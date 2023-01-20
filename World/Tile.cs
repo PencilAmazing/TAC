@@ -139,11 +139,27 @@ namespace TAC.World
 		}
 
 		public bool HasWall(Wall wall) => (walls & (byte)wall) != 0;
-
-		// TODO Implement things
 		public bool HasThing() => this.thing > 0;
-
 		public bool HasUnit() => this.unit != null;
+
+		/// <summary>
+		/// Is tile a null tile?
+		/// </summary>
+		public bool IsTileInvalid() => this == Tile.nullTile;
+		/// <summary>
+		/// Does tile contain a unit?
+		/// </summary>
+		public bool IsTileOccupied() => HasUnit(); // Or tile has object
+
+		/// <summary>
+		/// Does tile contain a unit or a thing?
+		/// </summary>
+		public bool IsTileImpassable() => HasThing() || HasUnit();
+
+		/// <summary>
+		/// Does tile block line of sight or line of fire?
+		/// </summary>
+		public bool IsTileBlocking() => HasWall(Wall.North | Wall.West) || HasThing();
 
 		public static bool operator ==(Tile l, Tile r)
 		{
@@ -167,10 +183,14 @@ namespace TAC.World
 			throw new System.NotImplementedException();
 		}
 
-		public JsonNode GetJsonNode() => new JsonArray { type, North, West, thing, walls };
+		public JsonNode GetJsonNode() => new JsonArray { type,
+			HasWall(Wall.North) ? North : 0,
+			HasWall(Wall.West) ? West : 0,
+			thing, walls };
+
 		public static Tile FillFromJson(JsonArray json)
 		{
-			if(json.Count > 4)
+			if (json.Count > 4)
 				return new Tile((int)json[0], (int)json[1], (int)json[2], (int)json[3], (byte)json[4]);
 			else
 				return new Tile((int)json[0], (int)json[1], (int)json[2], (int)json[3]);

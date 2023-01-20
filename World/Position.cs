@@ -10,6 +10,7 @@ namespace TAC.World
 		public int y;
 		public int z;
 
+		public static readonly Position Zero = new Position(0, 0, 0);
 		public static readonly Position One = new Position(1, 1, 1);
 		public static readonly Position Negative = new Position(-1, -1, -1);
 

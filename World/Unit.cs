@@ -6,9 +6,12 @@ using TAC.Logic;
 
 namespace TAC.World
 {
+	/// <summary>
+	/// Going clockwise
+	/// </summary>
 	public enum UnitDirection
 	{
-		North,
+		North = 0,
 		NorthEast,
 		East,
 		SouthEast,

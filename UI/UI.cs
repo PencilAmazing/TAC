@@ -193,7 +193,7 @@ namespace TAC.UISystem
 		{
 			PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.One * 5);
 			//SetNextWindowSize(-Vector2.One);
-			if (Begin("Material Panel", ImGuiWindowFlags.NoCollapse|ImGuiWindowFlags.AlwaysAutoResize)) {
+			if (Begin("Material Panel", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
 				if (BeginTable("Material Panel Content", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingFixedFit)) {
 					TableNextColumn();
 					foreach (string key in engine.resourceCache.Brushes.Keys) {
@@ -277,10 +277,13 @@ namespace TAC.UISystem
 			if (IsPlayerTeamInPlay(engine.player)) {
 				////////////////
 				SetNextWindowPos(Vector2.Zero);
-				if (engine.scene.CurrentActionInProgress()) BeginDisabled();
+				if (engine.scene.CurrentActionInProgress()) BeginDisabled(); // Disable UI if action in progress
 				Begin("Game Controls", controlFlags);
 				if (Button("Next turn", new Vector2(150, 40))) {
 					engine.scene.EndTurn();
+				}
+				if (Button("Check visibility", new Vector2(150, 40))) {
+					engine.scene.viewCache = engine.scene.GetUnitFOV(engine.player.GameState.SelectedUnit);
 				}
 				End();
 				////////////////
@@ -289,8 +292,8 @@ namespace TAC.UISystem
 				if (Button("Edit", new Vector2(150, 40)))
 					UIEventQueue.PushEvent(engine.ToggleGameMode);
 				End();
-				if (engine.scene.CurrentActionInProgress()) EndDisabled();
-				////////////////
+				if (engine.scene.CurrentActionInProgress()) EndDisabled(); // End disable
+																		   ////////////////
 				if (engine.player.SelectedUnit != null)
 					DrawUnitStats();
 			} else {
