@@ -1,6 +1,5 @@
 ﻿using Raylib_cs;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
 using System.Numerics;
 using System.Text.Json.Nodes;
 using TAC.Editor;
@@ -133,7 +132,7 @@ namespace TAC.World
 			}
 
 			// Tick animations
-			foreach(Unit unit in units) {
+			foreach (Unit unit in units) {
 				unit.Think(deltaTime); // Here we go
 			}
 
@@ -168,7 +167,7 @@ namespace TAC.World
 			}
 
 			// Unit render loop
-			foreach(Unit unit in units) renderer.DrawUnit(camera, unit, cache);
+			foreach (Unit unit in units) renderer.DrawUnit(camera, unit, cache);
 
 			// Particle render loop
 			foreach (ParticleEffect effect in particleEffects) {
@@ -192,8 +191,8 @@ namespace TAC.World
 			ActionSelectTarget select = GetCurrentAction() as ActionSelectTarget;
 			if (select != null) {
 				renderer.DrawDebugPath(select.line);
-				if (select.collision.hit)
-					renderer.DrawDebugLine(select.unit.position.ToVector3() + select.unit.equipOffset, select.collision.point, Color.BEIGE);
+				if (select.impactData.hit)
+					renderer.DrawDebugLine(select.unit.position.ToVector3() + select.unit.equipOffset, select.impactData.Point, Color.BEIGE);
 				else
 					renderer.DrawDebugLine(select.unit.position.ToVector3() + select.unit.equipOffset, select.target.ToVector3(), Color.BEIGE);
 			}
@@ -563,12 +562,12 @@ namespace TAC.World
 			}
 
 			node["Teams"] = new JsonArray();
-			foreach(Team team in Teams) {
+			foreach (Team team in Teams) {
 				node["Teams"].AsArray().Add(team.GetJsonNode());
 			}
 
 			node["Units"] = new JsonArray();
-			foreach(Unit unit in units) {
+			foreach (Unit unit in units) {
 				node["Units"].AsArray().Add(unit.GetJsonNode());
 			}
 
@@ -576,28 +575,27 @@ namespace TAC.World
 
 			return node;
 		}
-
 		public bool FillFromJson(JsonObject sceneNode)
 		{
 			JsonArray tilearray = sceneNode["TileTypeMap"].AsArray();
 			// Rebuild tile texture map
-			foreach(string assetname in tilearray) {
+			foreach (string assetname in tilearray) {
 				Texture tex = cache.GetTexture(assetname);
 				TileTypeMap.Add(tex);
 			}
 			JsonArray brusharray = sceneNode["BrushTypeMap"].AsArray();
-			foreach(string assetname in brusharray) {
+			foreach (string assetname in brusharray) {
 				Brush brush = cache.GetBrush(assetname);
 				BrushTypeMap.Add(brush);
 			}
 			JsonArray thingarray = sceneNode["ThingTypeMap"].AsArray();
-			foreach(string assetname in thingarray) {
+			foreach (string assetname in thingarray) {
 				Thing thing = cache.GetThing(assetname);
 				ThingTypeMap.Add(thing);
 			}
 
 			JsonArray teamarray = sceneNode["Teams"].AsArray();
-			foreach(JsonObject teamnode in teamarray) {
+			foreach (JsonObject teamnode in teamarray) {
 				//Team team = cache.GetTeam((string)teamnode["assetname"]);
 				Team team = new Team(teamnode);
 				Teams.Add(team);
@@ -607,7 +605,7 @@ namespace TAC.World
 			SetTileSpace(new SceneTileSpace(tilespace));
 
 			JsonArray unitarray = sceneNode["Units"].AsArray();
-			foreach(JsonObject unitjson in unitarray) {
+			foreach (JsonObject unitjson in unitarray) {
 				UnitTemplate template = cache.GetUnitTemplate((string)unitjson["Template"]);
 				Unit unit = new Unit(unitjson, template, new List<Item>());
 

@@ -5,6 +5,7 @@ namespace TAC.Logic
 {
 	public struct TargetImpactData
 	{
+		public bool hit;
 		// World space hit point
 		public Vector3 Point;
 		// Tile containing collision thing, wall
@@ -14,8 +15,9 @@ namespace TAC.Logic
 		/// </summary>
 		public Wall HitType;
 
-		public TargetImpactData(Vector3 point, Position tile, Wall hitType)
+		public TargetImpactData(bool hit, Vector3 point, Position tile, Wall hitType)
 		{
+			this.hit = hit;
 			Point = point;
 			Tile = tile;
 			HitType = hitType;

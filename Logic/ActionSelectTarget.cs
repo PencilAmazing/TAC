@@ -15,7 +15,7 @@ namespace TAC.Logic
 		public Position[] line;
 
 		// TODO get rid of this, cache it all in our own data structure
-		public RayCollision collision;
+		//public RayCollision collision;
 		public TargetImpactData impactData;
 
 		private ParticleEffect actionEffect;
@@ -28,14 +28,15 @@ namespace TAC.Logic
 			this.target = target;
 			Vector3 chestHeight = unit.position.ToVector3() + unit.equipOffset;
 			line = scene.GetSupercoverLine(chestHeight, target.ToVector3());
-			collision = CalculateImpactPoint();
+			impactData = new TargetImpactData(false, target.ToVector3(), target, 0);
+			/*collision = */
+			CalculateImpactPoint();
 		}
 
 		// Return collision data where ray line hits a model in a tile
 		private RayCollision CalculateImpactPoint()
 		{
 			RayCollision result = new RayCollision();
-			impactData = new TargetImpactData(target.ToVector3(), target, 0);
 
 			foreach (Position pos in line) {
 				// I'll let Bill Gates optimize this mess
@@ -63,6 +64,7 @@ namespace TAC.Logic
 						result = Raylib.GetRayCollisionBox(ray, box);
 						// If collision is closer than current one
 						if (result.hit && Vector3.DistanceSquared(chestHeight, result.point) < Vector3.DistanceSquared(chestHeight, impactData.Point)) {
+							impactData.hit = true;
 							impactData.Point = result.point;
 							impactData.Tile = pos;
 							impactData.HitType = Wall.North;
@@ -75,6 +77,7 @@ namespace TAC.Logic
 						box.max = Vector3Transform(box.max, MatrixTranslate(pos.x, pos.y, pos.z) * scene.cache.WallTransformWest);
 						result = Raylib.GetRayCollisionBox(ray, box);
 						if (result.hit && Vector3.DistanceSquared(chestHeight, result.point) < Vector3.DistanceSquared(chestHeight, impactData.Point)) {
+							impactData.hit = true;
 							impactData.Point = result.point;
 							impactData.Tile = pos;
 							impactData.HitType = Wall.West;
@@ -85,6 +88,7 @@ namespace TAC.Logic
 						BoundingBox box = tile.unit.GetUnitBoundingBox();
 						result = Raylib.GetRayCollisionBox(ray, box);
 						if (result.hit && Vector3.DistanceSquared(chestHeight, result.point) < Vector3.DistanceSquared(chestHeight, impactData.Point)) {
+							impactData.hit = true;
 							impactData.Point = result.point;
 							impactData.Tile = pos;
 							impactData.HitType = (Wall)3;
@@ -103,7 +107,8 @@ namespace TAC.Logic
 		// Just animate the equiped item firing and projectile travelling
 		private void ThinkStraight(float dt)
 		{
-			Vector3 final = collision.hit ? collision.point : target.ToVector3();
+			//Vector3 final = collision.hit ? collision.point : target.ToVector3();
+			Vector3 final = impactData.hit ? impactData.Point : target.ToVector3();
 
 			float projectileSpeed = 0.1f;
 			// Absolutely horrendous
@@ -152,7 +157,7 @@ namespace TAC.Logic
 			// TODO replace isDone flag with a ActionIsDone maybe>
 			base.Done();
 
-			if (collision.hit) {
+			if (impactData.hit) {
 				nextAction = new ActionTargetImpact(scene, item, impactData);
 			};
 		}

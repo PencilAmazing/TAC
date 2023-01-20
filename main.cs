@@ -80,6 +80,11 @@ namespace TAC
 				//engine.scene = loadscene;
 				//loadscene.renderer = engine.renderer;
 				engine.player.GameState.SelectedTeam = loadscene.Teams[0]; // I guess
+																		   // Load items and effects
+				Sprite impactEffect = new Sprite(engine.resourceCache.GetTexture("scene/sprite/explosion_11"), 6, 32, 32);
+				Sprite actionEffect = new Sprite(engine.resourceCache.GetTexture("scene/sprite/ProjectileArranged"), 6, 256, 64);
+				Item stick = new Item("Stick", 2, impactEffect, actionEffect);
+				engine.scene.units[0].AddToInventory(stick);
 			}
 			catch (System.Exception) {
 				throw;
