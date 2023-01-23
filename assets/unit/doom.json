@@ -5,8 +5,8 @@
 	"doom_color.png"
   ],
   "animations": [
-	"anim/doom/run_center",
-	"anim/doom/runN"
+	"anim/biped/run_center",
+	"anim/biped/runN"
   ],
   "health": 100,
   "time": 80

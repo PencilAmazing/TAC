@@ -467,13 +467,14 @@ namespace TAC.Editor
 			uint animCount = 0;
 			ReadOnlySpan<Raylib_cs.ModelAnimation> anims = Raylib.LoadModelAnimations(GetFullAssetPath(animFileName, ".iqm"), ref animCount);
 			// Early out since some animations are loaded without assetnames
-			if (animationorder.Count < animCount) {
+			if (animationorder == null || animationorder.Count < animCount) {
 				UnloadModelAnimations(anims.ToArray(), animCount);
 				return null;
 			}
 
 			// Construct assetname and load into registry
-			for (int i = 0; i < animationorder.Count; i++) {
+			//for (int i = 0; i < animationorder.Count; i++) {
+			for (int i = 0; i < animCount; i++) {
 				// new assetname
 				string asset = animFileName + '/' + (string)animationorder[i];
 				ModelAnimations.Add(asset, new ModelAnimation(assetname, anims[i]));
