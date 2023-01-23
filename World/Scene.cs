@@ -397,6 +397,7 @@ namespace TAC.World
 
 		public List<Position> GetUnitFOV(Unit unit)
 		{
+			if (unit == null) return new();
 			return GetUnitVisibleTiles(unit.position, unit.direction);
 		}
 

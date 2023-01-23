@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Text.Json.Nodes;
 using TAC.Editor;
@@ -20,6 +21,14 @@ namespace TAC.World
 		West,
 		NorthWest,
 	};
+
+	/// <summary>
+	/// UnitDirection utilities
+	/// </summary>
+	static class UnitDirectionUtil
+	{
+		public static UnitDirection AddDirection(UnitDirection dir, int delta) => (UnitDirection)(((int)dir + Math.Sign(delta) + 8) % 8);
+	}
 
 	public enum UnitAnimation
 	{
@@ -44,6 +53,28 @@ namespace TAC.World
 				Vector3.Normalize(-Vector3.UnitZ-Vector3.UnitX),
 				Vector3.Normalize(-Vector3.UnitX),
 				Vector3.Normalize(Vector3.UnitZ-Vector3.UnitX)
+		};
+		public static readonly Position[] PositionDirections =
+		{
+			Position.PositiveZ,
+			Position.PositiveZ+Position.PositiveX,
+			Position.PositiveX,
+			-Position.PositiveZ+Position.PositiveX,
+			-Position.PositiveZ,
+			-Position.PositiveZ-Position.PositiveX,
+			-Position.PositiveX,
+			Position.PositiveZ-Position.PositiveX
+		};
+
+		public static readonly UnitDirection[] OppositeDirections = {
+			UnitDirection.South,
+			UnitDirection.SouthWest,
+			UnitDirection.West,
+			UnitDirection.NorthWest,
+			UnitDirection.North,
+			UnitDirection.NorthEast,
+			UnitDirection.East,
+			UnitDirection.SouthEast
 		};
 
 		public UnitTemplate Template;
@@ -117,7 +148,8 @@ namespace TAC.World
 				   (int)unitjson["TeamID"],
 				   (int)unitjson["TimeUnits"],
 				   (int)unitjson["Health"],
-				   inventory: inventory) {}
+				   inventory: inventory)
+		{ }
 
 		// TODO complete json representation
 		public JsonObject GetJsonNode()

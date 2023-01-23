@@ -70,7 +70,7 @@ namespace TAC.Render
 				int offset = ((int)(8 * angle + 8.5) - unitForward + 8) % 8;
 				SetShaderValueV(cache.BillboardShader, cache.BillboardTexCoordShiftLoc,
 								// integer divisions were a mistake
-								new float[] { offset/8.0f, 1.0f/8.0f},
+								new float[] { offset / 8.0f, 1.0f / 8.0f },
 								ShaderUniformDataType.SHADER_UNIFORM_VEC2, 1);
 				SetMaterialTexture(ref cache.BillboardMaterial, MaterialMapIndex.MATERIAL_MAP_DIFFUSE, template.BillboardTexture.texture);
 				DrawMesh(cache.BillboardMesh, cache.BillboardMaterial, MatrixTranslate(unitPosition.X, unitPosition.Y, unitPosition.Z));
@@ -120,7 +120,7 @@ namespace TAC.Render
 			// FIXME Texture arrays do not exist in raylib bro wtf
 			// Offset rendering by epsilion
 			Rlgl.rlDisableBackfaceCulling();
-			DrawModel(FloorModel, Vector3.UnitY*0.001f, 1, Color.WHITE);
+			DrawModel(FloorModel, Vector3.UnitY * 0.001f, 1, Color.WHITE);
 			Rlgl.rlEnableBackfaceCulling();
 		}
 
@@ -188,6 +188,16 @@ namespace TAC.Render
 				// Thank god for HSV
 				float color = i * 360 / positions.Length;
 				DrawCubeV(positions[i].ToVector3(), Vector3.One / 2, ColorFromHSV(color, 0.5f, 0.5f));
+			}
+		}
+
+		public void DrawDebugPositions(Position[] positions)
+		{
+			float freq = MathF.PI * positions.Length / 2;
+			for (int i = 0; i < positions.Length; i++) {
+				// Thank god for HSV
+				float color = i * 360.0f / positions.Length;
+				DrawCubeV(positions[i].ToVector3() + Vector3.UnitY * 0.1f, Vector3.One / 3, ColorFromHSV(1.0f, 0.0f, color));
 			}
 		}
 
