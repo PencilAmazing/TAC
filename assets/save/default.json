@@ -32,14 +32,14 @@
       "Name": "Bruh-bot 9001",
       "Template": "unit/mech",
       "TeamID": 0,
-      "TimeUnits": 28,
+      "TimeUnits": 9,
       "Health": 100,
       "Position": [
         3,
         0,
-        13
+        9
       ],
-      "Direction": 3
+      "Direction": 1
     },
     {
       "Name": "Poor fella",
@@ -48,11 +48,11 @@
       "TimeUnits": 80,
       "Health": 90,
       "Position": [
-        5,
+        8,
         0,
         7
       ],
-      "Direction": 4
+      "Direction": 1
     },
     {
       "Name": "Another fool",
@@ -61,11 +61,11 @@
       "TimeUnits": 80,
       "Health": 90,
       "Position": [
-        7,
         0,
-        9
+        0,
+        11
       ],
-      "Direction": 7
+      "Direction": 6
     }
   ],
   "TileSpace": {

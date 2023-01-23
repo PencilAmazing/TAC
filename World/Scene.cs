@@ -51,6 +51,7 @@ namespace TAC.World
 		public Renderer renderer;
 		public bool isEdit;
 		public List<Position> viewCache;
+		public List<Position> hideCache;
 		// TODO: replace with action stack?
 		private Action currentAction;
 		//
@@ -201,6 +202,9 @@ namespace TAC.World
 			foreach (Unit unit in units)
 				Raylib.DrawBoundingBox(unit.GetUnitBoundingBox(), Color.ORANGE);
 
+			if (hideCache != null) {
+				renderer.DrawDebugPositions(hideCache.ToArray());
+			}
 			if (viewCache != null) {
 				renderer.DrawDebugPath(viewCache.ToArray());
 			}
@@ -429,6 +433,47 @@ namespace TAC.World
 			bool southwest = TileSpace.GetTile(pos - PositiveX + PositiveZ).HasWall(Wall.North) ||
 							 TileSpace.GetTile(pos + PositiveZ).HasWall(Wall.West) ||
 							 IsTileImpassable(pos + PositiveZ - PositiveX);
+
+			if (dir == UnitDirection.North)
+				return north;
+			if (dir == UnitDirection.West)
+				return west;
+			if (dir == UnitDirection.South)
+				return south;
+			if (dir == UnitDirection.East)
+				return east;
+
+			if (dir == UnitDirection.NorthEast) {
+				return north || east || northeast;
+			} else if (dir == UnitDirection.NorthWest) {
+				return north || west || northwest;
+			} else if (dir == UnitDirection.SouthEast) {
+				return south || east || southeast;
+			} else if (dir == UnitDirection.SouthWest) {
+				return south || west || southwest;
+			} else return false;
+		}
+
+		public bool TestDirectionCallback(Position pos, UnitDirection dir, System.Func<Position, bool> TestFunc)
+		{
+			// Blocking cardinal direction movement
+			bool north = TileSpace.GetTile(pos).HasWall(Wall.North) || TestFunc(pos - PositiveZ);
+			bool west = TileSpace.GetTile(pos).HasWall(Wall.West) || TestFunc(pos - PositiveX);
+			bool south = TileSpace.GetTile(pos + PositiveZ).HasWall(Wall.North) || TestFunc(pos + PositiveZ);
+			bool east = TileSpace.GetTile(pos + PositiveX).HasWall(Wall.West) || TestFunc(pos + PositiveX);
+
+			bool northeast = TileSpace.GetTile(pos + PositiveX - PositiveZ).HasWall(Wall.West) ||
+							 TileSpace.GetTile(pos + PositiveX).HasWall(Wall.North) ||
+							 TestFunc(pos + PositiveX - PositiveZ);
+			bool northwest = TileSpace.GetTile(pos - PositiveZ).HasWall(Wall.West) ||
+							 TileSpace.GetTile(pos - PositiveX).HasWall(Wall.North) ||
+							 TestFunc(pos - PositiveX - PositiveZ);
+			bool southeast = TileSpace.GetTile(pos + PositiveX + PositiveZ).HasWall(Wall.North) ||
+							 TileSpace.GetTile(pos + PositiveX + PositiveZ).HasWall(Wall.West) ||
+							 TestFunc(pos + PositiveX + PositiveZ);
+			bool southwest = TileSpace.GetTile(pos - PositiveX + PositiveZ).HasWall(Wall.North) ||
+							 TileSpace.GetTile(pos + PositiveZ).HasWall(Wall.West) ||
+							 TestFunc(pos + PositiveZ - PositiveX);
 
 			if (dir == UnitDirection.North)
 				return north;

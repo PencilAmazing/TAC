@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using TAC.Logic;
 
 // https://www.albertford.com/shadowcasting/
 namespace TAC.World
 {
 	class Fraction
 	{
-		public float numerator;
-		public float denominator;
+		public int numerator;
+		public int denominator;
 
-		public Fraction(float numerator, float denominator)
+		public Fraction(int numerator, int denominator)
 		{
 			this.numerator = numerator;
 			this.denominator = denominator;
@@ -30,29 +32,22 @@ namespace TAC.World
 
 		public static bool operator !=(Fraction f1, Fraction f2) => !(f1 == f2);
 
-		public static Fraction operator *(Fraction f1, float f2)
+		public static Fraction operator *(int f2, Fraction f1) => f1 * f2;
+		public static Fraction operator *(Fraction f1, int f2)
 		{
 			var f3 = new Fraction(f1);
 			f3.numerator *= f2;
 			return f3;
 		}
 
-		public static Fraction operator /(Fraction f1, float f2)
-		{
-			var f3 = new Fraction(f1);
-			f3.numerator /= f2;
-			f3.denominator /= f2;
-			return f3;
-		}
-
-		public static Fraction operator +(Fraction f1, float f2)
+		public static Fraction operator +(Fraction f1, int f2)
 		{
 			var f3 = new Fraction(f1.numerator, f1.denominator);
 			f3.numerator += f2 * f3.denominator;
 			return f3;
 		}
 
-		public static Fraction operator -(Fraction f1, float f2)
+		public static Fraction operator -(Fraction f1, int f2)
 		{
 			var f3 = new Fraction(f1.numerator, f1.denominator);
 			f3.numerator -= f2 * f3.denominator;
@@ -122,8 +117,8 @@ namespace TAC.World
 
 	class Row
 	{
-		private static int round_up(float x) => (int)(x + 0.5);
-		private static int round_down(float x) => (int)(x - 0.5);
+		private static int round_up(float x) => (int)MathF.Floor(x + 0.5f);
+		private static int round_down(float x) => (int)MathF.Ceiling(x - 0.5f);
 
 		public int depth;
 		public Fraction start_slope, end_slope;
@@ -159,12 +154,12 @@ namespace TAC.World
 		{
 			//Just for now lfmao
 			if (dir != UnitDirection.North && dir != UnitDirection.South && dir != UnitDirection.East && dir != UnitDirection.West) return null;
-			Position[][] boundarydefs = new Position[8][];
+			//Position[][] boundarydefs = new Position[8][];
 			// Start, End, Delta
-			boundarydefs[(int)UnitDirection.North] = new Position[3] { new(-4, 0, -4), new(4, 0, -4), new(1, 0, 0) };
-			boundarydefs[(int)UnitDirection.East] = new Position[3] { new(4, 0, -4), new(4, 0, 4), new(0, 0, 1) };
-			boundarydefs[(int)UnitDirection.South] = new Position[3] { new(-4, 0, 4), new(4, 0, 4), new(1, 0, 0) };
-			boundarydefs[(int)UnitDirection.West] = new Position[3] { new(-4, 0, -4), new(-4, 0, 4), new(0, 0, 1) };
+			//boundarydefs[(int)UnitDirection.North] = new Position[3] { new(-4, 0, -4), new(4, 0, -4), new(1, 0, 0) };
+			//boundarydefs[(int)UnitDirection.East] = new Position[3] { new(4, 0, -4), new(4, 0, 4), new(0, 0, 1) };
+			//boundarydefs[(int)UnitDirection.South] = new Position[3] { new(-4, 0, 4), new(4, 0, 4), new(1, 0, 0) };
+			//boundarydefs[(int)UnitDirection.West] = new Position[3] { new(-4, 0, -4), new(-4, 0, 4), new(0, 0, 1) };
 
 			/*
 			 I swear it looks better when it actually works
@@ -200,15 +195,51 @@ namespace TAC.World
 			// 90 degrees FOV
 			List<Position> visible = new();
 
-			// Assist functions
-			void SetVisible(Position pos) => visible.Add(pos);
-			bool IsWall(Tile tile) => tile.IsTileInvalid() ? false : tile.IsTileBlocking();
-			bool IsFloor(Tile tile) => tile.IsTileInvalid() ? false : !tile.IsTileBlocking();
-			bool IsSymmetric(Row row, Tile tile) => true; // IDK dude
-
-			Fraction slope(Position tile) => new Fraction(2 * tile.z - 1, 2 * tile.x);
+			hideCache = new List<Position>();
 
 			Quadrant quad = new Quadrant(dir, start);
+			Fraction slope(Position tile) => new Fraction(2 * tile.z - 1, 2 * tile.x);
+
+			bool Testcallback(Position pos) => false;
+
+			// Assist functions
+			void SetVisible(Position pos) => visible.Add(quad.Transform(pos));
+			bool IsWall(Position tile)
+			{
+				if (tile == new Position(-2, -2, -2)) return false;
+
+				// Transform tiles
+				Position transform = quad.Transform(tile);
+				// Then fucking check if that shit's valid
+				if (IsTileInvalid(transform)) return false;
+
+				UnitDirection testDir = Pathfinding.GetDirectionAtan(start, transform);
+				Position StepBack = transform;
+				// Relative testDir
+				// Step back one tile
+				StepBack += Pathfinding.GenerateVectorFromDirection(testDir);
+				// StepBack is generated correctly, test is broken
+				this.hideCache.Add(StepBack);
+				UnitDirection oppositeTest = Unit.OppositeDirections[(int)testDir];
+
+				return TestDirectionCallback(StepBack, oppositeTest, Testcallback);
+			};
+
+			bool IsFloor(Position tile)
+			{
+				if (tile == new Position(-2, -2, -2)) return false;
+				if (IsTileInvalid(quad.Transform(tile))) return false;
+				return !IsWall(tile);
+			}
+			bool IsSymmetric(Row row, Position tile)
+			{
+				int row_depth = tile.x;
+				int col = tile.z;
+
+				bool result = col >= (row.start_slope.ToFloat() * row.depth) &&
+					   col <= (row.end_slope.ToFloat() * row.depth);
+				return result;
+			};
 
 			void Scan(Row row)
 			{
@@ -216,18 +247,18 @@ namespace TAC.World
 				rows.Push(row);
 				while (rows.Count > 0) {
 					row = rows.Pop();
-					Tile prev_tile = Tile.nullTile;
-					foreach (Position pos in row.Tiles()) {
-						Tile tile = GetTile(quad.Transform(pos));
+					// Magic invalid number
+					Position prev_tile = new Position(-2, -2, -2);
+					foreach (Position tile in row.Tiles()) {
 						if (IsWall(tile) || IsSymmetric(row, tile)) {
-							SetVisible(quad.Transform(pos));
+							SetVisible(tile);
 						}
 						if (IsWall(prev_tile) && IsFloor(tile)) {
-							row.start_slope = slope(pos);
+							row.start_slope = slope(tile);
 						}
 						if (IsFloor(prev_tile) && IsWall(tile)) {
 							Row next_row = row.Next();
-							next_row.end_slope = slope(pos);
+							next_row.end_slope = slope(tile);
 							rows.Push(next_row);
 						}
 						prev_tile = tile;

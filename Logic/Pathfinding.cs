@@ -19,7 +19,7 @@ namespace TAC.Logic
 		}
 
 		// Neat trick from the openxcom fellas
-		Position GenerateVectorFromDirection(UnitDirection dir)
+		public static Position GenerateVectorFromDirection(UnitDirection dir)
 		{
 			int[] x = { 0, 1, 1, 1, 0, -1, -1, -1 };
 			int[] z = { -1, -1, 0, 1, 1, 1, 0, -1 };
@@ -104,9 +104,26 @@ namespace TAC.Logic
 			return true;
 		}
 
+		/// <summary>
+		/// FIXME 3D missing pls
+		/// </summary>
+		// https://gamedev.stackexchange.com/a/49300
+		public static UnitDirection GetDirectionAtan(Position from, Position to)
+		{
+			Position diff = to - from;
+			float angle = MathF.Atan2(diff.z, diff.x) - MathF.PI/2;
+			int octant = (int)MathF.Round(8 * angle / (2 * MathF.PI) + 8 + 8) % 8;
+			return (UnitDirection)octant;
+		}
+
+		/// <summary>
+		/// Assumes both positions are adjacent.
+		/// Use GetDirectionAtan for long distance calculations
+		/// </summary>
 		public static UnitDirection GetDirection(Position from, Position to)
 		{
 			Position diff = to - from;
+			// Nevermind any of this
 			if (diff.z > 0)
 				if (diff.x > 0)
 					return UnitDirection.NorthEast;
