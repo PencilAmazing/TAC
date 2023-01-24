@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using TAC.Logic;
 
-// https://www.albertford.com/shadowcasting/
 namespace TAC.World
 {
 	class Fraction
@@ -27,6 +26,8 @@ namespace TAC.World
 			Fraction other = obj as Fraction;
 			return (numerator == other.numerator && denominator == other.denominator);
 		}
+
+		public override int GetHashCode() => HashCode.Combine(numerator, denominator);
 
 		public static bool operator ==(Fraction f1, Fraction f2) => f1.Equals(f2);
 
@@ -146,6 +147,7 @@ namespace TAC.World
 	public partial class Scene
 	{
 		// http://www.adammil.net/blog/v125_roguelike_vision_algorithms.html#shadowcode
+		// https://www.albertford.com/shadowcasting/
 		// Actually shadowcasting
 		// TODO move this to tilespace
 		// TODO implement diagonal views by modifying quadrant class
@@ -154,45 +156,8 @@ namespace TAC.World
 		{
 			//Just for now lfmao
 			if (dir != UnitDirection.North && dir != UnitDirection.South && dir != UnitDirection.East && dir != UnitDirection.West) return null;
-			//Position[][] boundarydefs = new Position[8][];
-			// Start, End, Delta
-			//boundarydefs[(int)UnitDirection.North] = new Position[3] { new(-4, 0, -4), new(4, 0, -4), new(1, 0, 0) };
-			//boundarydefs[(int)UnitDirection.East] = new Position[3] { new(4, 0, -4), new(4, 0, 4), new(0, 0, 1) };
-			//boundarydefs[(int)UnitDirection.South] = new Position[3] { new(-4, 0, 4), new(4, 0, 4), new(1, 0, 0) };
-			//boundarydefs[(int)UnitDirection.West] = new Position[3] { new(-4, 0, -4), new(-4, 0, 4), new(0, 0, 1) };
-
-			/*
-			 I swear it looks better when it actually works
-			 South:
-				@
-			   ***
-			  *****
-			 *******
-
-			 East:
-				   *
-				  **
-				 ***
-				@***
-				 ***
-				  **
-				   *
-
-			SouthEast:
-				@*****
-				*****
-				****
-				***
-				**
-				*
-			  Basically find a 'boundary' and line cast from player to every cell in line
-			 */
-
-			//Position boundarystart = start + boundarydefs[(int)dir][0];
-			//Position boundaryend = start = boundarydefs[(int)dir][1];
-			//Position diff = boundarydefs[(int)dir][2];
-
 			// 90 degrees FOV
+			// TODO make 45 degrees
 			List<Position> visible = new();
 
 			hideCache = new List<Position>();
@@ -203,7 +168,22 @@ namespace TAC.World
 			bool Testcallback(Position pos) => false;
 
 			// Assist functions
-			void SetVisible(Position pos) => visible.Add(quad.Transform(pos));
+			void SetVisible(Position pos)
+			{
+				Position transform = quad.Transform(pos);
+				UnitDirection testDir = Pathfinding.GetDirectionAtan(start, transform);
+
+				// NOTE TestDirection doesn't allow corner cutting around walls
+				// which is honestly something I might want to change
+				// Function was designed for movement, not sight anyways
+				// Replace with something worse i mean better :^)
+				if (!TestDirectionCallback(transform, testDir, Testcallback))
+					visible.Add(quad.Transform(pos));
+				else
+					this.hideCache.Add(transform);
+
+			}
+
 			bool IsWall(Position tile)
 			{
 				if (tile == new Position(-2, -2, -2)) return false;
@@ -219,10 +199,9 @@ namespace TAC.World
 				// Step back one tile
 				StepBack += Pathfinding.GenerateVectorFromDirection(testDir);
 				// StepBack is generated correctly, test is broken
-				this.hideCache.Add(StepBack);
 				UnitDirection oppositeTest = Unit.OppositeDirections[(int)testDir];
 
-				return TestDirectionCallback(StepBack, oppositeTest, Testcallback);
+				return TestDirectionCallback(transform, testDir, Testcallback);
 			};
 
 			bool IsFloor(Position tile)
@@ -250,8 +229,9 @@ namespace TAC.World
 					// Magic invalid number
 					Position prev_tile = new Position(-2, -2, -2);
 					foreach (Position tile in row.Tiles()) {
+						// Checks if visile from start to tile
 						if (IsWall(tile) || IsSymmetric(row, tile)) {
-							SetVisible(tile);
+							SetVisible(tile); // TODO Check if visible both ways
 						}
 						if (IsWall(prev_tile) && IsFloor(tile)) {
 							row.start_slope = slope(tile);
