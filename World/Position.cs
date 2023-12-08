@@ -56,6 +56,7 @@ namespace TAC.World
 		public static Position operator -(Position pos) => new(-pos.x, -pos.y, -pos.z);
 		public static Position operator +(Position l, Position r) => new(l.x + r.x, l.y + r.y, l.z + r.z);
 		public static Position operator -(Position l, Position r) => l + (-r);
+		public static Position operator *(Position l, int r) => new(l.x * r, l.y * r, l.z * r);
 
 		public static bool operator ==(Position l, Position r) => l.x == r.x && l.y == r.y && l.z == r.z;
 		public static bool operator !=(Position l, Position r) => !(l == r);

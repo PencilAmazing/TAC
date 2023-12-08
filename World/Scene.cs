@@ -402,7 +402,33 @@ namespace TAC.World
 		public List<Position> GetUnitFOV(Unit unit)
 		{
 			if (unit == null) return new();
+			//return GetUnitVisibleTilesRaycast(unit.position, unit.direction);
 			return GetUnitVisibleTiles(unit.position, unit.direction);
+		}
+
+		public bool TestCellNorth(Position pos) => TileSpace.GetTile(pos).HasWall(Wall.North);
+		public bool TestCellWest(Position pos) => TileSpace.GetTile(pos).HasWall(Wall.West);
+		public bool TestCellSouth(Position pos) => TileSpace.GetTile(pos + PositiveZ).HasWall(Wall.North);
+		public bool TestCellEast(Position pos) => TileSpace.GetTile(pos + PositiveX).HasWall(Wall.West);
+
+		// Is tile as position tile visible from direction
+		public bool IsTileVisibleFromDir(Position tile, UnitDirection lookingfrom)
+		{
+			throw new System.NotImplementedException("go away");
+			switch (lookingfrom) {
+				case UnitDirection.North:
+					return TestCellNorth(tile);
+				case UnitDirection.East:
+					return TestCellEast(tile);
+				case UnitDirection.South:
+					return TestCellSouth(tile);
+				case UnitDirection.West:
+					return TestCellWest(tile);
+				default:
+					break;
+			}
+
+			return true;
 		}
 
 		/// <summary>
@@ -416,10 +442,10 @@ namespace TAC.World
 			int z = pos.z;
 
 			// Blocking cardinal direction movement
-			bool north = TileSpace.GetTile(pos).HasWall(Wall.North) || IsTileImpassable(pos - PositiveZ);
-			bool west = TileSpace.GetTile(pos).HasWall(Wall.West) || IsTileImpassable(pos - PositiveX);
-			bool south = TileSpace.GetTile(pos + PositiveZ).HasWall(Wall.North) || IsTileImpassable(pos + PositiveZ);
-			bool east = TileSpace.GetTile(pos + PositiveX).HasWall(Wall.West) || IsTileImpassable(pos + PositiveX);
+			bool north = TestCellNorth(pos) || IsTileImpassable(pos - PositiveZ);
+			bool west =  TestCellWest(pos)  || IsTileImpassable(pos - PositiveX);
+			bool south = TestCellSouth(pos) || IsTileImpassable(pos + PositiveZ);
+			bool east =  TestCellEast(pos)  || IsTileImpassable(pos + PositiveX);
 
 			bool northeast = TileSpace.GetTile(pos + PositiveX - PositiveZ).HasWall(Wall.West) ||
 							 TileSpace.GetTile(pos + PositiveX).HasWall(Wall.North) ||

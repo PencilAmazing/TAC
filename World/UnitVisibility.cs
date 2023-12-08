@@ -167,6 +167,14 @@ namespace TAC.World
 
 			bool Testcallback(Position pos) => false;
 
+			bool TestWall(Position transform)
+			{
+				return (dir == UnitDirection.North && TestCellSouth(transform))
+				 || (dir == UnitDirection.East && TestCellWest(transform))
+				 || (dir == UnitDirection.South && TestCellNorth(transform))
+				 || (dir == UnitDirection.West && TestCellEast(transform));
+			}
+
 			// Assist functions
 			void SetVisible(Position pos)
 			{
@@ -177,7 +185,10 @@ namespace TAC.World
 				// which is honestly something I might want to change
 				// Function was designed for movement, not sight anyways
 				// Replace with something worse i mean better :^)
-				if (!TestDirectionCallback(transform, testDir, Testcallback))
+				//if (!TestDirectionCallback(transform, testDir, Testcallback))
+
+				// bro the fuck is wrong with you just use the quadrant to find test direction
+				if (!TestWall(transform))
 					visible.Add(quad.Transform(pos));
 				else
 					this.hideCache.Add(transform);
@@ -186,7 +197,7 @@ namespace TAC.World
 
 			bool IsWall(Position tile)
 			{
-				if (tile == new Position(-2, -2, -2)) return false;
+				if (tile == new Position(0, int.MaxValue, 0)) return false;
 
 				// Transform tiles
 				Position transform = quad.Transform(tile);
@@ -201,12 +212,13 @@ namespace TAC.World
 				// StepBack is generated correctly, test is broken
 				UnitDirection oppositeTest = Unit.OppositeDirections[(int)testDir];
 
-				return TestDirectionCallback(transform, testDir, Testcallback);
+				//return TestDirectionCallback(transform, testDir, Testcallback);
+				return TestWall(transform);
 			};
 
 			bool IsFloor(Position tile)
 			{
-				if (tile == new Position(-2, -2, -2)) return false;
+				if (tile == new Position(0, int.MaxValue, 0)) return false;
 				if (IsTileInvalid(quad.Transform(tile))) return false;
 				return !IsWall(tile);
 			}
@@ -227,7 +239,7 @@ namespace TAC.World
 				while (rows.Count > 0) {
 					row = rows.Pop();
 					// Magic invalid number
-					Position prev_tile = new Position(-2, -2, -2);
+					Position prev_tile = new Position(0, int.MaxValue, 0);
 					foreach (Position tile in row.Tiles()) {
 						// Checks if visile from start to tile
 						if (IsWall(tile) || IsSymmetric(row, tile)) {

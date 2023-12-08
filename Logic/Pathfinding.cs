@@ -112,6 +112,7 @@ namespace TAC.Logic
 		{
 			Position diff = to - from;
 			float angle = MathF.Atan2(diff.z, diff.x) - MathF.PI/2;
+			angle *= 1.01f; // bias, eh
 			int octant = (int)MathF.Round(8 * angle / (2 * MathF.PI) + 8 + 8) % 8;
 			return (UnitDirection)octant;
 		}
